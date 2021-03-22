@@ -1,0 +1,56 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.2.0"
+    }
+}
+
+plugins {
+    id 'java'
+}
+apply plugin: "com.github.johnrengelman.shadow"
+
+sourceCompatibility = 1.8
+targetCompatibility = '1.8'
+
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation 'org.semanticweb.yars:nxparser-parsers:4.0.0'
+    // https://mvnrepository.com/artifact/tokyocabinet/tokyocabinet
+    // https://mvnrepository.com/artifact/com.cloudhopper/ch-kyotocabinet-java
+    // implementation group: 'com.cloudhopper', name: 'ch-kyotocabinet-java', version: '1.24.0'
+
+    // https://mvnrepository.com/artifact/berkeleydb/je
+    // implementation group: 'berkeleydb', name: 'je', version: '3.2.76'
+
+    // implementation files('lib/tkrzw.jar')
+
+    // https://mvnrepository.com/artifact/org.rocksdb/rocksdbjni
+    //    implementation group: 'org.rocksdb', name: 'rocksdbjni', version: '6.15.5'
+
+
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
+
+
+}
+
+
+shadowJar {
+    mergeServiceFiles()
+    manifest {
+        attributes 'Main-Class': 'Parser'
+    }
+}
