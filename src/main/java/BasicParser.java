@@ -45,6 +45,9 @@ public class BasicParser {
         System.out.println("Time Elapsed singlePassIterator: " + watch.getTime());
     }
     
+    /**
+     * convert iterator to stream - not proven to be efficient: Java Heap Space issue on Server
+     */
     public void singlePassIteratorStreamer() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -110,15 +113,14 @@ public class BasicParser {
         
         BasicParser parser = new BasicParser(filePath);
         
-        parser.singlePassIterator();
-        
-        // Java heap space issue on server
-        //parser.singlePassIteratorStreamer();
-        System.gc();
-        parser.singlePassNioStreamFileReader();
-        System.gc();
-        parser.singlePassNioStreamFileReaderParallel();
-        System.gc();
-        
+        for (int i = 0; i < 10; i++) {
+            System.out.println("Iteration " + i + 1);
+            parser.singlePassIterator();
+            System.gc();
+            parser.singlePassNioStreamFileReader();
+            System.gc();
+            parser.singlePassNioStreamFileReaderParallel();
+            System.gc();
+        }
     }
 }
