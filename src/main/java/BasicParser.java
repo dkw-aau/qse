@@ -111,8 +111,9 @@ public class BasicParser {
         BasicParser parser = new BasicParser(filePath);
         
         parser.singlePassIterator();
-        System.gc();
-        parser.singlePassIteratorStreamer();
+        
+        // Java heap space issue on server
+        //parser.singlePassIteratorStreamer();
         System.gc();
         parser.singlePassNioStreamFileReader();
         System.gc();
