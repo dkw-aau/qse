@@ -27,37 +27,20 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
+
     implementation 'org.semanticweb.yars:nxparser-parsers:4.0.0'
-    // https://mvnrepository.com/artifact/tokyocabinet/tokyocabinet
-    // https://mvnrepository.com/artifact/com.cloudhopper/ch-kyotocabinet-java
-    // implementation group: 'com.cloudhopper', name: 'ch-kyotocabinet-java', version: '1.24.0'
 
-    // https://mvnrepository.com/artifact/berkeleydb/je
-    // implementation group: 'berkeleydb', name: 'je', version: '3.2.76'
-
-    // implementation files('lib/tkrzw.jar')
-
-    // https://mvnrepository.com/artifact/org.rocksdb/rocksdbjni
-    //    implementation group: 'org.rocksdb', name: 'rocksdbjni', version: '6.15.5'
-
-
-    // https://mvnrepository.com/artifact/com.google.guava/guava
     implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
 
-    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-
-    implementation 'gr.james:random-sampling:0.16' // Runtime
-//    api            'gr.james:random-sampling:0.16' // Public API
-
-
+    implementation 'gr.james:random-sampling:0.16'
 }
 
 
 shadowJar {
     mergeServiceFiles()
     manifest {
-        attributes 'Main-Class': 'Parser'
+        attributes 'Main-Class': 'BasicParser'
     }
 }

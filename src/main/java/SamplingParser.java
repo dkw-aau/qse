@@ -5,16 +5,12 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// find the classes
-// find all the instances of the class
-// find all the triples whose subject is one of its instances
-// track instances
-
-public class Parser {
+public class SamplingParser {
     public String rdfFile = "";
     public HashSet<String> classesHashSet = new HashSet<>();
     public HashMap<String, Integer> classInstanceCount = new HashMap<>();
@@ -28,7 +24,7 @@ public class Parser {
     HashMap<String, BloomFilter<String>> classInstanceBloomFilters = new HashMap<>();
     
     //HashMap<String, HashMap<String, HashSet<String>>> classPropWithType = new HashMap<>();
-    Parser(String filePath) {
+    SamplingParser(String filePath) {
         this.rdfFile = filePath;
     }
     
@@ -152,79 +148,10 @@ public class Parser {
         System.out.println("Time Elapsed performSampling: " + watch.getTime());
     }
     
-    public void extractClassPropertiesByIteratingOverTheFile() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            //init hashMap
-            classesHashSet.forEach(c -> {
-                classProperties.put(c, new HashSet<>());
-            });
-            
-            FileInputStream file = new FileInputStream(rdfFile);
-            NxParser nxp = new NxParser(file);
-            while (nxp.iterator().hasNext()) {
-                Node[] nodes = nxp.next();
-                
-                sampledClassInstances.forEach((c, props) -> {
-                    
-                    if (props.contains(nodes[0].toString())) {
-                        HashSet<String> l = classProperties.get(c);
-                        l.add(nodes[1].toString());
-                        classProperties.put(c, l);
-                    }
-                    
-                });
-                
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        
-        System.out.println("Time Elapsed extractClassProperties: " + watch.getTime());
-    }
-    
-    public void extractClasses() {
-        //init hashMap
-        classesHashSet.forEach(c -> {
-            classProperties.put(c, new HashSet<>());
-        });
-        sampledClassInstances.forEach((c, instances) -> {
-            instances.parallelStream().forEach(instance -> {
-                if (instanceProps.containsKey(instance)) {
-                    classProperties.get(c).addAll(instanceProps.get(instance));
-                }
-            });
-            
-        });
-    }
-    
-    public void generateClassInstancesHashMaps() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            FileInputStream file = new FileInputStream(rdfFile);
-            NxParser nxp = new NxParser(file);
-            nxp.iterator().forEachRemaining(nodes -> {
-                //filter class instances
-                if (classesHashSet.contains(nodes[2].toString())) {
-                    HashSet<String> h = classInstances.get(nodes[2].toString());
-                    h.add(nodes[0].toString());
-                    classInstances.put(nodes[2].toString(), h);
-                }
-            });
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        System.out.println("Time Elapsed generateClassInstancesHashMaps: " + watch.getTime());
-    }
     
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
-        Parser parser = new Parser(filePath);
+        SamplingParser parser = new SamplingParser(filePath);
         parser.firstPass();
         //parser.parseInstanceProps();
         parser.mapInstanceFrequency();
@@ -241,9 +168,6 @@ public class Parser {
         });
         
         //parser.extractClassProperties();
-        
-        System.out.println("______________________________________________________________________");
-        //parser.classProperties.entrySet().parallelStream().forEach(System.out::println);
-        //parser.instanceProps.entrySet().parallelStream().forEach(System.out::println);
-    } // main ends here
+      
+    }
 }

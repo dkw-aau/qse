@@ -16,8 +16,8 @@ Gradle Daemon started in 2 s 44 ms
 > Task :classes
 > Task :Parser.main()
 <http://schema.org/Thing> -> 4,928,026
-<http://schema.org/Person> -> 1692839
-<http://yago-knowledge.org/resource/Human> -> 1691127
+<http://schema.org/Person> -> 1,692,839
+<http://yago-knowledge.org/resource/Human> -> 1,691,127
 <http://schema.org/Place> -> 1252165
 <http://schema.org/GeoCoordinates> -> 934820
 <http://schema.org/CreativeWork> -> 660794
