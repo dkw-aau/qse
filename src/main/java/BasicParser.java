@@ -114,7 +114,7 @@ public class BasicParser {
         BasicParser parser = new BasicParser(filePath);
         
         for (int i = 0; i < 10; i++) {
-            System.out.println("Iteration " + i + 1);
+            System.out.println("Iteration " + i);
             parser.singlePassIterator();
             System.gc();
             parser.singlePassNioStreamFileReader();
