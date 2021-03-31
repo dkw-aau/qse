@@ -1,4 +1,3 @@
-import com.google.common.hash.BloomFilter;
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -9,20 +8,12 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class BasicParser {
+public class VariousFileReadingApproaches {
     public String rdfFile = "";
-    /*
-    public HashSet<String> classesHashSet = new HashSet<>();
-    public HashMap<String, Integer> classInstanceCount = new HashMap<>();
-    HashMap<String, HashSet<String>> classInstances = new HashMap<>();
-    HashMap<String, Double> instanceFrequency = new HashMap<>();
-    */
-    
-    BasicParser(String filePath) {
+    VariousFileReadingApproaches(String filePath) {
         this.rdfFile = filePath;
     }
     
@@ -88,6 +79,9 @@ public class BasicParser {
         System.out.println("Time Elapsed singlePassNioFileReaderParallel: " + watch.getTime());
     }
     
+    /**
+     * This is the most efficient as compared to other parsing methods
+     */
     public void singlePassNioStreamFileReader() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -111,7 +105,7 @@ public class BasicParser {
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         
-        BasicParser parser = new BasicParser(filePath);
+        VariousFileReadingApproaches parser = new VariousFileReadingApproaches(filePath);
         
         for (int i = 0; i < 10; i++) {
             System.out.println("Iteration " + i);
