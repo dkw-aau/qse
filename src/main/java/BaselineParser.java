@@ -6,8 +6,10 @@ import org.semanticweb.yars.nx.util.NxUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
 public class BaselineParser {
@@ -49,7 +51,26 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Stream<String> lines = Files.lines(Path.of(rdfFile));
+            
+            Files.lines(Path.of(rdfFile))
+                    .parallel()
+                    .filter(line -> line.contains(RDFtype))
+                    .forEach(line -> {
+                        //System.out.println(line);
+                        String[] nodes = line.split(" ");
+                        
+                        //Track instances
+                        if (classToInstances.containsKey(nodes[2])) {
+                            HashSet<String> h = classToInstances.get(nodes[2]);
+                            h.add(nodes[0]);
+                            classToInstances.put(nodes[2], h);
+                        } else {
+                            HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
+                            classToInstances.put(nodes[2], h);
+                        }
+                    });
+            
+          /*  Stream<String> lines = Files.lines(Path.of(rdfFile));
             lines.forEach(s -> {
                 String[] nodes = s.split(" ");
                 
@@ -63,7 +84,7 @@ public class BaselineParser {
                     classToInstances.put(nodes[2], h);
                 }
                 
-            });
+            });*/
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,5 +100,10 @@ public class BaselineParser {
         System.out.println(parser.classToInstanceCount.size());
         System.gc();
         parser.secondPass();
+        parser.classToInstances.forEach((k, v) -> {
+            System.out.println(k + " " + v.size());
+        });
+        System.gc();
+        
     }
 }
