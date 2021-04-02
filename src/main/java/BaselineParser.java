@@ -10,11 +10,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class BaselineParser {
     public String rdfFile = "";
-    public final Integer expectedNumberOfClasses = 25;
+    public final Integer expectedNumberOfClasses = 9000;
     public final String RDFtype = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     
     //HashMaps declaration
@@ -51,19 +52,22 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            
-            Files.lines(Path.of(rdfFile))
+   
+            // Java Stream is an implementation of map/filter/reduce in JDK
+            Files.lines(Path.of(rdfFile)) // stream : does not carry any data
                     .parallel()
-                    .filter(line -> line.contains(RDFtype))
+                    .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
                     .forEach(line -> {
                         //System.out.println(line);
                         String[] nodes = line.split(" ");
                         
                         //Track instances
                         if (classToInstances.containsKey(nodes[2])) {
-                            HashSet<String> h = classToInstances.get(nodes[2]);
+                            /*HashSet<String> h = classToInstances.get(nodes[2]);
                             h.add(nodes[0]);
-                            classToInstances.put(nodes[2], h);
+                            classToInstances.put(nodes[2], h);*/
+                            classToInstances.get(nodes[2]).add(nodes[0]);
+                     
                         } else {
                             HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
                             classToInstances.put(nodes[2], h);
