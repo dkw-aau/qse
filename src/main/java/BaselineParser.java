@@ -15,12 +15,14 @@ import java.util.stream.Stream;
 
 public class BaselineParser {
     public String rdfFile = "";
-    public final Integer expectedNumberOfClasses = 9000;
+    //public final Integer expectedNumberOfClasses = 9000;
     public final String RDFtype = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     
     //HashMaps declaration
-    HashMap<String, Integer> classToInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor https://sites.google.com/site/markussprunck/blog-1/howtoinitializeajavahashmapwithreasonablevalues
+    //HashMap<String, Integer> classToInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor https://sites.google.com/site/markussprunck/blog-1/howtoinitializeajavahashmapwithreasonablevalues
     //HashMap<String, HashSet<String>> classToInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    HashMap<String, Integer> classToInstanceCount = new HashMap<>();
+    
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
     
     BaselineParser(String filePath) {
