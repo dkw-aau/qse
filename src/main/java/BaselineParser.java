@@ -24,27 +24,6 @@ public class BaselineParser {
         this.rdfFile = filePath;
     }
     
-    public void firstPass() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Stream<String> lines = Files.lines(Path.of(rdfFile));
-            lines.forEach(s -> {
-                String[] nodes = s.split(" ");
-                
-                if (nodes[1].equals(RDFtype)) {
-                    classToInstanceCount.put(nodes[2], (classToInstanceCount.getOrDefault(nodes[2], 0)) + 1);
-                }
-            });
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        System.out.println("Time Elapsed firstPass: " + watch.getTime());
-    }
-    
-    
     public void firstPassWithStream() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -55,6 +34,16 @@ public class BaselineParser {
                     .forEach(line -> {
                         String[] nodes = line.split(" ");
                         classToInstanceCount.put(nodes[2], (classToInstanceCount.getOrDefault(nodes[2], 0)) + 1);
+    
+                        //Track instances
+                        if (classToInstances.containsKey(nodes[2])) {
+                            classToInstances.get(nodes[2]).add(nodes[0]);
+        
+                        } else {
+                            HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
+                            classToInstances.put(nodes[2], h);
+                        }
+                        
                     });
             
         } catch (Exception e) {
@@ -72,7 +61,7 @@ public class BaselineParser {
             
             // Java Stream is an implementation of map/filter/reduce in JDK
             Files.lines(Path.of(rdfFile)) // stream : does not carry any data
-                    .parallel()
+                    //.parallel()
                     .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
                     .forEach(line -> {
                         //System.out.println(line);
@@ -80,9 +69,6 @@ public class BaselineParser {
                         
                         //Track instances
                         if (classToInstances.containsKey(nodes[2])) {
-                            /*HashSet<String> h = classToInstances.get(nodes[2]);
-                            h.add(nodes[0]);
-                            classToInstances.put(nodes[2], h);*/
                             classToInstances.get(nodes[2]).add(nodes[0]);
                             
                         } else {
@@ -119,13 +105,8 @@ public class BaselineParser {
         BaselineParser parser = new BaselineParser(filePath);
         parser.firstPassWithStream();
         System.out.println(parser.classToInstanceCount.size());
-        //System.gc();
-        //parser.firstPassWithStream();
-/*        parser.secondPass();
         parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
         });
-        System.gc();*/
-        
     }
 }
