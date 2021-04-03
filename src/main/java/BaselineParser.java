@@ -17,8 +17,8 @@ public class BaselineParser {
     public String rdfFile = "";
     public final String RDFtype = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     
-    HashMap<String, Integer> classToInstanceCount = new HashMap<>(1000);
-    HashMap<String, HashSet<String>> classToInstances = new HashMap<>(1000);
+    HashMap<String, Integer> classToInstanceCount = new HashMap<>();
+    HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
     
     BaselineParser(String filePath) {
         this.rdfFile = filePath;
@@ -118,10 +118,10 @@ public class BaselineParser {
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
-        parser.firstPass();
-        System.out.println(parser.classToInstanceCount.size());
-        System.gc();
         parser.firstPassWithStream();
+        System.out.println(parser.classToInstanceCount.size());
+        //System.gc();
+        //parser.firstPassWithStream();
 /*        parser.secondPass();
         parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
