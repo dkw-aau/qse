@@ -51,7 +51,6 @@ public class BaselineParser {
         try {
             // Java Stream is an implementation of map/filter/reduce in JDK
             Files.lines(Path.of(rdfFile)) // stream : does not carry any data
-                    .parallel()
                     .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
                     .forEach(line -> {
                         String[] nodes = line.split(" ");
