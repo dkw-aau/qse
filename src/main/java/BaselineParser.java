@@ -15,15 +15,10 @@ import java.util.stream.Stream;
 
 public class BaselineParser {
     public String rdfFile = "";
-    //public final Integer expectedNumberOfClasses = 9000;
     public final String RDFtype = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     
-    //HashMaps declaration
-    //HashMap<String, Integer> classToInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor https://sites.google.com/site/markussprunck/blog-1/howtoinitializeajavahashmapwithreasonablevalues
-    //HashMap<String, HashSet<String>> classToInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<String, Integer> classToInstanceCount = new HashMap<>();
-    
-    HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
+    HashMap<String, Integer> classToInstanceCount = new HashMap<>(1000);
+    HashMap<String, HashSet<String>> classToInstances = new HashMap<>(1000);
     
     BaselineParser(String filePath) {
         this.rdfFile = filePath;
@@ -50,11 +45,32 @@ public class BaselineParser {
     }
     
     
+    public void firstPassWithStream() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            // Java Stream is an implementation of map/filter/reduce in JDK
+            Files.lines(Path.of(rdfFile)) // stream : does not carry any data
+                    .parallel()
+                    .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
+                    .forEach(line -> {
+                        String[] nodes = line.split(" ");
+                        classToInstanceCount.put(nodes[2], (classToInstanceCount.getOrDefault(nodes[2], 0)) + 1);
+                    });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed firstPassWithStream: " + watch.getTime());
+    }
+    
+    
     public void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-   
+            
             // Java Stream is an implementation of map/filter/reduce in JDK
             Files.lines(Path.of(rdfFile)) // stream : does not carry any data
                     .parallel()
@@ -69,7 +85,7 @@ public class BaselineParser {
                             h.add(nodes[0]);
                             classToInstances.put(nodes[2], h);*/
                             classToInstances.get(nodes[2]).add(nodes[0]);
-                     
+                            
                         } else {
                             HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
                             classToInstances.put(nodes[2], h);
@@ -105,11 +121,12 @@ public class BaselineParser {
         parser.firstPass();
         System.out.println(parser.classToInstanceCount.size());
         System.gc();
-        parser.secondPass();
+        parser.firstPassWithStream();
+/*        parser.secondPass();
         parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
         });
-        System.gc();
+        System.gc();*/
         
     }
 }
