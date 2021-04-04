@@ -1,17 +1,9 @@
 import org.apache.commons.lang3.time.StopWatch;
-import org.semanticweb.yars.nx.Node;
-import org.semanticweb.yars.nx.parser.NxParser;
-import org.semanticweb.yars.nx.parser.ParseException;
-import org.semanticweb.yars.nx.util.NxUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BaselineParser {
     public String rdfFile = "";
@@ -24,86 +16,39 @@ public class BaselineParser {
         this.rdfFile = filePath;
     }
     
-    public void firstPassWithStream() {
+    public void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
             // Java Stream is an implementation of map/filter/reduce in JDK
-            Files.lines(Path.of(rdfFile)) // stream : does not carry any data
-                    .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
-                    .forEach(line -> {
+            Files.lines(Path.of(rdfFile))                           // stream : does not carry any data
+                    .filter(line -> line.contains(RDFtype))         // An intermediate operation
+                    .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");
                         classToInstanceCount.put(nodes[2], (classToInstanceCount.getOrDefault(nodes[2], 0)) + 1);
     
                         //Track instances
                         if (classToInstances.containsKey(nodes[2])) {
-                            classToInstances.get(nodes[2]).add(nodes[0]);
+                            classToInstances.get(nodes[2]).add(line);
         
                         } else {
-                            HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
+                            HashSet<String> h = new HashSet<>() {{ add(line); }};
                             classToInstances.put(nodes[2], h);
                         }
-                        
                     });
             
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed firstPassWithStream: " + watch.getTime());
+        System.out.println("Time Elapsed firstPass: " + watch.getTime());
     }
     
-    
-    public void secondPass() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            
-            // Java Stream is an implementation of map/filter/reduce in JDK
-            Files.lines(Path.of(rdfFile)) // stream : does not carry any data
-                    //.parallel()
-                    .filter(line -> line.contains(RDFtype)) // intermediate operation - not a terminal operation
-                    .forEach(line -> {
-                        //System.out.println(line);
-                        String[] nodes = line.split(" ");
-                        
-                        //Track instances
-                        if (classToInstances.containsKey(nodes[2])) {
-                            classToInstances.get(nodes[2]).add(nodes[0]);
-                            
-                        } else {
-                            HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
-                            classToInstances.put(nodes[2], h);
-                        }
-                    });
-            
-          /*  Stream<String> lines = Files.lines(Path.of(rdfFile));
-            lines.forEach(s -> {
-                String[] nodes = s.split(" ");
-                
-                //Track instances
-                if (classToInstances.containsKey(nodes[2])) {
-                    HashSet<String> h = classToInstances.get(nodes[2]);
-                    h.add(nodes[0]);
-                    classToInstances.put(nodes[2], h);
-                } else {
-                    HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
-                    classToInstances.put(nodes[2], h);
-                }
-                
-            });*/
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        System.out.println("Time Elapsed secondPass: " + watch.getTime());
-    }
     
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
-        parser.firstPassWithStream();
+        parser.firstPass();
         System.out.println(parser.classToInstanceCount.size());
         parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
