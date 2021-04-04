@@ -32,7 +32,7 @@ public class BaselineParser {
                             classToInstances.get(nodes[2]).add(line);
         
                         } else {
-                            HashSet<String> h = new HashSet<>() {{ add(line); }};
+                            HashSet<String> h = new HashSet<String>() {{ add(line); }};
                             classToInstances.put(nodes[2], h);
                         }
                     });
