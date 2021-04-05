@@ -13,14 +13,23 @@ import static java.util.Comparator.comparingInt;
 
 
 public class BaselineParser {
+    
     public String rdfFile = "";
+    
+    // Constants
     public final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     public final String OntologyClass = "<http://www.w3.org/2002/07/owl#Ontology>";
+    
+    // Classes, instances, properties
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
     HashMap<String, HashSet<String>> classToProperties = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
+    HashMap<String, HashSet<String>> propertyToTypes = new HashMap<>();
+    
+    // Bloom Filters
     BloomFilter<CharSequence> subjObjBloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000_000, 0.01);
     
+    // Constructor
     BaselineParser(String filePath) {
         this.rdfFile = filePath;
     }
@@ -29,29 +38,25 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            // Java Stream is an implementation of map/filter/reduce in JDK
-            Files.lines(Path.of(rdfFile))                           // stream : does not carry any data
-                    //.filter(line -> line.contains(RDFType))         // An intermediate operation
+            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .forEach(line -> {                              // - A terminal operation
-                        String[] nodes = line.split(" ");     // parse a <subject> <predicate> <object> string
+                        String[] nodes = line.split(" ");     // - Parse a <subject> <predicate> <object> string
                         
-                        if(nodes[1].contains(RDFType)){
+                        if (nodes[1].contains(RDFType)) {
                             //Track instances
                             if (classToInstances.containsKey(nodes[2])) {
                                 classToInstances.get(nodes[2]).add(nodes[0]);
-        
+                                
                             } else {
                                 HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
                                 classToInstances.put(nodes[2], h);
                             }
                         }
-    
                         subjObjBloomFilter.put(nodes[0] + nodes[1]);
                         properties.add(nodes[1]);
-                      
                     });
-            
-            classToInstances.remove(OntologyClass);
+            //properties.remove(RDFType);
+            //classToInstances.remove(OntologyClass);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -63,14 +68,19 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // stream : does not carry any data
+            
+            properties.forEach(p -> {
+                propertyToTypes.put(p, new HashSet<>());
+            });
+            
+            Files.lines(Path.of(rdfFile))                      // - Stream of lines ~ Stream <String>
+                    //.filter(line -> !line.contains(RDFType))         // Filter RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // parse a <subject> <predicate> <object> string
-                        subjObjBloomFilter.put(nodes[0] + nodes[1]);
-                        properties.add(nodes[1]);
+                        
+                        //TODO: Try to find the types of properties, i.e., the type of object against a property
+                        propertyToTypes.get(nodes[1]).add(nodes[2]);
                     });
-            properties.remove(RDFType);
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,7 +95,7 @@ public class BaselineParser {
                 .stream()
                 .sorted(comparingInt(e -> e.getValue().size()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    
+        
         watch.stop();
         System.out.println("Time Elapsed prioritizeClasses: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
@@ -103,7 +113,7 @@ public class BaselineParser {
                     if (subjObjBloomFilter.mightContain(instance + p)) {
                         if (classToProperties.containsKey(classInstances.getKey())) {
                             classToProperties.get(classInstances.getKey()).add(p);
-        
+                            
                         } else {
                             HashSet<String> h = new HashSet<String>() {{ add(p); }};
                             classToProperties.put(classInstances.getKey(), h);
@@ -128,14 +138,18 @@ public class BaselineParser {
         parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
         });
-        
-        //parser.secondPass();
-        
+    
+        parser.secondPass();
+    
+        parser.propertyToTypes.forEach((k, v) -> {
+            System.out.println(k + " -> " + v.size());
+        });
+       
         System.out.println(parser.properties.size());
-        
         System.out.println(parser.properties);
-        
         parser.propsExtractor();
-        parser.classToProperties.forEach((k,v) -> {System.out.println(k + " -> " +v);});
+        parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
+    
+        
     }
 }
