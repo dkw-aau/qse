@@ -31,18 +31,24 @@ public class BaselineParser {
         try {
             // Java Stream is an implementation of map/filter/reduce in JDK
             Files.lines(Path.of(rdfFile))                           // stream : does not carry any data
-                    .filter(line -> line.contains(RDFType))         // An intermediate operation
+                    //.filter(line -> line.contains(RDFType))         // An intermediate operation
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // parse a <subject> <predicate> <object> string
                         
-                        //Track instances
-                        if (classToInstances.containsKey(nodes[2])) {
-                            classToInstances.get(nodes[2]).add(nodes[0]);
-                            
-                        } else {
-                            HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
-                            classToInstances.put(nodes[2], h);
+                        if(nodes[1].contains(RDFType)){
+                            //Track instances
+                            if (classToInstances.containsKey(nodes[2])) {
+                                classToInstances.get(nodes[2]).add(nodes[0]);
+        
+                            } else {
+                                HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
+                                classToInstances.put(nodes[2], h);
+                            }
                         }
+    
+                        subjObjBloomFilter.put(nodes[0] + nodes[1]);
+                        properties.add(nodes[1]);
+                      
                     });
             
             classToInstances.remove(OntologyClass);
@@ -89,7 +95,8 @@ public class BaselineParser {
         watch.start();
         classToInstances.entrySet().forEach((classInstances -> {
             System.out.println(classInstances.getKey() + "-> \n");
-            
+            StopWatch innerWatch = new StopWatch();
+            innerWatch.start();
             classInstances.getValue().forEach(instance -> {
                 //instance is a <subject> string, the key is its type like subj rdf:type key
                 properties.forEach(p -> {
@@ -104,6 +111,7 @@ public class BaselineParser {
                     }
                 });
             });
+            System.out.println("Time Elapsed:" + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
         }));
         watch.stop();
         System.out.println("Time Elapsed propsExtractor: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
@@ -121,13 +129,13 @@ public class BaselineParser {
             System.out.println(k + " " + v.size());
         });
         
-        parser.secondPass();
+        //parser.secondPass();
         
         System.out.println(parser.properties.size());
         
         System.out.println(parser.properties);
         
         parser.propsExtractor();
-        parser.classToProperties.forEach((k,v) -> {System.out.println(k + " -> " + v.size());});
+        parser.classToProperties.forEach((k,v) -> {System.out.println(k + " -> " +v);});
     }
 }
