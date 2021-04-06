@@ -156,11 +156,7 @@ public class BaselineParser {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
         parser.firstPass();
-        System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + SizeOfAgent.fullSizeOf(parser.classToInstances));
-        System.out.println("Size - Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + SizeOfAgent.fullSizeOf(parser.classToPropWithObjType));
-        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + SizeOfAgent.fullSizeOf(parser.instanceToClass));
-        System.out.println("Size - Parser HashSet<String> properties: " + SizeOfAgent.fullSizeOf(parser.properties));
-    
+
         parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
@@ -175,10 +171,13 @@ public class BaselineParser {
             });
             System.out.println();
         });
-        
-        
-         System.out.println("Size - Parser HashMap<String, HashSet<String>> propertyToTypes: " + SizeOfAgent.fullSizeOf(parser.propertyToTypes));
+    
+       /* System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + SizeOfAgent.fullSizeOf(parser.classToInstances));
+        System.out.println("Size - Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + SizeOfAgent.fullSizeOf(parser.classToPropWithObjType));
+        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + SizeOfAgent.fullSizeOf(parser.instanceToClass));
+        System.out.println("Size - Parser HashSet<String> properties: " + SizeOfAgent.fullSizeOf(parser.properties));
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> propertyToTypes: " + SizeOfAgent.fullSizeOf(parser.propertyToTypes));
         System.out.println("Size - Parser BloomFilter<CharSequence> subjObjBloomFilter: " + SizeOfAgent.fullSizeOf(parser.subjObjBloomFilter));
-        System.out.println("Size - Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + SizeOfAgent.fullSizeOf(parser.objPropTypeBloomFilter));
+        System.out.println("Size - Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + SizeOfAgent.fullSizeOf(parser.objPropTypeBloomFilter));*/
     }
 }
