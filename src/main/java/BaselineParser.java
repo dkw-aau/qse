@@ -1,6 +1,7 @@
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
+import sizeof.agent.SizeOfAgent;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -60,8 +61,8 @@ public class BaselineParser {
                         subjObjBloomFilter.put(nodes[0] + nodes[1]);
                         properties.add(nodes[1]);
                     });
-            //properties.remove(RDFType);
-            //classToInstances.remove(OntologyClass);
+            properties.remove(RDFType);
+            classToInstances.remove(OntologyClass);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -111,7 +112,7 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         classToInstances.entrySet().forEach((classInstances -> {
-            System.out.print(classInstances.getKey() + "-> ");
+            System.out.print("Class: "+classInstances.getKey() + ". No. of Instances: " + classInstances.getValue().size() + " ... ");
             StopWatch innerWatch = new StopWatch();
             innerWatch.start();
             classInstances.getValue().forEach(instance -> {
@@ -120,31 +121,25 @@ public class BaselineParser {
                     if (subjObjBloomFilter.mightContain(instance + p)) {
                         
                         if (classToPropWithObjType.containsKey(classInstances.getKey())) {
-                            //classToProperties.get(classInstances.getKey()).add(p);
                             
-                            if (!propertyToTypes.get(p).isEmpty()) {
-                                if (propertyToTypes.get(p).size() > 1) {
-                                    List<String> objTypes = new ArrayList<>();
-                                    //Check existence of property to object reference for this instance"<instance><property><type of the object>"
-                                    propertyToTypes.get(p).forEach(objType -> {
-                                        if(objPropTypeBloomFilter.mightContain(instance + p + objType)){
-                                            objTypes.add(objType);
-                                        }
-                                    });
-                                    classToPropWithObjType.get(classInstances.getKey()).put(p, objTypes.toString());
-                                   
-                                } else {
-                                    // only one type
-                                    classToPropWithObjType.get(classInstances.getKey()).put(p, propertyToTypes.get(p).toString());
-                                }
+                            if (propertyToTypes.get(p).size() > 1) {
+                                List<String> objTypes = new ArrayList<>();
+                                //Check existence of property to object reference for this instance"<instance><property><type of the object>"
+                                propertyToTypes.get(p).forEach(objType -> {
+                                    if (objPropTypeBloomFilter.mightContain(instance + p + objType)) {
+                                        objTypes.add(objType);
+                                    }
+                                });
+                                classToPropWithObjType.get(classInstances.getKey()).put(p, objTypes.toString());
+                                
                             } else {
-                                //literal
-                                classToPropWithObjType.get(classInstances.getKey()).put(p, "<LITERAL>");
+                                // only one type
+                                classToPropWithObjType.get(classInstances.getKey()).put(p, propertyToTypes.get(p).toString());
                             }
                             
                         } else {
                             HashMap<String, String> propToType = new HashMap<>();
-                            propToType.put(classInstances.getKey(), propertyToTypes.get(p).toString());
+                            propToType.put(p, propertyToTypes.get(p).toString());
                             classToPropWithObjType.put(classInstances.getKey(), propToType);
                         }
                     }
@@ -161,23 +156,12 @@ public class BaselineParser {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
         parser.firstPass();
-        
-        //System.out.println(parser.classToInstances.size());
-        
-        parser.classToInstances.forEach((k, v) -> {
-            System.out.println(k + " " + v.size());
-        });
-        
         parser.secondPass();
+        System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
-        parser.propertyToTypes.forEach((k, v) -> {
-            System.out.println(k + " -> " + v);
-        });
-        
-        System.out.println(parser.properties.size());
-        System.out.println(parser.properties);
+        parser.prioritizeClasses();
         parser.propsExtractor();
-        //parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
+       
         System.out.println("*****");
         parser.classToPropWithObjType.forEach((k, v) -> {
             System.out.println(k + " -> ");
@@ -187,10 +171,13 @@ public class BaselineParser {
             System.out.println();
         });
         
-        //System.out.println(ClassLayout.parseInstance(parser.classToInstances).toPrintable());
         
-        /*System.out.println(SizeOfAgent.fullSizeOf(parser.properties));
-        System.out.println(SizeOfAgent.fullSizeOf(parser.classToInstances));*/
-        
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + SizeOfAgent.fullSizeOf(parser.classToInstances));
+        System.out.println("Size - Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + SizeOfAgent.fullSizeOf(parser.classToPropWithObjType));
+        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + SizeOfAgent.fullSizeOf(parser.instanceToClass));
+        System.out.println("Size - Parser HashSet<String> properties: " + SizeOfAgent.fullSizeOf(parser.properties));
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> propertyToTypes: " + SizeOfAgent.fullSizeOf(parser.propertyToTypes));
+        System.out.println("Size - Parser BloomFilter<CharSequence> subjObjBloomFilter: " + SizeOfAgent.fullSizeOf(parser.subjObjBloomFilter));
+        System.out.println("Size - Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + SizeOfAgent.fullSizeOf(parser.objPropTypeBloomFilter));
     }
 }
