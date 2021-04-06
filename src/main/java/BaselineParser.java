@@ -1,5 +1,6 @@
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import net.sourceforge.sizeof.SizeOf;
 import org.apache.commons.lang3.time.StopWatch;
 
 import org.openjdk.jol.info.ClassLayout;
@@ -26,7 +27,7 @@ public class BaselineParser {
     // Classes, instances, properties
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
     HashMap<String, HashSet<String>> classToProperties = new HashMap<>();
-    HashMap<String, HashSet<String>> instanceToClass = new HashMap<>();
+    HashMap<String, String> instanceToClass = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
     HashMap<String, HashSet<String>> propertyToTypes = new HashMap<>();
     
@@ -50,24 +51,14 @@ public class BaselineParser {
                             //Track instances per class
                             if (classToInstances.containsKey(nodes[2])) {
                                 classToInstances.get(nodes[2]).add(nodes[0]);
-                                
-                                
                             } else {
                                 HashSet<String> cti = new HashSet<String>() {{ add(nodes[0]); }};
                                 classToInstances.put(nodes[2], cti);
-                                
-                                
                             }
+                            
                             // Track classes per instance
-                            if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).add(nodes[2]);
-                            } else {
-                                HashSet<String> itc = new HashSet<String>() {{ add(nodes[2]); }};
-                                instanceToClass.put(nodes[0], itc);
-                            }
+                            instanceToClass.put(nodes[0], nodes[2]);
                         }
-                        
-                        
                         subjObjBloomFilter.put(nodes[0] + nodes[1]);
                         properties.add(nodes[1]);
                     });
@@ -90,14 +81,12 @@ public class BaselineParser {
             });
             
             Files.lines(Path.of(rdfFile))                      // - Stream of lines ~ Stream <String>
-                    //.filter(line -> !line.contains(RDFType))         // Filter RDF type triples
+                    .filter(line -> !line.contains(RDFType))         // Filter RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // parse a <subject> <predicate> <object> string
-                        
-                        //TODO: Try to find the types of properties, i.e., the type of object against a property
-                        propertyToTypes.get(nodes[1]).add(nodes[2]);
+                        //for this triple, I want to know, given a certain predicate, having its object, what is the type of its object, either it is literal or an IRI to some class
+                        propertyToTypes.get(nodes[1]).add(instanceToClass.get(nodes[2]));
                     });
-            
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,8 +138,10 @@ public class BaselineParser {
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
+        RDFVault rdfVault = new RDFVault();
         
         parser.firstPass();
+        
         //System.out.println(parser.classToInstances.size());
         
         /*   parser.classToInstances.forEach((k, v) -> {
@@ -159,15 +150,16 @@ public class BaselineParser {
         
         parser.secondPass();
         
-       /* parser.propertyToTypes.forEach((k, v) -> {
-            System.out.println(k + " -> " + v.size());
-        });*/
+        parser.propertyToTypes.forEach((k, v) -> {
+            System.out.println(k + " -> " + v);
+        });
         
         //System.out.println(parser.properties.size());
         //System.out.println(parser.properties);
         //parser.propsExtractor();
         //parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
         
-        System.out.println(ClassLayout.parseInstance(parser).toPrintable());
+        System.out.println(ClassLayout.parseInstance(parser.classToInstances).toPrintable());
+        
     }
 }

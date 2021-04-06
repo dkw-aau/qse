@@ -38,7 +38,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.openjdk.jol/jol-core
     implementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.15'
 
-
+    implementation files('lib/SizeOf.jar')
 }
 
 
