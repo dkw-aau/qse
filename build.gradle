@@ -36,9 +36,12 @@ dependencies {
     implementation 'gr.james:random-sampling:0.16'
 
     // https://mvnrepository.com/artifact/org.openjdk.jol/jol-core
-    implementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.15'
+    //implementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.15'
 
-    implementation files('lib/SizeOf.jar')
+    // https://mvnrepository.com/artifact/com.googlecode.sizeofag/sizeofag
+    implementation group: 'com.googlecode.sizeofag', name: 'sizeofag', version: '1.0.0'
+
+    //implementation files('jar')
 }
 
 

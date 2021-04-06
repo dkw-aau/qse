@@ -1,10 +1,6 @@
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import net.sourceforge.sizeof.SizeOf;
 import org.apache.commons.lang3.time.StopWatch;
-
-import org.openjdk.jol.info.ClassLayout;
-import org.openjdk.jol.info.GraphLayout;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,13 +22,15 @@ public class BaselineParser {
     
     // Classes, instances, properties
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
-    HashMap<String, HashSet<String>> classToProperties = new HashMap<>();
+    HashMap<String, HashMap<String, String>> classToPropWithObjType = new HashMap<>();
+    
     HashMap<String, String> instanceToClass = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
     HashMap<String, HashSet<String>> propertyToTypes = new HashMap<>();
     
     // Bloom Filters
     BloomFilter<CharSequence> subjObjBloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000_000, 0.01);
+    BloomFilter<CharSequence> objPropTypeBloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000_000, 0.01);
     
     // Constructor
     BaselineParser(String filePath) {
@@ -86,6 +84,8 @@ public class BaselineParser {
                         String[] nodes = line.split(" ");     // parse a <subject> <predicate> <object> string
                         //for this triple, I want to know, given a certain predicate, having its object, what is the type of its object, either it is literal or an IRI to some class
                         propertyToTypes.get(nodes[1]).add(instanceToClass.get(nodes[2]));
+                        // <instance> <property> <object> <type of the object> -> "<instance><property><type of the object>"
+                        objPropTypeBloomFilter.put(nodes[0] + nodes[1] + instanceToClass.get(nodes[2]));
                     });
             
         } catch (Exception e) {
@@ -118,12 +118,34 @@ public class BaselineParser {
                 //instance is a <subject> string, the key is its type like subj rdf:type key
                 properties.forEach(p -> {
                     if (subjObjBloomFilter.mightContain(instance + p)) {
-                        if (classToProperties.containsKey(classInstances.getKey())) {
-                            classToProperties.get(classInstances.getKey()).add(p);
+                        
+                        if (classToPropWithObjType.containsKey(classInstances.getKey())) {
+                            //classToProperties.get(classInstances.getKey()).add(p);
+                            
+                            if (!propertyToTypes.get(p).isEmpty()) {
+                                if (propertyToTypes.get(p).size() > 1) {
+                                    List<String> objTypes = new ArrayList<>();
+                                    //Check existence of property to object reference for this instance"<instance><property><type of the object>"
+                                    propertyToTypes.get(p).forEach(objType -> {
+                                        if(objPropTypeBloomFilter.mightContain(instance + p + objType)){
+                                            objTypes.add(objType);
+                                        }
+                                    });
+                                    classToPropWithObjType.get(classInstances.getKey()).put(p, objTypes.toString());
+                                   
+                                } else {
+                                    // only one type
+                                    classToPropWithObjType.get(classInstances.getKey()).put(p, propertyToTypes.get(p).toString());
+                                }
+                            } else {
+                                //literal
+                                classToPropWithObjType.get(classInstances.getKey()).put(p, "<LITERAL>");
+                            }
                             
                         } else {
-                            HashSet<String> h = new HashSet<String>() {{ add(p); }};
-                            classToProperties.put(classInstances.getKey(), h);
+                            HashMap<String, String> propToType = new HashMap<>();
+                            propToType.put(classInstances.getKey(), propertyToTypes.get(p).toString());
+                            classToPropWithObjType.put(classInstances.getKey(), propToType);
                         }
                     }
                 });
@@ -138,15 +160,13 @@ public class BaselineParser {
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
-        RDFVault rdfVault = new RDFVault();
-        
         parser.firstPass();
         
         //System.out.println(parser.classToInstances.size());
         
-        /*   parser.classToInstances.forEach((k, v) -> {
+        parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
-        });*/
+        });
         
         parser.secondPass();
         
@@ -154,12 +174,23 @@ public class BaselineParser {
             System.out.println(k + " -> " + v);
         });
         
-        //System.out.println(parser.properties.size());
-        //System.out.println(parser.properties);
-        //parser.propsExtractor();
+        System.out.println(parser.properties.size());
+        System.out.println(parser.properties);
+        parser.propsExtractor();
         //parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
+        System.out.println("*****");
+        parser.classToPropWithObjType.forEach((k, v) -> {
+            System.out.println(k + " -> ");
+            v.forEach((prop, type) -> {
+                System.out.println("\t " + prop + " ---->:" + type);
+            });
+            System.out.println();
+        });
         
-        System.out.println(ClassLayout.parseInstance(parser.classToInstances).toPrintable());
+        //System.out.println(ClassLayout.parseInstance(parser.classToInstances).toPrintable());
+        
+        /*System.out.println(SizeOfAgent.fullSizeOf(parser.properties));
+        System.out.println(SizeOfAgent.fullSizeOf(parser.classToInstances));*/
         
     }
 }
