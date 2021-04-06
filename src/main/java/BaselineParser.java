@@ -144,7 +144,8 @@ public class BaselineParser {
         watch.stop();
         System.out.println("Time Elapsed propsExtractor: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
-    @SuppressWarnings("restriction")
+    
+    
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
@@ -167,6 +168,6 @@ public class BaselineParser {
         //parser.propsExtractor();
         //parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
         
-        System.out.println(GraphLayout.parseInstance(parser).toFootprint());
+        System.out.println(ClassLayout.parseInstance(parser).toPrintable());
     }
 }
