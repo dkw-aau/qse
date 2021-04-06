@@ -2,6 +2,9 @@ import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
 
+import org.openjdk.jol.info.ClassLayout;
+import org.openjdk.jol.info.GraphLayout;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +26,7 @@ public class BaselineParser {
     // Classes, instances, properties
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>();
     HashMap<String, HashSet<String>> classToProperties = new HashMap<>();
+    HashMap<String, HashSet<String>> instanceToClass = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
     HashMap<String, HashSet<String>> propertyToTypes = new HashMap<>();
     
@@ -43,15 +47,27 @@ public class BaselineParser {
                         String[] nodes = line.split(" ");     // - Parse a <subject> <predicate> <object> string
                         
                         if (nodes[1].contains(RDFType)) {
-                            //Track instances
+                            //Track instances per class
                             if (classToInstances.containsKey(nodes[2])) {
                                 classToInstances.get(nodes[2]).add(nodes[0]);
                                 
+                                
                             } else {
-                                HashSet<String> h = new HashSet<String>() {{ add(nodes[0]); }};
-                                classToInstances.put(nodes[2], h);
+                                HashSet<String> cti = new HashSet<String>() {{ add(nodes[0]); }};
+                                classToInstances.put(nodes[2], cti);
+                                
+                                
+                            }
+                            // Track classes per instance
+                            if (instanceToClass.containsKey(nodes[0])) {
+                                instanceToClass.get(nodes[0]).add(nodes[2]);
+                            } else {
+                                HashSet<String> itc = new HashSet<String>() {{ add(nodes[2]); }};
+                                instanceToClass.put(nodes[0], itc);
                             }
                         }
+                        
+                        
                         subjObjBloomFilter.put(nodes[0] + nodes[1]);
                         properties.add(nodes[1]);
                     });
@@ -81,6 +97,8 @@ public class BaselineParser {
                         //TODO: Try to find the types of properties, i.e., the type of object against a property
                         propertyToTypes.get(nodes[1]).add(nodes[2]);
                     });
+            
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -104,7 +122,7 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         classToInstances.entrySet().forEach((classInstances -> {
-            System.out.println(classInstances.getKey() + "-> \n");
+            System.out.print(classInstances.getKey() + "-> ");
             StopWatch innerWatch = new StopWatch();
             innerWatch.start();
             classInstances.getValue().forEach(instance -> {
@@ -121,35 +139,34 @@ public class BaselineParser {
                     }
                 });
             });
-            System.out.println("Time Elapsed:" + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
+            System.out.print(" Time Elapsed:" + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()) + " Sec\n");
         }));
         watch.stop();
         System.out.println("Time Elapsed propsExtractor: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
-    
+    @SuppressWarnings("restriction")
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
         BaselineParser parser = new BaselineParser(filePath);
+        
         parser.firstPass();
-        parser.prioritizeClasses();
+        //System.out.println(parser.classToInstances.size());
         
-        System.out.println(parser.classToInstances.size());
-        
-        parser.classToInstances.forEach((k, v) -> {
+        /*   parser.classToInstances.forEach((k, v) -> {
             System.out.println(k + " " + v.size());
-        });
-    
-        parser.secondPass();
-    
-        parser.propertyToTypes.forEach((k, v) -> {
-            System.out.println(k + " -> " + v.size());
-        });
-       
-        System.out.println(parser.properties.size());
-        System.out.println(parser.properties);
-        parser.propsExtractor();
-        parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
-    
+        });*/
         
+        parser.secondPass();
+        
+       /* parser.propertyToTypes.forEach((k, v) -> {
+            System.out.println(k + " -> " + v.size());
+        });*/
+        
+        //System.out.println(parser.properties.size());
+        //System.out.println(parser.properties);
+        //parser.propsExtractor();
+        //parser.classToProperties.forEach((k, v) -> {System.out.println(k + " -> " + v);});
+        
+        System.out.println(GraphLayout.parseInstance(parser).toFootprint());
     }
 }
