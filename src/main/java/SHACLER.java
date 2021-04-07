@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 public class SHACLER {
     String classIRI = "";
-    HashMap<String, String> propToType;
+    HashMap<String, String> propToType = null;
     ValueFactory factory = SimpleValueFactory.getInstance();
     Model model = null;
     ModelBuilder builder = null;
@@ -43,7 +43,8 @@ public class SHACLER {
                 .add(SHACL.TARGET_CLASS, subj)
                 .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                 .add(SHACL.CLOSED, false);
-        if (!propToType.isEmpty()) {
+        
+        if (propToType != null) {
             propToType.forEach((prop, propType) -> {
                 prop = prop.replace("<", "").replace(">", "");
                 
