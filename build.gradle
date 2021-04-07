@@ -39,7 +39,12 @@ dependencies {
     //implementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.15'
 
     // https://mvnrepository.com/artifact/com.googlecode.sizeofag/sizeofag
-    implementation group: 'com.googlecode.sizeofag', name: 'sizeofag', version: '1.0.0'
+    // does not work on server
+    //implementation group: 'com.googlecode.sizeofag', name: 'sizeofag', version: '1.0.0'
+
+    // https://mvnrepository.com/artifact/org.ehcache/sizeof
+    implementation group: 'org.ehcache', name: 'sizeof', version: '0.4.0'
+
 
     //implementation files('jar')
 }

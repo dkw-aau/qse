@@ -1,7 +1,7 @@
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
-import sizeof.agent.SizeOfAgent;
+import org.ehcache.sizeof.SizeOf;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -172,12 +172,13 @@ public class BaselineParser {
             System.out.println();
         });
     
-       /* System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + SizeOfAgent.fullSizeOf(parser.classToInstances));
-        System.out.println("Size - Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + SizeOfAgent.fullSizeOf(parser.classToPropWithObjType));
-        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + SizeOfAgent.fullSizeOf(parser.instanceToClass));
-        System.out.println("Size - Parser HashSet<String> properties: " + SizeOfAgent.fullSizeOf(parser.properties));
-        System.out.println("Size - Parser HashMap<String, HashSet<String>> propertyToTypes: " + SizeOfAgent.fullSizeOf(parser.propertyToTypes));
-        System.out.println("Size - Parser BloomFilter<CharSequence> subjObjBloomFilter: " + SizeOfAgent.fullSizeOf(parser.subjObjBloomFilter));
-        System.out.println("Size - Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + SizeOfAgent.fullSizeOf(parser.objPropTypeBloomFilter));*/
+        SizeOf sizeOf = SizeOf.newInstance();
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + sizeOf.deepSizeOf(parser.classToInstances));
+        System.out.println("Size - Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + sizeOf.deepSizeOf(parser.classToPropWithObjType));
+        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + sizeOf.deepSizeOf(parser.instanceToClass));
+        System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(parser.properties));
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> propertyToTypes: " + sizeOf.deepSizeOf(parser.propertyToTypes));
+        System.out.println("Size - Parser BloomFilter<CharSequence> subjObjBloomFilter: " + sizeOf.deepSizeOf(parser.subjObjBloomFilter));
+        System.out.println("Size - Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + sizeOf.deepSizeOf(parser.objPropTypeBloomFilter));
     }
 }
