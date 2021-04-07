@@ -1,3 +1,5 @@
+package extras;
+
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;

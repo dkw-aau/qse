@@ -1,9 +1,9 @@
-14.54.59: Executing task 'Parser.main()'...
+14.54.59: Executing task 'extras.Parser.main()'...
 
 > Task :compileJava
 > Task :processResources UP-TO-DATE
 > Task :classes
-> Task :Parser.main()
+> Task :extras.Parser.main()
 23
 [<http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchGroup>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Student>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Chair>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>, <http://www.w3.org/2002/07/owl#Ontology>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Publication>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>]
 <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work> -> 1079580
@@ -87,7 +87,7 @@ See https://docs.gradle.org/6.7/userguide/command_line_interface.html#sec:comman
 
 BUILD SUCCESSFUL in 8m 11s
 3 actionable tasks: 2 executed, 1 up-to-date
-15.03.10: Task execution finished 'Parser.main()'.
+15.03.10: Task execution finished 'extras.Parser.main()'.
 
 
 
@@ -101,12 +101,12 @@ Time Elapsed extractClassProperties: 250302 ~ 4.1717
 
 TOOK 25 minutes in total
 
-15.52.32: Executing task 'Parser.main()'...
+15.52.32: Executing task 'extras.Parser.main()'...
 
 > Task :compileJava
 > Task :processResources UP-TO-DATE
 > Task :classes
-> Task :Parser.main()
+> Task :extras.Parser.main()
 23
 [<http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchGroup>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Student>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Chair>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>, <http://www.w3.org/2002/07/owl#Ontology>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Publication>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>]
 <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work> -> 1,079,580
@@ -401,7 +401,7 @@ See https://docs.gradle.org/6.7/userguide/command_line_interface.html#sec:comman
 
 BUILD SUCCESSFUL in 24m 59s
 3 actionable tasks: 2 executed, 1 up-to-date
-16.17.32: Task execution finished 'Parser.main()'.
+16.17.32: Task execution finished 'extras.Parser.main()'.
 
 
 

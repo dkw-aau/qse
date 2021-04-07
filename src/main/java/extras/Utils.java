@@ -1,3 +1,5 @@
+package extras;
+
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
