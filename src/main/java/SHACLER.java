@@ -4,7 +4,6 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
-import org.eclipse.rdf4j.model.vocabulary.FOAF;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -50,7 +49,6 @@ public class SHACLER {
             
             IRI property = factory.createIRI(prop);
             IRI propShape = factory.createIRI("sh:" + property.getLocalName()+ subj.getLocalName() + "ShapeProperty");
-            //IRI propShapeBN = SHACL.BLANK_NODE;
             b.subject(nodeShape)
                     .add(SHACL.PROPERTY, propShape);
             b.subject(propShape)

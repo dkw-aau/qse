@@ -1,20 +1,34 @@
-###Setup
-Using gradle 6.8.3 & Java "11.0.10"
+## Anytime Algorithm to Generate  Validating Schemas for RDF Datasets
 
-    gradle clean
+### Setup
 
-    gradle build
+Follow [these](https://sdkman.io/install) steps to install sdkman.
+1. List available java versions using
+    
+        skd list java
+   
+2. Install Java
 
-    gradle shadowJar
+        sdk install java 11.0.10.fx-zulu
 
-### LUBM Data Generation
+3. Install gradle 
 
-https://github.com/rvesse/lubm-uba
+        sdk install gradle 6.8.3
 
-### Results per method
+4. Build project
+       
+        gradle clean
+    
+        gradle build
+    
+        gradle shadowJar
 
-|           	|        method       	| parallel 	| No. of Triples 	| No. of Classes 	| Time in MS 	| Time in Seconds 	| Time in Minutes 	|
-|:---------:	|:-------------------:	|:--------:	|:--------------:	|:--------------:	|:----------:	|:---------------:	|:---------------:	|
-|  LUBM-500 	| Stream Over Triples 	|    no    	|   50 Million   	|       15       	|    35420   	|                 	|                 	|
-|  LUBM-500 	| Stream Over Triples 	|    no    	|   91 Million   	|       23       	|   156214   	|                 	|                 	|
-| LUBM-1000 	| Stream Over Triples 	|    no    	|   138 Million  	|       15       	|   113090   	|                 	|                 	|
+
+
+
+### Datasets
+1. #### LUBM
+    We use [uba](https://github.com/rvesse/lubm-uba) lubm data generator.
+
+2. #### YAGO-4
+    We use [English](https://yago-knowledge.org/downloads/yago-4) version of latest YAGO-4 dataset.
