@@ -27,7 +27,7 @@ public class SHACLER {
     }
     
     public void setParams(String classIRI, HashMap<String, String> propToType) {
-        this.classIRI = classIRI.replace("<","").replace(">", "");
+        this.classIRI = classIRI.replace("<", "").replace(">", "");
         this.propToType = propToType;
     }
     
@@ -43,29 +43,30 @@ public class SHACLER {
                 .add(SHACL.TARGET_CLASS, subj)
                 .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                 .add(SHACL.CLOSED, false);
-        
-        propToType.forEach((prop, propType) -> {
-            prop = prop.replace("<","").replace(">", "");
-            
-            IRI property = factory.createIRI(prop);
-            IRI propShape = factory.createIRI("sh:" + property.getLocalName()+ subj.getLocalName() + "ShapeProperty");
-            b.subject(nodeShape)
-                    .add(SHACL.PROPERTY, propShape);
-            b.subject(propShape)
-                    .add(SHACL.PATH, property)
-                    .add(SHACL.MIN_COUNT, 1)
-                    .add(SHACL.MAX_COUNT, 1);
-            
-            if (!propType.equals("[null]")) {
-                propType = propType.replace("<","").replace(">", "");
+        if (!propToType.isEmpty()) {
+            propToType.forEach((prop, propType) -> {
+                prop = prop.replace("<", "").replace(">", "");
+                
+                IRI property = factory.createIRI(prop);
+                IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
+                b.subject(nodeShape)
+                        .add(SHACL.PROPERTY, propShape);
                 b.subject(propShape)
-                        .add(SHACL.CLASS, propType)
-                        .add(SHACL.NODE_KIND, SHACL.IRI);
-            } else {
-                b.subject(propShape)
-                        .add(SHACL.DATATYPE, XSD.STRING);
-            }
-        });
+                        .add(SHACL.PATH, property)
+                        .add(SHACL.MIN_COUNT, 1)
+                        .add(SHACL.MAX_COUNT, 1);
+                
+                if (!propType.equals("[null]")) {
+                    propType = propType.replace("<", "").replace(">", "");
+                    b.subject(propShape)
+                            .add(SHACL.CLASS, propType)
+                            .add(SHACL.NODE_KIND, SHACL.IRI);
+                } else {
+                    b.subject(propShape)
+                            .add(SHACL.DATATYPE, XSD.STRING);
+                }
+            });
+        }
         
         m = b.build();
         printModel(m);
