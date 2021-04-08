@@ -124,7 +124,7 @@ public class BaselineParser {
                     if (subjObjBloomFilter.mightContain(instance + p)) {
                         
                         if (classToPropWithObjType.containsKey(classInstances.getKey())) {
-                            
+                            // in case the property have more than one type of objects
                             if (propertyToTypes.get(p).size() > 1) {
                                 List<String> objTypes = new ArrayList<>();
                                 //Check existence of property to object reference for this instance"<instance><property><type of the object>"
@@ -136,10 +136,9 @@ public class BaselineParser {
                                 classToPropWithObjType.get(classInstances.getKey()).put(p, objTypes.toString());
                                 
                             } else {
-                                // only one type
+                                //only one type
                                 classToPropWithObjType.get(classInstances.getKey()).put(p, propertyToTypes.get(p).toString());
                             }
-                            
                         } else {
                             HashMap<String, String> propToType = new HashMap<>();
                             propToType.put(p, propertyToTypes.get(p).toString());

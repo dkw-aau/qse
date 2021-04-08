@@ -34,27 +34,18 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
     implementation 'gr.james:random-sampling:0.16'
-    
+
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-model
     implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-model', version: '3.6.2'
 
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-rio-turtle
     implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-rio-turtle', version: '3.6.2'
 
-
-
-    // https://mvnrepository.com/artifact/org.openjdk.jol/jol-core
-    //implementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.15'
-
-    // https://mvnrepository.com/artifact/com.googlecode.sizeofag/sizeofag
-    // does not work on server
-    //implementation group: 'com.googlecode.sizeofag', name: 'sizeofag', version: '1.0.0'
-
-    // https://mvnrepository.com/artifact/org.ehcache/sizeof
+    // https://mvnrepository.com/artifact/org.ehcache/sizeof -> https://github.com/ehcache/sizeof
     implementation group: 'org.ehcache', name: 'sizeof', version: '0.4.0'
 
 
-    //implementation files('jar')
+    //implementation files('address/file.jar')
 }
 
 
