@@ -162,7 +162,7 @@ public class BaselineParser {
         BaselineParser parser = new BaselineParser(filePath);
         parser.firstPass();
         
-        parser.secondPass();
+        //parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
         //parser.prioritizeClasses();
