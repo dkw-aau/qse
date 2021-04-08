@@ -165,8 +165,8 @@ public class BaselineParser {
         parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
-        parser.prioritizeClasses();
-        parser.propsExtractor();
+        //parser.prioritizeClasses();
+        //parser.propsExtractor();
         
         System.out.println("*****");
    /*     parser.classToPropWithObjType.forEach((k, v) -> {
@@ -176,7 +176,7 @@ public class BaselineParser {
             });
             System.out.println();
         });*/
-        parser.shacler.printModel();
+        //parser.shacler.printModel();
         
         
         SizeOf sizeOf = SizeOf.newInstance();
