@@ -11,10 +11,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class SHACLER {
     String classIRI = "";
-    HashMap<String, String> propToType = null;
+    HashMap<String, HashSet<String>> propToType = null;
     ValueFactory factory = SimpleValueFactory.getInstance();
     Model model = null;
     ModelBuilder builder = null;
@@ -26,8 +27,9 @@ public class SHACLER {
         builder.setNamespace("shape", "http://shaclshapes.org/");
     }
     
-    public void setParams(String classIRI, HashMap<String, String> propToType) {
+    public void setParams(String classIRI, HashMap<String, HashSet<String>> propToType) {
         this.classIRI = classIRI.replace("<", "").replace(">", "");
+        
         this.propToType = propToType;
     }
     
@@ -45,7 +47,7 @@ public class SHACLER {
                 .add(SHACL.CLOSED, false);
         
         if (propToType != null) {
-            propToType.forEach((prop, propType) -> {
+            propToType.forEach((prop, propTypes) -> {
                 prop = prop.replace("<", "").replace(">", "");
                 
                 IRI property = factory.createIRI(prop);
@@ -57,15 +59,19 @@ public class SHACLER {
                         .add(SHACL.MIN_COUNT, 1)
                         .add(SHACL.MAX_COUNT, 1);
                 
-                if (!propType.equals("[null]")) {
-                    propType = propType.replace("<", "").replace(">", "");
-                    b.subject(propShape)
-                            .add(SHACL.CLASS, propType)
-                            .add(SHACL.NODE_KIND, SHACL.IRI);
-                } else {
-                    b.subject(propShape)
-                            .add(SHACL.DATATYPE, XSD.STRING);
-                }
+                propTypes.forEach(type -> {
+                    if (type != null) {
+                        type = type.replace("<", "").replace(">", "");
+                        b.subject(propShape)
+                                .add(SHACL.CLASS, type)
+                                .add(SHACL.NODE_KIND, SHACL.IRI);
+                    } else {
+                        b.subject(propShape)
+                                .add(SHACL.DATATYPE, XSD.STRING);
+                    }
+                });
+                
+               
             });
         }
         

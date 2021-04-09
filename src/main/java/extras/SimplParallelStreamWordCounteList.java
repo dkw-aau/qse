@@ -39,8 +39,8 @@ public class SimplParallelStreamWordCounteList {
                         wordCounts.put(word, new LongAdder());  // Create a new LongAdder
                     wordCounts.get(word).increment();           // Increment the LongAdder for each instance of a word
                 });
-        
-        
+
+
         wordCounts.keySet()
                 .stream()
                 .map(key -> String.format("%-10d %s", wordCounts.get(key).intValue(), key))

@@ -52,6 +52,6 @@ dependencies {
 shadowJar {
     mergeServiceFiles()
     manifest {
-        attributes 'Main-Class': 'SamplingParser'
+        attributes 'Main-Class': 'BaselineParser'
     }
 }

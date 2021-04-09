@@ -18,10 +18,10 @@ public class VariousFileReadingApproaches {
     VariousFileReadingApproaches(String filePath) {
         this.rdfFile = filePath;
     }
-    
+
     public void singlePassIterator() {
         StopWatch watch = new StopWatch();
-        
+
         try {
             FileInputStream rdf = new FileInputStream(rdfFile);
             NxParser nxp = new NxParser(rdf);
@@ -29,7 +29,7 @@ public class VariousFileReadingApproaches {
             watch.start();
             while (iterator.hasNext()) {
                 Node[] nodes = nxp.next();
-                
+
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -37,7 +37,7 @@ public class VariousFileReadingApproaches {
         watch.stop();
         System.out.println("Time Elapsed singlePassIterator: " + watch.getTime());
     }
-    
+
     /**
      * convert iterator to stream - not proven to be efficient: Java Heap Space issue on Server
      */
@@ -47,20 +47,20 @@ public class VariousFileReadingApproaches {
         try {
             FileInputStream rdf = new FileInputStream(rdfFile);
             NxParser nxp = new NxParser(rdf);
-            
+
             Iterator<Node[]> iterator = nxp.iterator();
-            
+
             Stream<Node[]> stream = StreamSupport.stream(nxp.spliterator(), true);
             System.out.println(StreamSupport.stream(nxp.spliterator(), true).count());
             stream.parallel().forEach(System.out::println);
-            
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed singlePassIteratorStreamer: " + watch.getTime());
     }
-    
+
     public void singlePassNioStreamFileReaderParallel() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -80,7 +80,7 @@ public class VariousFileReadingApproaches {
         watch.stop();
         System.out.println("Time Elapsed singlePassNioFileReaderParallel: " + watch.getTime());
     }
-    
+
     /**
      * This is the most efficient as compared to other parsing methods
      */
@@ -96,19 +96,19 @@ public class VariousFileReadingApproaches {
                     e.printStackTrace();
                 }
             });
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed singlePassNioFileReader: " + watch.getTime());
     }
-    
+
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
-        
+
         VariousFileReadingApproaches parser = new VariousFileReadingApproaches(filePath);
-        
+
         for (int i = 0; i < 10; i++) {
             System.out.println("Iteration " + i);
             parser.singlePassIterator();

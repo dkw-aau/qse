@@ -1,9 +1,6 @@
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
 import org.ehcache.sizeof.SizeOf;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -12,33 +9,28 @@ import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparingInt;
 
-
 public class BaselineParser {
-    
     public String rdfFile = "";
     SHACLER shacler = new SHACLER();
     
     // Constants
     public final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    public final String OntologyClass = "<http://www.w3.org/2002/07/owl#Ontology>";
-    private final int expectedNumberOfClasses = 25;
-    private final int expectedNumberOfProperties = 25;
+    private int expectedNumberOfClasses = 10000;
     
     // Classes, instances, properties
-    HashMap<String, HashSet<String>> classToInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor https://sites.google.com/site/markussprunck/blog-1/howtoinitializeajavahashmapwithreasonablevalues
-    HashMap<String, HashMap<String, String>> classToPropWithObjType = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    
+    HashMap<String, HashSet<String>> classToInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
+    HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     HashMap<String, String> instanceToClass = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
-    HashMap<String, HashSet<String>> propertyToTypes = new HashMap<>((int) ((expectedNumberOfProperties) / 0.75 + 1));
-    
-    // Bloom Filters
-    BloomFilter<CharSequence> subjObjBloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000_000, 0.01);
-    BloomFilter<CharSequence> objPropTypeBloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000_000, 0.01);
     
     // Constructor
     BaselineParser(String filePath) {
         this.rdfFile = filePath;
+    }
+    
+    BaselineParser(String filePath, String expSizeOfClasses) {
+        this.rdfFile = filePath;
+        this.expectedNumberOfClasses = Integer.parseInt(expSizeOfClasses);
     }
     
     public void firstPass() {
@@ -48,7 +40,6 @@ public class BaselineParser {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // - Parse a <subject> <predicate> <object> string
-                        
                         if (nodes[1].contains(RDFType)) {
                             //Track instances per class
                             if (classToInstances.containsKey(nodes[2])) {
@@ -57,15 +48,11 @@ public class BaselineParser {
                                 HashSet<String> cti = new HashSet<String>() {{ add(nodes[0]); }};
                                 classToInstances.put(nodes[2], cti);
                             }
-                            
                             // Track classes per instance
                             instanceToClass.put(nodes[0], nodes[2]);
                         }
-                        subjObjBloomFilter.put(nodes[0] + nodes[1]);
                         properties.add(nodes[1]);
                     });
-            properties.remove(RDFType);
-            classToInstances.remove(OntologyClass);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -77,21 +64,33 @@ public class BaselineParser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            properties.forEach(p -> {
-                propertyToTypes.put(p, new HashSet<>());
-            });
-            
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // - Parse a <subject> <predicate> <object> string
                         
-                        //for this triple, I want to know, given a certain predicate, having its object, what is the type of its object, either it is literal or an IRI to some class
-                        propertyToTypes.get(nodes[1]).add(instanceToClass.get(nodes[2]));
-                        //  "<instance> <property> <type of the object>"
-                        objPropTypeBloomFilter.put(nodes[0] + nodes[1] + instanceToClass.get(nodes[2]));
+                        if (classToPropWithObjTypes.containsKey(instanceToClass.get(nodes[0]))) {
+                            HashMap<String, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(instanceToClass.get(nodes[0]));
+                            if (propToObjTypes.containsKey(nodes[1])) {
+                                propToObjTypes.get(nodes[1]).add(instanceToClass.get(nodes[2]));
+                            } else {
+                                HashSet<String> objTypes = new HashSet<String>() {{
+                                    add(instanceToClass.get(nodes[2]));
+                                }};
+                                propToObjTypes.put(nodes[1], objTypes);
+                            }
+                            if (instanceToClass.get(nodes[0]) != null) {
+                                classToPropWithObjTypes.put(instanceToClass.get(nodes[0]), propToObjTypes);
+                            }
+                        } else {
+                            HashSet<String> objTypes = new HashSet<String>() {{add(instanceToClass.get(nodes[2]));}};
+                            HashMap<String, HashSet<String>> propToObjTypes = new HashMap<>();
+                            propToObjTypes.put(nodes[1], objTypes);
+                            if (instanceToClass.get(nodes[0]) != null) {
+                                classToPropWithObjTypes.put(instanceToClass.get(nodes[0]), propToObjTypes);
+                            }
+                        }
                     });
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -111,83 +110,35 @@ public class BaselineParser {
         System.out.println("Time Elapsed prioritizeClasses: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    public void propsExtractor() {
+    public void populateShapes() {
         StopWatch watch = new StopWatch();
         watch.start();
-        
-        classToInstances.entrySet().forEach((classInstances -> {
-            System.out.print("Class: " + classInstances.getKey() + ". No. of Instances: " + classInstances.getValue().size() + " ... ");
-            StopWatch innerWatch = new StopWatch();
-            innerWatch.start();
-            
-            classInstances.getValue().forEach(instance -> {
-                //instance is a <subject> string, the key is its type like subj rdf:type key
-                properties.forEach(p -> {
-                    if (subjObjBloomFilter.mightContain(instance + p)) {
-                        
-                        if (classToPropWithObjType.containsKey(classInstances.getKey())) {
-                            // in case the property have more than one type of objects
-                            if (propertyToTypes.get(p).size() > 1) {
-                                List<String> objTypes = new ArrayList<>();
-                                //Check existence of property to object reference for this instance"<instance><property><type of the object>"
-                                propertyToTypes.get(p).forEach(objType -> {
-                                    if (objPropTypeBloomFilter.mightContain(instance + p + objType)) {
-                                        objTypes.add(objType);
-                                    }
-                                });
-                                classToPropWithObjType.get(classInstances.getKey()).put(p, objTypes.toString());
-                                
-                            } else {
-                                //only one type
-                                classToPropWithObjType.get(classInstances.getKey()).put(p, propertyToTypes.get(p).toString());
-                            }
-                        } else {
-                            HashMap<String, String> propToType = new HashMap<>();
-                            propToType.put(p, propertyToTypes.get(p).toString());
-                            classToPropWithObjType.put(classInstances.getKey(), propToType);
-                        }
-                    }
-                });
-            });
-            shacler.setParams(classInstances.getKey(), classToPropWithObjType.get(classInstances.getKey()));
+        classToPropWithObjTypes.forEach((c, p) -> {
+            shacler.setParams(c, p);
             shacler.constructShape();
-            
-            System.out.print(" Time Elapsed:" + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()) + " Sec\n");
-        }));
+        });
         watch.stop();
-        System.out.println("Time Elapsed propsExtractor: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
-    
     
     public static void main(String[] args) throws Exception {
         String filePath = args[0];
-        BaselineParser parser = new BaselineParser(filePath);
+        String expectedNumberOfClasses = args[1];
+        BaselineParser parser = new BaselineParser(filePath, expectedNumberOfClasses);
         parser.firstPass();
         
-        //parser.secondPass();
+        parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
-        //parser.prioritizeClasses();
-        //parser.propsExtractor();
-        
+        parser.prioritizeClasses();
+        parser.populateShapes();
         System.out.println("*****");
-        /*     parser.classToPropWithObjType.forEach((k, v) -> {
-            System.out.println(k + " -> ");
-            v.forEach((prop, type) -> {
-                System.out.println("\t " + prop + " ---->:" + type);
-            });
-            System.out.println();
-        });*/
         //parser.shacler.printModel();
         
-        
         SizeOf sizeOf = SizeOf.newInstance();
-        System.out.println("Size - extras.Parser HashMap<String, HashSet<String>> classToInstances: " + sizeOf.deepSizeOf(parser.classToInstances));
-        System.out.println("Size - extras.Parser HashMap<String, HashMap<String, String>> classToPropWithObjType: " + sizeOf.deepSizeOf(parser.classToPropWithObjType));
-        System.out.println("Size - extras.Parser HashMap<String, String> instanceToClass: " + sizeOf.deepSizeOf(parser.instanceToClass));
-        System.out.println("Size - extras.Parser HashSet<String> properties: " + sizeOf.deepSizeOf(parser.properties));
-        System.out.println("Size - extras.Parser HashMap<String, HashSet<String>> propertyToTypes: " + sizeOf.deepSizeOf(parser.propertyToTypes));
-        System.out.println("Size - extras.Parser BloomFilter<CharSequence> subjObjBloomFilter: " + sizeOf.deepSizeOf(parser.subjObjBloomFilter));
-        System.out.println("Size - extras.Parser BloomFilter<CharSequence> objPropTypeBloomFilter: " + sizeOf.deepSizeOf(parser.objPropTypeBloomFilter));
+        System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + sizeOf.deepSizeOf(parser.classToInstances));
+        System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + sizeOf.deepSizeOf(parser.instanceToClass));
+        System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(parser.properties));
+        System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(parser.classToPropWithObjTypes));
     }
 }
