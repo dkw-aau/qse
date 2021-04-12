@@ -144,11 +144,6 @@ public class BaselineParser {
         String expectedNumberOfClasses = args[1];
         BaselineParser parser = new BaselineParser(filePath, expectedNumberOfClasses);
         parser.firstPass();
-        parser.instanceToClass.forEach((i, c) -> {
-            if (c.size() > 1) {
-                System.out.println(i + " ---- " + c);
-            }
-        });
         parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
