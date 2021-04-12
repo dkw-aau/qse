@@ -20,7 +20,7 @@ public class BaselineParser {
     // Classes, instances, properties
     HashMap<String, HashSet<String>> classToInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<String, String> instanceToClass = new HashMap<>();
+    HashMap<String, List<String>> instanceToClass = new HashMap<>();
     HashSet<String> properties = new HashSet<>();
     
     // Constructor
@@ -48,8 +48,17 @@ public class BaselineParser {
                                 HashSet<String> cti = new HashSet<String>() {{ add(nodes[0]); }};
                                 classToInstances.put(nodes[2], cti);
                             }
+                            
                             // Track classes per instance
-                            instanceToClass.put(nodes[0], nodes[2]);
+                            if (instanceToClass.containsKey(nodes[0])) {
+                                instanceToClass.get(nodes[0]).add(nodes[2]);
+                            } else {
+                                List<String> list = new ArrayList<>();
+                                list.add(nodes[2]);
+                                instanceToClass.put(nodes[0], list);
+                            }
+                            
+                            
                         }
                         properties.add(nodes[1]);
                     });
@@ -68,28 +77,37 @@ public class BaselineParser {
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         String[] nodes = line.split(" ");     // - Parse a <subject> <predicate> <object> string
-                        
-                        if (classToPropWithObjTypes.containsKey(instanceToClass.get(nodes[0]))) {
-                            HashMap<String, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(instanceToClass.get(nodes[0]));
-                            if (propToObjTypes.containsKey(nodes[1])) {
-                                propToObjTypes.get(nodes[1]).add(instanceToClass.get(nodes[2]));
-                            } else {
-                                HashSet<String> objTypes = new HashSet<String>() {{
-                                    add(instanceToClass.get(nodes[2]));
-                                }};
-                                propToObjTypes.put(nodes[1], objTypes);
-                            }
-                            if (instanceToClass.get(nodes[0]) != null) {
-                                classToPropWithObjTypes.put(instanceToClass.get(nodes[0]), propToObjTypes);
-                            }
-                        } else {
-                            HashSet<String> objTypes = new HashSet<String>() {{add(instanceToClass.get(nodes[2]));}};
-                            HashMap<String, HashSet<String>> propToObjTypes = new HashMap<>();
-                            propToObjTypes.put(nodes[1], objTypes);
-                            if (instanceToClass.get(nodes[0]) != null) {
-                                classToPropWithObjTypes.put(instanceToClass.get(nodes[0]), propToObjTypes);
-                            }
+                        if (instanceToClass.containsKey(nodes[0])) {
+                            instanceToClass.get(nodes[0]).forEach(c -> {
+                                if (classToPropWithObjTypes.containsKey(c)) {
+                                    HashMap<String, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                    if (propToObjTypes.containsKey(nodes[1])) {
+                                        propToObjTypes.get(nodes[1]).add(c);
+                                    } else {
+                                        HashSet<String> objTypes = new HashSet<String>() {{
+                                            add(c);
+                                        }};
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                    }
+                                    if (instanceToClass.get(nodes[0]) != null) {
+                                        classToPropWithObjTypes.put(c, propToObjTypes);
+                                    }
+                                } else {
+                                    HashSet<String> objTypes = new HashSet<String>();
+                                    if (instanceToClass.containsKey(nodes[2])) {
+                                        objTypes.addAll(instanceToClass.get(nodes[2]));
+                                    }
+                                    HashMap<String, HashSet<String>> propToObjTypes = new HashMap<>();
+                                    propToObjTypes.put(nodes[1], objTypes);
+                                    if (instanceToClass.get(nodes[0]) != null) {
+                                        instanceToClass.get(nodes[0]).forEach(cl -> {
+                                            classToPropWithObjTypes.put(cl, propToObjTypes);
+                                        });
+                                    }
+                                }
+                            });
                         }
+                        
                     });
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,14 +144,18 @@ public class BaselineParser {
         String expectedNumberOfClasses = args[1];
         BaselineParser parser = new BaselineParser(filePath, expectedNumberOfClasses);
         parser.firstPass();
-        
+        parser.instanceToClass.forEach((i, c) -> {
+            if (c.size() > 1) {
+                System.out.println(i + " ---- " + c);
+            }
+        });
         parser.secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classToInstances.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
         
         parser.prioritizeClasses();
         parser.populateShapes();
         System.out.println("*****");
-        //parser.shacler.printModel();
+        parser.shacler.printModel();
         
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + sizeOf.deepSizeOf(parser.classToInstances));
