@@ -162,7 +162,7 @@ public class BaselineParser {
     
     public static void measureMemoryUsage(BaselineParser parser) {
         SizeOf sizeOf = SizeOf.newInstance();
-        System.out.println("Size - Parser HashMap<String, HashSet<String>> classToInstances: " + sizeOf.deepSizeOf(parser.classInstanceCount));
+        System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(parser.classInstanceCount));
         System.out.println("Size - Parser HashMap<String, String> instanceToClass: " + sizeOf.deepSizeOf(parser.instanceToClass));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(parser.properties));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(parser.classToPropWithObjTypes));
