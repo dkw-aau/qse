@@ -9,13 +9,15 @@ import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
+import org.semanticweb.yars.nx.Node;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class SHACLER {
-    String classIRI = "";
-    HashMap<String, HashSet<String>> propToType = null;
+    String classIRI;
+    public final String SHAPES_NAMESPACE = "http://shaclshapes.org/";
+    HashMap<Node, HashSet<String>> propToType = null;
     ValueFactory factory = SimpleValueFactory.getInstance();
     Model model = null;
     ModelBuilder builder = null;
@@ -23,16 +25,13 @@ public class SHACLER {
     
     public SHACLER() {
         this.builder = new ModelBuilder();
-        // set some namespaces
-        builder.setNamespace("shape", "http://shaclshapes.org/");
+        builder.setNamespace("shape", SHAPES_NAMESPACE);
     }
     
-    public void setParams(String classIRI, HashMap<String, HashSet<String>> propToType) {
-        this.classIRI = classIRI.replace("<", "").replace(">", "");
-        
+    public void setParams(Node classNode, HashMap<Node, HashSet<String>> propToType) {
+        this.classIRI = classNode.getLabel();
         this.propToType = propToType;
     }
-    
     
     public void constructShape() {
         Model m = null;
@@ -48,30 +47,32 @@ public class SHACLER {
         
         if (propToType != null) {
             propToType.forEach((prop, propTypes) -> {
-                prop = prop.replace("<", "").replace(">", "");
-                
-                IRI property = factory.createIRI(prop);
+                IRI property = factory.createIRI(prop.getLabel());
                 IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
                 b.subject(nodeShape)
                         .add(SHACL.PROPERTY, propShape);
                 b.subject(propShape)
                         .add(SHACL.PATH, property)
-                        .add(SHACL.MIN_COUNT, 1)
-                        .add(SHACL.MAX_COUNT, 1);
+                        .add(SHACL.MIN_COUNT, 1);
+                //.add(SHACL.MAX_COUNT, 1);
                 
                 propTypes.forEach(type -> {
                     if (type != null) {
-                        type = type.replace("<", "").replace(">", "");
-                        b.subject(propShape)
-                                .add(SHACL.CLASS, type)
-                                .add(SHACL.NODE_KIND, SHACL.IRI);
+                        if (type.contains(XSD.NAMESPACE) || type.contains(RDF.LANGSTRING.toString())) {
+                            b.subject(propShape)
+                                    .add(SHACL.DATATYPE, type);
+                        } else {
+                            type = type.replace("<", "").replace(">", "");
+                            b.subject(propShape)
+                                    .add(SHACL.CLASS, type)
+                                    .add(SHACL.NODE_KIND, SHACL.IRI);
+                        }
                     } else {
+                        // in case the type is null, we set it default as string
                         b.subject(propShape)
                                 .add(SHACL.DATATYPE, XSD.STRING);
                     }
                 });
-                
-               
             });
         }
         
@@ -92,4 +93,6 @@ public class SHACLER {
     public void printModel(Model m) {
         Rio.write(m, System.out, RDFFormat.TURTLE);
     }
+    
+    
 }
