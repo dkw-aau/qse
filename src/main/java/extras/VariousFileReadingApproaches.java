@@ -88,8 +88,7 @@ public class VariousFileReadingApproaches {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Stream<String> lines = Files.lines(Path.of(rdfFile));
-            lines.forEach(s -> {
+            Files.lines(Path.of(rdfFile)).forEach(s -> {
                 try {
                     Node[] x = NxParser.parseNodes(s);
                 } catch (ParseException e) {
@@ -101,7 +100,7 @@ public class VariousFileReadingApproaches {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed singlePassNioFileReader: " + watch.getTime());
+        System.out.println("Time Elapsed singlePassNioStreamFileReader: " + watch.getTime());
     }
 
     public static void main(String[] args) throws Exception {
@@ -109,14 +108,10 @@ public class VariousFileReadingApproaches {
 
         VariousFileReadingApproaches parser = new VariousFileReadingApproaches(filePath);
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             System.out.println("Iteration " + i);
-            parser.singlePassIterator();
-            System.gc();
             parser.singlePassNioStreamFileReader();
-            System.gc();
-            parser.singlePassNioStreamFileReaderParallel();
-            System.gc();
+        
         }
     }
 }
