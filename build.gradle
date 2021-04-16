@@ -53,6 +53,6 @@ dependencies {
 shadowJar {
     mergeServiceFiles()
     manifest {
-        attributes 'Main-Class': 'VariousFileReadingApproaches'
+        attributes 'Main-Class': 'extras.VariousFileReadingApproaches'
     }
 }
