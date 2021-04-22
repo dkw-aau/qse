@@ -27,10 +27,22 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
-    implementation 'org.semanticweb.yars:nxparser-parsers:4.0.0'
+
 
     // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-utilities-uri
-    implementation group: 'org.semanticweb.yars', name: 'nxparser-utilities-uri', version: '4.0.0'
+    //implementation group: 'org.semanticweb.yars', name: 'nxparser-utilities-uri', version: '4.0.0'
+
+    // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser
+    implementation group: 'org.semanticweb.yars', name: 'nxparser', version: '4.0.0', ext: 'pom'
+
+    // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-model
+    implementation group: 'org.semanticweb.yars', name: 'nxparser-model', version: '4.0.0'
+
+// https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-parsers
+    implementation group: 'org.semanticweb.yars', name: 'nxparser-parsers', version: '4.0.0'
+
+
+
 
     implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
 
@@ -47,6 +59,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.ehcache/sizeof -> https://github.com/ehcache/sizeof
     implementation group: 'org.ehcache', name: 'sizeof', version: '0.4.0'
 
+    // https://mvnrepository.com/artifact/org.mapdb/mapdb
+    implementation group: 'org.mapdb', name: 'mapdb', version: '3.0.8'
+
     //implementation files('address/file.jar')
 }
 
@@ -54,6 +69,6 @@ dependencies {
 shadowJar {
     mergeServiceFiles()
     manifest {
-        attributes 'Main-Class': 'BaselineParser'
+        attributes 'Main-Class': 'cs.Main'
     }
 }

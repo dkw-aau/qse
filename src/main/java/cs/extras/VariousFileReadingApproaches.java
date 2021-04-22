@@ -1,4 +1,4 @@
-package extras;
+package cs.extras;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;

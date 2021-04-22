@@ -1,3 +1,7 @@
+package cs.parsers;
+import org.apache.commons.io.FilenameUtils;
+import cs.Main;
+import cs.utils.ConfigManager;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Statement;
@@ -11,6 +15,9 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.semanticweb.yars.nx.Node;
 
+import java.io.FileWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -77,7 +84,7 @@ public class SHACLER {
         }
         
         m = b.build();
-        printModel(m);
+        //printModel(m);
         model = builder.build();
         model.addAll(m);
     }
@@ -88,6 +95,18 @@ public class SHACLER {
     
     public void printModel() {
         Rio.write(model, System.out, RDFFormat.TURTLE);
+    }
+    
+    public void writeModelToFile() {
+        Path path = Paths.get(Main.datasetPath);
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "-SHACL.ttl";
+        System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
+        try {
+            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            Rio.write(model, fileWriter, RDFFormat.TURTLE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     public void printModel(Model m) {

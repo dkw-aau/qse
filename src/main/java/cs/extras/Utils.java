@@ -1,12 +1,4 @@
-package extras;
-
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
-import org.apache.commons.lang3.time.StopWatch;
-import org.semanticweb.yars.nx.parser.NxParser;
-
-import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
+package cs.extras;
 
 public class Utils {
 

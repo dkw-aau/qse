@@ -1,3 +1,5 @@
+package cs.parsers;
+
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -9,17 +11,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static java.util.Comparator.comparingInt;
 
 public class BaselineParser {
-    public String rdfFile = "";
+    String rdfFile = "";
     SHACLER shacler = new SHACLER();
     
     // Constants
-    public final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    private int expectedNumberOfClasses = 10000;
+    final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
+    int expectedNumberOfClasses = 10000;
     
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -32,12 +31,12 @@ public class BaselineParser {
         this.rdfFile = filePath;
     }
     
-    BaselineParser(String filePath, String expSizeOfClasses) {
+    public BaselineParser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
-        this.expectedNumberOfClasses = Integer.parseInt(expSizeOfClasses);
+        this.expectedNumberOfClasses = expSizeOfClasses;
     }
     
-    public void firstPass() {
+    private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -66,7 +65,7 @@ public class BaselineParser {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    public void secondPass() {
+    private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -125,7 +124,7 @@ public class BaselineParser {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    public void populateShapes() {
+    private void populateShapes() {
         StopWatch watch = new StopWatch();
         watch.start();
         classToPropWithObjTypes.forEach((c, p) -> {
@@ -136,7 +135,7 @@ public class BaselineParser {
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    public String getType(String value) {
+    private String getType(String value) {
         String theType = "<http://www.w3.org/2001/XMLSchema#string>"; //default type is XSD:string
         
         if (value.contains("\"^^")) {
@@ -151,28 +150,24 @@ public class BaselineParser {
         return theType;
     }
     
-    public static void runParser(BaselineParser parser) {
-        parser.firstPass();
-        parser.secondPass();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + parser.classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + parser.properties.size());
-        parser.populateShapes();
-        System.out.println("******** OUTPUT COMPLETE SHAPES GRAPH");
-        parser.shacler.printModel();
+    private void runParser() {
+        firstPass();
+        secondPass();
+        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
+        populateShapes();
+        shacler.writeModelToFile();
     }
     
-    public static void measureMemoryUsage(BaselineParser parser) {
+    private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
-        System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(parser.classInstanceCount));
-        System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(parser.instanceToClass));
-        System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(parser.properties));
-        System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(parser.classToPropWithObjTypes));
+        System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
+        System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
+        System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
+        System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
     
-    public static void main(String[] args) throws Exception {
-        String filePath = args[0];
-        String expectedNumberOfClasses = args[1];
-        BaselineParser parser = new BaselineParser(filePath, expectedNumberOfClasses);
-        runParser(parser);
-        measureMemoryUsage(parser);
+    public void run() {
+        runParser();
+        measureMemoryUsage();
     }
 }

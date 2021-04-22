@@ -1,13 +1,13 @@
-package extras;
+package cs.extras;
 
 import java.util.Arrays;
 
 /**
- * extras.RDFVault is a trie-based compact in-memory dictionary encoder especially tuned for RDF data.
+ * cs.extras.RDFVault is a trie-based compact in-memory dictionary encoder especially tuned for RDF data.
  * It is based on a enhanced version of List-Trie which both fast and memory efficient, especially
  * for strings that have long common prefixes
  * <p>
- * extras.RDFVault does not map each string to a calculated numerical ID, but instead, it maps each string
+ * cs.extras.RDFVault does not map each string to a calculated numerical ID, but instead, it maps each string
  * to a memory location from where the string can be reconstructed again. Thus, the dictionary coder
  * which often requires two data structures to be constructed is confined into a single data structure,
  * saving memory and time.
