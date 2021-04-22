@@ -1,7 +1,7 @@
 package cs;
 
-import cs.parsers.BaselineParser;
 import cs.parsers.MemOptimalParser;
+import cs.parsers.OnDiskMapParser;
 import cs.utils.ConfigManager;
 
 public class Main {
@@ -17,6 +17,9 @@ public class Main {
         //BaselineParser baselineParser = new BaselineParser(datasetPath, numberOfClasses);
         //baselineParser.run();
         
+        //OnDiskMapParser onDiskMapParser = new OnDiskMapParser(datasetPath, numberOfClasses);
+        //onDiskMapParser.run();
+    
         MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
         memOptimalParser.run();
     }

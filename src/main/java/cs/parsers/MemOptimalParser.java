@@ -1,19 +1,15 @@
 package cs.parsers;
 
-import com.github.jsonldjava.shaded.com.google.common.hash.BloomFilter;
-import com.github.jsonldjava.shaded.com.google.common.hash.Funnels;
-import cs.utils.ConfigManager;
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnels;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -23,7 +19,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
-public class OnDiskMapParser {
+public class MemOptimalParser {
     private String rdfFile = "";
     private SHACLER shacler = new SHACLER();
     
@@ -34,21 +30,18 @@ public class OnDiskMapParser {
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    //HashMap<Node, List<Node>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
     
-    //Map DB
-    DB db = DBMaker.fileDB(ConfigManager.getProperty("mapdb_file_path")).make();
-    HTreeMap mapdb = db.hashMap("instanceToClassMap").create();
+    //Bloom Filter Mapping classes to instances
+    HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
     
     // Constructor
-    public OnDiskMapParser(String filePath, int expSizeOfClasses) {
+    public MemOptimalParser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
     }
     
     private void firstPass() {
-        
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -58,14 +51,13 @@ public class OnDiskMapParser {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
-                            if (mapdb.containsKey(nodes[0])) {
-                                List<Node> list = (List<Node>) mapdb.get(nodes[0]);
-                                list.add(nodes[2]);
-                                mapdb.put(nodes[0], list);
+                            
+                            if (ctiBf.containsKey(nodes[2])) {
+                                ctiBf.get(nodes[2]).put(nodes[0].getLabel());
                             } else {
-                                List<Node> list = new ArrayList<>();
-                                list.add(nodes[2]);
-                                mapdb.put(nodes[0], list);
+                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
+                                bf.put(nodes[0].getLabel());
+                                ctiBf.put(nodes[2], bf);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -87,45 +79,43 @@ public class OnDiskMapParser {
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (mapdb.containsKey(nodes[0])) {
-                                List<Node> classList = (List<Node>) mapdb.get(nodes[0]);
-                                classList.forEach(c -> {
-                                    if (classToPropWithObjTypes.containsKey(c)) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-                                        HashSet<String> objTypes = new HashSet<String>();
-                                        if (mapdb.containsKey(nodes[2])) // object is an instance of some class e.g., :Paris is an instance of :City.
-                                            ((List<Node>) mapdb.get(nodes[0])).forEach(node -> {
-                                                objTypes.add(node.toString());
-                                            });
-                                        else {
-                                            objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
-                                        }
-                                        if (propToObjTypes.containsKey(nodes[1]))
-                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                        else {
-                                            propToObjTypes.put(nodes[1], objTypes);
-                                        }
-                                        classToPropWithObjTypes.put(c, propToObjTypes);
-                                        
-                                        
-                                    } else {
-                                        HashSet<String> objTypes = new HashSet<String>();
-                                        if (mapdb.containsKey(nodes[2]))  // object is an instance of some class e.g., :Paris is an instance of :City.
-                                            ((List<Node>) mapdb.get(nodes[0])).forEach(node -> {
-                                                objTypes.add(node.toString());
-                                            });
-                                        else {
-                                            objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
-                                        }
-                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                            
+                            //What's the type of this instance?
+                            //To find the type, you need to iterate over the ctiBf and check in all the bloom filters
+                            List<Node> instanceTypes = new ArrayList<>();
+                            HashSet<String> objTypes = new HashSet<String>();
+                            ctiBf.forEach((c, bf) -> {
+                                if (bf.mightContain(nodes[0].getLabel())) {
+                                    instanceTypes.add(c);
+                                }
+                                if (bf.mightContain(nodes[2].getLabel())) {
+                                    objTypes.add(c.getLabel());
+                                }
+                            });
+                            
+                            instanceTypes.forEach(c -> {
+                                if (classToPropWithObjTypes.containsKey(c)) {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+    
+                                    if (propToObjTypes.containsKey(nodes[1]))
+                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                    else {
                                         propToObjTypes.put(nodes[1], objTypes);
-                                        
-                                        ((List<Node>) mapdb.get(nodes[0])).forEach(cl -> {
-                                            classToPropWithObjTypes.put(cl, propToObjTypes);
-                                        });
                                     }
-                                });
-                            }
+                                    classToPropWithObjTypes.put(c, propToObjTypes);
+                                    
+                                } else {
+                                    //HashSet<String> objTypes = new HashSet<String>();
+                                    if (objTypes.isEmpty()) {
+                                        objTypes.add(getType(nodes[2].toString()));
+                                    }
+                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                    propToObjTypes.put(nodes[1], objTypes);
+                                    instanceTypes.forEach(type -> {
+                                        classToPropWithObjTypes.put(type, propToObjTypes);
+                                    });
+                                }
+                            });
                             properties.add(nodes[1]);
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -175,24 +165,13 @@ public class OnDiskMapParser {
     private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
-        System.out.println("Size - Parser MapDB: " + sizeOf.deepSizeOf(mapdb));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
+        System.out.println("Size - Parser HashMap<Node, BloomFilter<CharSequence>> ctiBf: " + sizeOf.deepSizeOf(ctiBf));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
     
-    private void deleteTempMapFile() {
-        File file = new File(ConfigManager.getProperty("mapdb_file_path"));
-        if (file.delete()) {
-            System.out.println("File deleted successfully");
-        } else {
-            System.out.println("Failed to delete the file");
-        }
-    }
-    
     public void run() {
-        //deleteTempMapFile();
         runParser();
         measureMemoryUsage();
-        db.close();
     }
 }
