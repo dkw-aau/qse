@@ -38,15 +38,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-model
     implementation group: 'org.semanticweb.yars', name: 'nxparser-model', version: '4.0.0'
 
-// https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-parsers
+    // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-parsers
     implementation group: 'org.semanticweb.yars', name: 'nxparser-parsers', version: '4.0.0'
-
-
-
 
     implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
+    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
 
     implementation 'gr.james:random-sampling:0.16'
 

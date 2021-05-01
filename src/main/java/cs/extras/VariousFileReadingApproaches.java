@@ -15,7 +15,7 @@ import java.util.stream.StreamSupport;
 
 public class VariousFileReadingApproaches {
     public String rdfFile = "";
-    VariousFileReadingApproaches(String filePath) {
+    public VariousFileReadingApproaches(String filePath) {
         this.rdfFile = filePath;
     }
 

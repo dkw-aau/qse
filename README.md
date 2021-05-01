@@ -5,7 +5,7 @@
 Follow [these](https://sdkman.io/install) steps to install sdkman.
 1. List available java versions using
     
-        skd list java
+        sdk list java
    
 2. Install Java
 
