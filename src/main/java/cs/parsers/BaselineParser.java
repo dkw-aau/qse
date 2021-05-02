@@ -1,5 +1,6 @@
 package cs.parsers;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -23,7 +24,9 @@ public class BaselineParser {
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
+    HashMap<Node, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    //HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
+    HashMap<Node, List<Node>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
     
     // Constructor
@@ -92,7 +95,14 @@ public class BaselineParser {
                                             propToObjTypes.put(nodes[1], objTypes);
                                         }
                                         classToPropWithObjTypes.put(c, propToObjTypes);
-                                        
+    
+                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(c);
+                                        if(propToCount.containsKey(nodes[1])){
+                                            propToCount.replace(nodes[1], propToCount.get(nodes[1]) + 1);
+                                        } else {
+                                            propToCount.put(nodes[1],1);
+                                        }
+                                        classToPropWithCount.put(c, propToCount);
                                         
                                     } else {
                                         HashSet<String> objTypes = new HashSet<String>();
@@ -105,9 +115,15 @@ public class BaselineParser {
                                         }
                                         HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                         propToObjTypes.put(nodes[1], objTypes);
+                                      
                                         
+                                        //Add Count of Props
+                                        HashMap<Node, Integer> propToCount = new HashMap<>();
+                                        propToCount.put(nodes[1],1);
+    
                                         instanceToClass.get(nodes[0]).forEach(cl -> {
                                             classToPropWithObjTypes.put(cl, propToObjTypes);
+                                            classToPropWithCount.put(cl, propToCount);
                                         });
                                     }
                                 });
@@ -150,12 +166,26 @@ public class BaselineParser {
         return theType;
     }
     
+    private void findCommonProps() {
+        classToPropWithObjTypes.forEach((k, v) -> {
+            v.keySet(); // props of the class k
+            
+            classToPropWithObjTypes.forEach((k1, v1) -> {
+                Collection<Node> x;
+                if (!k1.equals(k))
+                    x = CollectionUtils.intersection(v.keySet(), v1.keySet());
+                    
+            });
+            
+        });
+    }
+    
     private void runParser() {
         firstPass();
         secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         populateShapes();
-        shacler.writeModelToFile();
+        //shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
@@ -168,6 +198,6 @@ public class BaselineParser {
     
     public void run() {
         runParser();
-        measureMemoryUsage();
+        //measureMemoryUsage();
     }
 }

@@ -173,16 +173,22 @@ public class WikidataParser {
     private void runParser() {
         firstPass();
         secondPass();
+        
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
+        
         classInstanceCount.forEach((k,v) -> {
             System.out.println(k + " -> " + v);
         });
-        System.out.println(" -- ");
+        
+        System.out.println(" ******* ClASS -> PROP COUNT ");
+        
         classToPropWithCount.forEach((k,v) -> {
             System.out.println(k + " -> " + v.size());
         });
+    
+        System.out.println(" ________________ ");
         
-        populateShapes();
+        //populateShapes();
         //shacler.writeModelToFile();
     }
     
@@ -196,6 +202,6 @@ public class WikidataParser {
     
     public void run() {
         runParser();
-        //measureMemoryUsage();
+        measureMemoryUsage();
     }
 }
