@@ -1,10 +1,7 @@
 package cs;
 
 import cs.extras.VariousFileReadingApproaches;
-import cs.parsers.BaselineParser;
-import cs.parsers.MemOptimalParser;
-import cs.parsers.OnDiskMapParser;
-import cs.parsers.WikidataParser;
+import cs.parsers.*;
 import cs.utils.ConfigManager;
 
 public class Main {
@@ -26,10 +23,13 @@ public class Main {
         //OnDiskMapParser onDiskMapParser = new OnDiskMapParser(datasetPath, numberOfClasses);
         //onDiskMapParser.run();
     
-        MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
-        memOptimalParser.run();
+        //MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
+        //memOptimalParser.run();
     
         //VariousFileReadingApproaches parser = new VariousFileReadingApproaches(datasetPath);
         //parser.singlePassNioStreamFileReader();
+    
+        BaselineWithRdfVault baselineWithRdfVault = new BaselineWithRdfVault(datasetPath, numberOfClasses);
+        baselineWithRdfVault.run();
     }
 }
