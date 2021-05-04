@@ -20,14 +20,14 @@ public class Main {
        //BaselineParser baselineParser = new BaselineParser(datasetPath, numberOfClasses);
        //baselineParser.run();
     
-        WikidataParser wikidataParser = new WikidataParser(datasetPath, numberOfClasses);
-        wikidataParser.run();
+        //WikidataParser wikidataParser = new WikidataParser(datasetPath, numberOfClasses);
+        //wikidataParser.run();
         
         //OnDiskMapParser onDiskMapParser = new OnDiskMapParser(datasetPath, numberOfClasses);
         //onDiskMapParser.run();
     
-        //MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
-        //memOptimalParser.run();
+        MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
+        memOptimalParser.run();
     
         //VariousFileReadingApproaches parser = new VariousFileReadingApproaches(datasetPath);
         //parser.singlePassNioStreamFileReader();

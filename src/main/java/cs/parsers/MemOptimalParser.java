@@ -2,6 +2,7 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import cs.extras.RDFVault;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -59,6 +60,7 @@ public class MemOptimalParser {
                                 bf.put(nodes[0].getLabel());
                                 ctiBf.put(nodes[2], bf);
                             }
+                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -156,10 +158,10 @@ public class MemOptimalParser {
     
     private void runParser() {
         firstPass();
-        secondPass();
+        //secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        populateShapes();
-        //shacler.writeModelToFile();
+        // populateShapes();
+        // shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
@@ -172,6 +174,6 @@ public class MemOptimalParser {
     
     public void run() {
         runParser();
-        //measureMemoryUsage();
+        measureMemoryUsage();
     }
 }
