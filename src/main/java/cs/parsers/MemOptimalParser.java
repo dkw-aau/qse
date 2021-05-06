@@ -2,7 +2,6 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.extras.RDFVault;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class MemOptimalParser {
@@ -75,6 +75,9 @@ public class MemOptimalParser {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
+        AtomicInteger cacheHitCounter = new AtomicInteger();
+        AtomicInteger cacheNonHitCounter = new AtomicInteger();
+        AtomicInteger total = new AtomicInteger();
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
@@ -82,7 +85,7 @@ public class MemOptimalParser {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             
-                            if(instanceToClassCache.size() > 100000){
+                            if (instanceToClassCache.size() > 1000000) { //one million
                                 instanceToClassCache.clear();
                             }
                             
@@ -92,11 +95,13 @@ public class MemOptimalParser {
                             
                             //Look up in the cache, if info doesn't exist in cache, then look up in the bloom filter key map
                             if (instanceToClassCache.containsKey(nodes[0]) && instanceToClassCache.containsKey(nodes[2])) {
+                                cacheHitCounter.getAndIncrement();
                                 instanceTypes.addAll(instanceToClassCache.get(nodes[0]));
                                 instanceToClassCache.get(nodes[2]).forEach(val -> {
                                     objTypes.add(val.getLabel());
                                 });
                             } else {
+                                cacheNonHitCounter.getAndIncrement();
                                 ctiBf.forEach((c, bf) -> {
                                     if (bf.mightContain(nodes[0].getLabel())) {
                                         instanceTypes.add(c);
@@ -146,10 +151,15 @@ public class MemOptimalParser {
                                 }
                             });
                             properties.add(nodes[1]);
+                            total.getAndIncrement();
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
+            System.out.println("\ncacheHitCounter: " + cacheHitCounter);
+            System.out.println("cacheNonHitCounter: " + cacheNonHitCounter);
+            System.out.println("total: " + total);
+            System.out.println("Hit  + Non Hit = " + (cacheHitCounter.get() + cacheNonHitCounter.get()));
         } catch (Exception e) {
             e.printStackTrace();
         }
