@@ -28,14 +28,20 @@ public class Main {
         //OnDiskMapParser onDiskMapParser = new OnDiskMapParser(datasetPath, numberOfClasses);
         //onDiskMapParser.run();
     
-        MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
-        memOptimalParser.run();
+        //MemOptimalParser memOptimalParser = new MemOptimalParser(datasetPath, numberOfClasses);
+        //memOptimalParser.run();
     
         //VariousFileReadingApproaches parser = new VariousFileReadingApproaches(datasetPath);
         //parser.singlePassNioStreamFileReader();
     
         //BaselineWithRdfVault baselineWithRdfVault = new BaselineWithRdfVault(datasetPath, numberOfClasses);
         //baselineWithRdfVault.run();
+        
+        //BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
+        //baselineWithART.run();
+        
+        BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
+        baselineParserWithBloomFilters.run();
         
     }
 }
