@@ -1,5 +1,7 @@
 package cs.parsers;
 
+import com.github.rohansuri.art.AdaptiveRadixTree;
+import com.github.rohansuri.art.BinaryComparables;
 import cs.extras.RDFVault;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -30,15 +32,18 @@ public class BaselineWithRdfVault {
     HashMap<Node, List<Node>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
     
+    RDFVault rdfVault = new RDFVault();
+    HashMap<Object, Object> hashMap = new HashMap<>();
+    NavigableMap<String, String> art = new AdaptiveRadixTree<>(BinaryComparables.forString());
+    
+    
     // Constructor
     BaselineWithRdfVault(String filePath) {
         this.rdfFile = filePath;
     }
     
     
-    RDFVault rdfVault = new RDFVault();
-    HashMap<Object, Object> hashMap = new HashMap<>();
-    
+
     
     public BaselineWithRdfVault(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -72,6 +77,12 @@ public class BaselineWithRdfVault {
                                 
                             } else {
                                 hashMap.put(rdfVault.encode(nodes[0].toString()), rdfVault.encode(nodes[2].toString()));
+                            }
+                            
+                            if(art.containsKey(nodes[0].getLabel())){
+                                art.replace(art.get(nodes[0].getLabel()),art.get(nodes[0].getLabel()) + "," + nodes[2].getLabel());
+                            } else {
+                                art.put(nodes[0].getLabel(), nodes[2].getLabel());
                             }
                             
                         } catch (ParseException e) {
@@ -183,20 +194,6 @@ public class BaselineWithRdfVault {
         return theType;
     }
     
-    private void findCommonProps() {
-        classToPropWithObjTypes.forEach((k, v) -> {
-            v.keySet(); // props of the class k
-            
-            classToPropWithObjTypes.forEach((k1, v1) -> {
-                Collection<Node> x;
-                if (!k1.equals(k))
-                    x = CollectionUtils.intersection(v.keySet(), v1.keySet());
-                
-            });
-            
-        });
-    }
-    
     private void runParser() {
         firstPass();
         //secondPass();
@@ -213,6 +210,7 @@ public class BaselineWithRdfVault {
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
         System.out.println("Size - Parser hashMap: " + sizeOf.deepSizeOf(hashMap));
+        System.out.println("Size - Parser art: " + sizeOf.deepSizeOf(art));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }

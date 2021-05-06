@@ -3,6 +3,7 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+
     }
     dependencies {
         classpath "com.github.jengelman.gradle.plugins:shadow:5.2.0"
@@ -22,13 +23,12 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-
-
-
+    compile 'com.github.rohansuri:adaptive-radix-tree:1.0.0-beta'
     // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-utilities-uri
     //implementation group: 'org.semanticweb.yars', name: 'nxparser-utilities-uri', version: '4.0.0'
 
@@ -61,6 +61,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.mapdb/mapdb
     implementation group: 'org.mapdb', name: 'mapdb', version: '3.0.8'
+
+    // https://mvnrepository.com/artifact/redis.clients/jedis
+    implementation group: 'redis.clients', name: 'jedis', version: '3.6.0'
 
     //implementation files('address/file.jar')
 }
