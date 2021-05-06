@@ -32,7 +32,7 @@ public class MemOptimalParser {
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     HashSet<Node> properties = new HashSet<>();
-    
+    HashMap<Node, List<Node>> instanceToClassCache = new HashMap<>();
     //Bloom Filter Mapping classes to instances
     HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
     
@@ -82,23 +82,54 @@ public class MemOptimalParser {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             
-                            //What's the type of this instance?
-                            //To find the type, you need to iterate over the ctiBf and check in all the bloom filters
+                            if(instanceToClassCache.size() > 100000){
+                                instanceToClassCache.clear();
+                            }
+                            
+                            //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
-                            ctiBf.forEach((c, bf) -> {
-                                if (bf.mightContain(nodes[0].getLabel())) {
-                                    instanceTypes.add(c);
-                                }
-                                if (bf.mightContain(nodes[2].getLabel())) {
-                                    objTypes.add(c.getLabel());
-                                }
-                            });
+                            
+                            //Look up in the cache, if info doesn't exist in cache, then look up in the bloom filter key map
+                            if (instanceToClassCache.containsKey(nodes[0]) && instanceToClassCache.containsKey(nodes[2])) {
+                                instanceTypes.addAll(instanceToClassCache.get(nodes[0]));
+                                instanceToClassCache.get(nodes[2]).forEach(val -> {
+                                    objTypes.add(val.getLabel());
+                                });
+                            } else {
+                                ctiBf.forEach((c, bf) -> {
+                                    if (bf.mightContain(nodes[0].getLabel())) {
+                                        instanceTypes.add(c);
+                                        if (instanceToClassCache.containsKey(nodes[0])) {
+                                            instanceToClassCache.get(nodes[0]).add(c);
+                                        } else {
+                                            List<Node> list = new ArrayList<>();
+                                            list.add(c);
+                                            instanceToClassCache.put(nodes[0], list);
+                                        }
+                                    }
+                                    if (bf.mightContain(nodes[2].getLabel())) {
+                                        objTypes.add(c.getLabel());
+                                        
+                                        if (instanceToClassCache.containsKey(nodes[2])) {
+                                            instanceToClassCache.get(nodes[2]).add(c);
+                                        } else {
+                                            List<Node> list = new ArrayList<>();
+                                            list.add(c);
+                                            instanceToClassCache.put(nodes[2], list);
+                                        }
+                                    }
+                                });
+                            }
                             
                             instanceTypes.forEach(c -> {
+                                if (objTypes.isEmpty()) {
+                                    objTypes.add(getType(nodes[2].toString()));
+                                }
+                                
                                 if (classToPropWithObjTypes.containsKey(c)) {
                                     HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-    
+                                    
                                     if (propToObjTypes.containsKey(nodes[1]))
                                         propToObjTypes.get(nodes[1]).addAll(objTypes);
                                     else {
@@ -107,10 +138,6 @@ public class MemOptimalParser {
                                     classToPropWithObjTypes.put(c, propToObjTypes);
                                     
                                 } else {
-                                    //HashSet<String> objTypes = new HashSet<String>();
-                                    if (objTypes.isEmpty()) {
-                                        objTypes.add(getType(nodes[2].toString()));
-                                    }
                                     HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                     propToObjTypes.put(nodes[1], objTypes);
                                     instanceTypes.forEach(type -> {
@@ -158,16 +185,18 @@ public class MemOptimalParser {
     
     private void runParser() {
         firstPass();
-        //secondPass();
+        secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        // populateShapes();
-        // shacler.writeModelToFile();
+        populateShapes();
+        shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
+        System.out.println("size: " + instanceToClassCache.size());
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
+        System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClassCache: " + sizeOf.deepSizeOf(instanceToClassCache));
         System.out.println("Size - Parser HashMap<Node, BloomFilter<CharSequence>> ctiBf: " + sizeOf.deepSizeOf(ctiBf));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
