@@ -37,14 +37,14 @@ public class Main {
         //BaselineWithRdfVault baselineWithRdfVault = new BaselineWithRdfVault(datasetPath, numberOfClasses);
         //baselineWithRdfVault.run();
         
-        BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
-        baselineWithART.run();
+        //BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
+        //baselineWithART.run();
         
         //BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
         //baselineParserWithBloomFilters.run();
         
-        //BaselineParserWithBloomFilterCache baselineParserWithBloomFilterCache = new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses);
-        //baselineParserWithBloomFilterCache.run();
+        BaselineParserWithBloomFilterCache baselineParserWithBloomFilterCache = new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses);
+        baselineParserWithBloomFilterCache.run();
         
     }
 }

@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class BaselineParserWithBloomFilterCache {
     private String rdfFile = "";
@@ -84,21 +83,29 @@ public class BaselineParserWithBloomFilterCache {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             
-                            if (instanceToClassCache.size() > 100000)
+                            if (instanceToClassCache.size() > 1000000)
                                 instanceToClassCache.clear();
                             
                             //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
+                            boolean literalTypeFlag = false;
+                            if (nodes[2].toString().contains("\"")) {
+                                literalTypeFlag = true;
+                            }
+                            
                             //Look up in the cache, if info doesn't exist in cache, then look up in the bloom filter key map
-                            if (instanceToClassCache.containsKey(nodes[0]) && instanceToClassCache.containsKey(nodes[2])) {
-                                //cacheHitCounter.getAndIncrement();
-                                instanceTypes.addAll(instanceToClassCache.get(nodes[0]));
+                            if (instanceToClassCache.containsKey(nodes[2])) {
                                 instanceToClassCache.get(nodes[2]).forEach(val -> {
                                     objTypes.add(val.getLabel());
                                 });
-                            } else {
+                            }
+                            if (instanceToClassCache.containsKey(nodes[0])) {
+                                instanceTypes.addAll(instanceToClassCache.get(nodes[0]));
+                            }
+                            
+                            if(objTypes.isEmpty() && !literalTypeFlag || instanceTypes.isEmpty()){
                                 //cacheNonHitCounter.getAndIncrement();
                                 ctiBf.forEach((c, bf) -> {
                                     if (bf.mightContain(nodes[0].getLabel())) {
