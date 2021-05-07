@@ -19,8 +19,8 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         
-       //BaselineParser baselineParser = new BaselineParser(datasetPath, numberOfClasses);
-       //baselineParser.run();
+       BaselineParser baselineParser = new BaselineParser(datasetPath, numberOfClasses);
+       baselineParser.run();
     
         //WikidataParser wikidataParser = new WikidataParser(datasetPath, numberOfClasses);
         //wikidataParser.run();
@@ -37,8 +37,8 @@ public class Main {
         //BaselineWithRdfVault baselineWithRdfVault = new BaselineWithRdfVault(datasetPath, numberOfClasses);
         //baselineWithRdfVault.run();
         
-        BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
-        baselineWithART.run();
+        //BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
+        //baselineWithART.run();
         
         //BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
         //baselineParserWithBloomFilters.run();

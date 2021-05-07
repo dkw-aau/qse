@@ -166,25 +166,11 @@ public class BaselineParser {
         return theType;
     }
     
-    private void findCommonProps() {
-        classToPropWithObjTypes.forEach((k, v) -> {
-            v.keySet(); // props of the class k
-            
-            classToPropWithObjTypes.forEach((k1, v1) -> {
-                Collection<Node> x;
-                if (!k1.equals(k))
-                    x = CollectionUtils.intersection(v.keySet(), v1.keySet());
-                    
-            });
-            
-        });
-    }
-    
     private void runParser() {
         firstPass();
-        secondPass();
+        //secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        populateShapes();
+        //populateShapes();
         //shacler.writeModelToFile();
     }
     
@@ -198,6 +184,6 @@ public class BaselineParser {
     
     public void run() {
         runParser();
-        //measureMemoryUsage();
+        measureMemoryUsage();
     }
 }
