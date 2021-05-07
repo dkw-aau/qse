@@ -84,9 +84,8 @@ public class BaselineParserWithBloomFilterCache {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             
-                            if (instanceToClassCache.size() > 1000000) { //one million
+                            if (instanceToClassCache.size() > 100000)
                                 instanceToClassCache.clear();
-                            }
                             
                             //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
                             List<Node> instanceTypes = new ArrayList<>();
