@@ -202,6 +202,11 @@ public class WikidataParser {
     
     public void run() {
         runParser();
-        measureMemoryUsage();
+        String entity = "<http://www.wikidata.org/entity/Q15773317>";
+        System.out.println(entity.hashCode());
+    
+        String entity1 = "<http://www.wikidata.org/entity/Q15773317>";
+        System.out.println(entity1.hashCode());
+        //measureMemoryUsage();
     }
 }

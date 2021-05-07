@@ -1,0 +1,616 @@
+PREFIX sh:      <http://www.w3.org/ns/shacl#>
+PREFIX dct:     <http://purl.org/dc/terms/>
+PREFIX ontolex: <http://www.w3.org/ns/lemon/ontolex#>
+PREFIX owl:     <http://www.w3.org/2002/07/owl#>
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema:  <http://schema.org/>
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>. }
+PREFIX shgen:   <http://generated-shacl.io/>
+
+shgen:GraduateStudentShape
+    a              sh:NodeShape ;
+    sh:property    shgen:advisorGraduateStudentShapeProperty, shgen:emailAddressGraduateStudentShapeProperty,
+                   shgen:memberOfGraduateStudentShapeProperty, shgen:nameGraduateStudentShapeProperty,
+                   shgen:takesCourseGraduateStudentShapeProperty, shgen:teachingAssistantOfGraduateStudentShapeProperty,
+                   shgen:telephoneGraduateStudentShapeProperty,
+                   shgen:undergraduateDegreeFromGraduateStudentShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>,
+                   <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>,
+                   <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant> .
+
+shgen:advisorGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor> .
+
+shgen:emailAddressGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:memberOfGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf> .
+
+shgen:nameGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:takesCourseGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse> .
+
+shgen:teachingAssistantOfGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 0 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teachingAssistantOf> .
+
+shgen:telephoneGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:FullProfessorShape
+    a              sh:NodeShape ;
+    sh:property    shgen:doctoralDegreeFromFullProfessorShapeProperty, shgen:emailAddressFullProfessorShapeProperty,
+                   shgen:headOfFullProfessorShapeProperty, shgen:mastersDegreeFromFullProfessorShapeProperty,
+                   shgen:nameFullProfessorShapeProperty, shgen:researchInterestFullProfessorShapeProperty,
+                   shgen:teacherOfFullProfessorShapeProperty, shgen:telephoneFullProfessorShapeProperty,
+                   shgen:undergraduateDegreeFromFullProfessorShapeProperty, shgen:worksForFullProfessorShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor> .
+
+shgen:doctoralDegreeFromFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom> .
+
+shgen:emailAddressFullProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:headOfFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 0 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#headOf> .
+
+shgen:mastersDegreeFromFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom> .
+
+shgen:nameFullProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:researchInterestFullProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest> .
+
+shgen:teacherOfFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf> .
+
+shgen:telephoneFullProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+shgen:worksForFullProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:LecturerShape
+    a              sh:NodeShape ;
+    sh:property    shgen:doctoralDegreeFromLecturerShapeProperty, shgen:emailAddressLecturerShapeProperty,
+                   shgen:mastersDegreeFromLecturerShapeProperty, shgen:nameLecturerShapeProperty,
+                   shgen:teacherOfLecturerShapeProperty, shgen:telephoneLecturerShapeProperty,
+                   shgen:undergraduateDegreeFromLecturerShapeProperty, shgen:worksForLecturerShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer> .
+
+shgen:doctoralDegreeFromLecturerShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom> .
+
+shgen:emailAddressLecturerShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:mastersDegreeFromLecturerShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom> .
+
+shgen:nameLecturerShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:teacherOfLecturerShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf> .
+
+shgen:telephoneLecturerShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromLecturerShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+shgen:worksForLecturerShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:GraduateStudentShape
+    a              sh:NodeShape ;
+    sh:property    shgen:advisorGraduateStudentShapeProperty, shgen:emailAddressGraduateStudentShapeProperty,
+                   shgen:memberOfGraduateStudentShapeProperty, shgen:nameGraduateStudentShapeProperty,
+                   shgen:takesCourseGraduateStudentShapeProperty, shgen:telephoneGraduateStudentShapeProperty,
+                   shgen:undergraduateDegreeFromGraduateStudentShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>,
+                   <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant> .
+
+shgen:advisorGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor> .
+
+shgen:emailAddressGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:memberOfGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf> .
+
+shgen:nameGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:takesCourseGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse> .
+
+shgen:telephoneGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchGroup>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:ResearchGroupShape
+    a              sh:NodeShape ;
+    sh:property    shgen:subOrganizationOfResearchGroupShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchGroup> .
+
+shgen:subOrganizationOfResearchGroupShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#subOrganizationOf> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Publication>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:PublicationShape
+    a              sh:NodeShape ;
+    sh:property    shgen:namePublicationShapeProperty, shgen:publicationAuthorPublicationShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Publication> .
+
+shgen:namePublicationShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:publicationAuthorPublicationShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#publicationAuthor> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:UndergraduateStudentShape
+    a              sh:NodeShape ;
+    sh:property    shgen:advisorUndergraduateStudentShapeProperty, shgen:emailAddressUndergraduateStudentShapeProperty,
+                   shgen:memberOfUndergraduateStudentShapeProperty, shgen:nameUndergraduateStudentShapeProperty,
+                   shgen:takesCourseUndergraduateStudentShapeProperty,
+                   shgen:telephoneUndergraduateStudentShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent> .
+
+shgen:advisorUndergraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 0 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor> .
+
+shgen:emailAddressUndergraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:memberOfUndergraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf> .
+
+shgen:nameUndergraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:takesCourseUndergraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse> .
+
+shgen:telephoneUndergraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:DepartmentShape
+    a              sh:NodeShape ;
+    sh:property    shgen:nameDepartmentShapeProperty, shgen:subOrganizationOfDepartmentShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department> .
+
+shgen:nameDepartmentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:subOrganizationOfDepartmentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#subOrganizationOf> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:GraduateCourseShape
+    a              sh:NodeShape ;
+    sh:property    shgen:nameGraduateCourseShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse> .
+
+shgen:nameGraduateCourseShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:GraduateStudentShape
+    a              sh:NodeShape ;
+    sh:property    shgen:advisorGraduateStudentShapeProperty, shgen:emailAddressGraduateStudentShapeProperty,
+                   shgen:memberOfGraduateStudentShapeProperty, shgen:nameGraduateStudentShapeProperty,
+                   shgen:takesCourseGraduateStudentShapeProperty, shgen:teachingAssistantOfGraduateStudentShapeProperty,
+                   shgen:telephoneGraduateStudentShapeProperty,
+                   shgen:undergraduateDegreeFromGraduateStudentShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>,
+                   <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant> .
+
+shgen:advisorGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor> .
+
+shgen:emailAddressGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:memberOfGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf> .
+
+shgen:nameGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:takesCourseGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse> .
+
+shgen:teachingAssistantOfGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teachingAssistantOf> .
+
+shgen:telephoneGraduateStudentShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromGraduateStudentShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:AssistantProfessorShape
+    a              sh:NodeShape ;
+    sh:property    shgen:doctoralDegreeFromAssistantProfessorShapeProperty,
+                   shgen:emailAddressAssistantProfessorShapeProperty,
+                   shgen:mastersDegreeFromAssistantProfessorShapeProperty, shgen:nameAssistantProfessorShapeProperty,
+                   shgen:researchInterestAssistantProfessorShapeProperty,
+                   shgen:teacherOfAssistantProfessorShapeProperty, shgen:telephoneAssistantProfessorShapeProperty,
+                   shgen:undergraduateDegreeFromAssistantProfessorShapeProperty,
+                   shgen:worksForAssistantProfessorShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor> .
+
+shgen:doctoralDegreeFromAssistantProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom> .
+
+shgen:emailAddressAssistantProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:mastersDegreeFromAssistantProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom> .
+
+shgen:nameAssistantProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:researchInterestAssistantProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest> .
+
+shgen:teacherOfAssistantProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf> .
+
+shgen:telephoneAssistantProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromAssistantProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+shgen:worksForAssistantProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:CourseShape
+    a              sh:NodeShape ;
+    sh:property    shgen:nameCourseShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course> .
+
+shgen:nameCourseShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:UniversityShape
+    a              sh:NodeShape ;
+    sh:property    shgen:nameUniversityShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University> .
+
+shgen:nameUniversityShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 0 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a owl:Ontology. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:OntologyShape
+    a              sh:NodeShape ;
+    sh:property    shgen:importsOntologyShapeProperty ;
+    sh:targetClass owl:Ontology .
+
+shgen:importsOntologyShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 0 ;
+    sh:path     owl:imports .
+
+
+# Result for pattern {a [__] ; ~ __} and query SELECT ?x WHERE {?x a <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>. }
+PREFIX shgen: <http://generated-shacl.io/>
+
+shgen:AssociateProfessorShape
+    a              sh:NodeShape ;
+    sh:property    shgen:doctoralDegreeFromAssociateProfessorShapeProperty,
+                   shgen:emailAddressAssociateProfessorShapeProperty,
+                   shgen:mastersDegreeFromAssociateProfessorShapeProperty, shgen:nameAssociateProfessorShapeProperty,
+                   shgen:researchInterestAssociateProfessorShapeProperty,
+                   shgen:teacherOfAssociateProfessorShapeProperty, shgen:telephoneAssociateProfessorShapeProperty,
+                   shgen:undergraduateDegreeFromAssociateProfessorShapeProperty,
+                   shgen:worksForAssociateProfessorShapeProperty ;
+    sh:targetClass <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor> .
+
+shgen:doctoralDegreeFromAssociateProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom> .
+
+shgen:emailAddressAssociateProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress> .
+
+shgen:mastersDegreeFromAssociateProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom> .
+
+shgen:nameAssociateProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name> .
+
+shgen:researchInterestAssociateProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest> .
+
+shgen:teacherOfAssociateProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf> .
+
+shgen:telephoneAssociateProfessorShapeProperty
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone> .
+
+shgen:undergraduateDegreeFromAssociateProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom> .
+
+shgen:worksForAssociateProfessorShapeProperty
+    sh:NodeKind sh:IRI ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:path     <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor> .
+
+

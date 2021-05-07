@@ -1,7 +1,6 @@
 package cs.parsers;
 
-import com.github.jsonldjava.shaded.com.google.common.hash.BloomFilter;
-import com.github.jsonldjava.shaded.com.google.common.hash.Funnels;
+import cs.extras.RDFVault;
 import cs.utils.ConfigManager;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -12,6 +11,7 @@ import org.mapdb.HTreeMap;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
+
 
 import java.io.File;
 import java.nio.file.Files;
@@ -40,7 +40,7 @@ public class OnDiskMapParser {
     //Map DB
     DB db = DBMaker.fileDB(ConfigManager.getProperty("mapdb_file_path")).make();
     HTreeMap mapdb = db.hashMap("instanceToClassMap").create();
-    
+  
     // Constructor
     public OnDiskMapParser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;

@@ -9,7 +9,11 @@ Follow [these](https://sdkman.io/install) steps to install sdkman.
    
 2. Install Java
 
-        sdk install java 11.0.10.fx-zulu
+        sdk install java 11.0.10.fx-zulu 
+   
+         Use this version because of integrating ART library 
+         -> sdk install java 15.0.2.fx-zulu
+         -> sdk use java 15.0.2.fx-zulu 
 
 3. Install gradle 
 
