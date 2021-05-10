@@ -40,11 +40,11 @@ public class Main {
         //BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
         //baselineWithART.run();
         
-        //BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
-        //baselineParserWithBloomFilters.run();
+        BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
+        baselineParserWithBloomFilters.run();
         
-        BaselineParserWithBloomFilterCache baselineParserWithBloomFilterCache = new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses);
-        baselineParserWithBloomFilterCache.run();
+        //BaselineParserWithBloomFilterCache baselineParserWithBloomFilterCache = new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses);
+        //baselineParserWithBloomFilterCache.run();
         
     }
 }
