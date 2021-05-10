@@ -2,9 +2,11 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import cs.utils.ConfigManager;
 import cs.utils.LRUCache;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -28,6 +30,7 @@ public class BaselineParserWithBloomFilterCache {
     // Constants
     private final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     private int expectedNumberOfClasses = 10000; // default value
+    private int sizeOfDataset = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
     
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -45,25 +48,30 @@ public class BaselineParserWithBloomFilterCache {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> line.contains(RDFType))
-                    .forEach(line -> {                              // - A terminal operation
-                        try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
-                            
-                            if (ctiBf.containsKey(nodes[2])) {
-                                ctiBf.get(nodes[2]).put(nodes[0].getLabel());
-                            } else {
-                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
-                                bf.put(nodes[0].getLabel());
-                                ctiBf.put(nodes[2], bf);
+            try (ProgressBar pb = new ProgressBar("Progress1stPass", sizeOfDataset)) {
+                
+                Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
+                        .filter(line -> line.contains(RDFType))
+                        .forEach(line -> {                              // - A terminal operation
+                            try {
+                                Node[] nodes = NxParser.parseNodes(line);
+                                classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
+                                
+                                if (ctiBf.containsKey(nodes[2])) {
+                                    ctiBf.get(nodes[2]).put(nodes[0].getLabel());
+                                } else {
+                                    BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
+                                    bf.put(nodes[0].getLabel());
+                                    ctiBf.put(nodes[2], bf);
+                                }
+                                
+                            } catch (ParseException e) {
+                                e.printStackTrace();
                             }
-                            
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                            pb.step();
+                            pb.setExtraMessage("Reading...");
+                        });
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,15 +82,12 @@ public class BaselineParserWithBloomFilterCache {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        LRUCache itcCache = new LRUCache(100000);
-        ProgressBarBuilder pbb = new ProgressBarBuilder();
+        LRUCache itcCache = new LRUCache(1000000);
         try {
-            try (ProgressBar pb = new ProgressBar("Progress", 1)) {
+            try (ProgressBar pb = new ProgressBar("Progress2ndPass", sizeOfDataset)) {
                 Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                         .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                         .forEach(line -> {                              // - A terminal operation
-                            pb.step();
-                            pb.setExtraMessage("Reading...");
                             try {
                                 Node[] nodes = NxParser.parseNodes(line);
                                 List<Node> instanceTypes = new ArrayList<>();
@@ -137,6 +142,8 @@ public class BaselineParserWithBloomFilterCache {
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
+                            pb.step();
+                            pb.setExtraMessage("Reading ...");
                         });
             }
         } catch (Exception e) {
