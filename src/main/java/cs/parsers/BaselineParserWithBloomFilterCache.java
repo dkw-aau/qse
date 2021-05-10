@@ -2,6 +2,7 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import cs.utils.LRUCache;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -30,8 +31,6 @@ public class BaselineParserWithBloomFilterCache {
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     HashSet<Node> properties = new HashSet<>();
-    HashMap<Node, List<Node>> instanceToClassCache = new HashMap<>();
-    //Bloom Filter Mapping classes to instances
     HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
     
     // Constructor
@@ -73,63 +72,36 @@ public class BaselineParserWithBloomFilterCache {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        //AtomicInteger cacheHitCounter = new AtomicInteger();
-        //AtomicInteger cacheNonHitCounter = new AtomicInteger();
-        //AtomicInteger total = new AtomicInteger();
+        LRUCache itcCache = new LRUCache(100000);
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            
-                            if (instanceToClassCache.size() > 1000000)
-                                instanceToClassCache.clear();
-                            
-                            //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            boolean literalTypeFlag = false;
-                            if (nodes[2].toString().contains("\"")) {
-                                literalTypeFlag = true;
-                            }
+                            boolean literalTypeFlag = nodes[2].toString().contains("\"");
                             
-                            //Look up in the cache, if info doesn't exist in cache, then look up in the bloom filter key map
-                            if (instanceToClassCache.containsKey(nodes[2])) {
-                                instanceToClassCache.get(nodes[2]).forEach(val -> {
-                                    objTypes.add(val.getLabel());
-                                });
-                            }
-                            if (instanceToClassCache.containsKey(nodes[0])) {
-                                instanceTypes.addAll(instanceToClassCache.get(nodes[0]));
-                            }
-                            
-                            if(objTypes.isEmpty() && !literalTypeFlag || instanceTypes.isEmpty()){
-                                //cacheNonHitCounter.getAndIncrement();
-                                ctiBf.forEach((c, bf) -> {
-                                    if (bf.mightContain(nodes[0].getLabel())) {
-                                        instanceTypes.add(c);
-                                        if (instanceToClassCache.containsKey(nodes[0])) {
-                                            instanceToClassCache.get(nodes[0]).add(c);
-                                        } else {
-                                            List<Node> list = new ArrayList<>();
-                                            list.add(c);
-                                            instanceToClassCache.put(nodes[0], list);
-                                        }
-                                    }
-                                    if (bf.mightContain(nodes[2].getLabel())) {
-                                        objTypes.add(c.getLabel());
-                                        
-                                        if (instanceToClassCache.containsKey(nodes[2])) {
-                                            instanceToClassCache.get(nodes[2]).add(c);
-                                        } else {
-                                            List<Node> list = new ArrayList<>();
-                                            list.add(c);
-                                            instanceToClassCache.put(nodes[2], list);
-                                        }
-                                    }
-                                });
+                            if (literalTypeFlag) {
+                                //check the subject entry in the cache
+                                if (itcCache.containsKey(nodes[0])) {
+                                    instanceTypes.addAll(itcCache.get(nodes[0]));
+                                } else {
+                                    lookUpSubjInBf(itcCache, nodes, instanceTypes);
+                                }
+                                
+                            } else {
+                                //check the subject and the object entry in the cache
+                                if (itcCache.containsKey(nodes[0]) && itcCache.containsKey(nodes[2])) {
+                                    instanceTypes.addAll(itcCache.get(nodes[0]));
+                                    itcCache.get(nodes[2]).forEach(val -> {
+                                        objTypes.add(val.getLabel());
+                                    });
+                                } else {
+                                    lookUpSubjObjInBf(itcCache, nodes, instanceTypes, objTypes);
+                                }
                             }
                             
                             instanceTypes.forEach(c -> {
@@ -156,20 +128,56 @@ public class BaselineParserWithBloomFilterCache {
                                 }
                             });
                             properties.add(nodes[1]);
-                            //total.getAndIncrement();
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-            //System.out.println("\ncacheHitCounter: " + cacheHitCounter);
-            //System.out.println("cacheNonHitCounter: " + cacheNonHitCounter);
-            //System.out.println("total: " + total);
-            //System.out.println("Hit  + Non Hit = " + (cacheHitCounter.get() + cacheNonHitCounter.get()));
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+    }
+    
+    private void lookUpSubjInBf(LRUCache itcCache, Node[] nodes, List<Node> instanceTypes) {
+        ctiBf.forEach((c, bf) -> {
+            if (bf.mightContain(nodes[0].getLabel())) {
+                instanceTypes.add(c);
+                if (itcCache.containsKey(nodes[0])) {
+                    itcCache.get(nodes[0]).add(c);
+                } else {
+                    List<Node> list = new ArrayList<>();
+                    list.add(c);
+                    itcCache.put(nodes[0], list);
+                }
+            }
+        });
+    }
+    
+    private void lookUpSubjObjInBf(LRUCache itcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
+        ctiBf.forEach((c, bf) -> {
+            if (bf.mightContain(nodes[0].getLabel())) {
+                instanceTypes.add(c);
+                if (itcCache.containsKey(nodes[0])) {
+                    itcCache.get(nodes[0]).add(c);
+                } else {
+                    List<Node> list = new ArrayList<>();
+                    list.add(c);
+                    itcCache.put(nodes[0], list);
+                }
+            }
+            if (bf.mightContain(nodes[2].getLabel())) {
+                objTypes.add(c.getLabel());
+                
+                if (itcCache.containsKey(nodes[2])) {
+                    itcCache.get(nodes[2]).add(c);
+                } else {
+                    List<Node> list = new ArrayList<>();
+                    list.add(c);
+                    itcCache.put(nodes[2], list);
+                }
+            }
+        });
     }
     
     private void populateShapes() {
@@ -207,11 +215,9 @@ public class BaselineParserWithBloomFilterCache {
     }
     
     private void measureMemoryUsage() {
-        System.out.println("size: " + instanceToClassCache.size());
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
-        System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClassCache: " + sizeOf.deepSizeOf(instanceToClassCache));
         System.out.println("Size - Parser HashMap<Node, BloomFilter<CharSequence>> ctiBf: " + sizeOf.deepSizeOf(ctiBf));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
