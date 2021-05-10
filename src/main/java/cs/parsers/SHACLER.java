@@ -40,6 +40,11 @@ public class SHACLER {
         this.propToType = propToType;
     }
     
+    public void setParams(String classLabel, HashMap<Node, HashSet<String>> propToType) {
+        this.classIRI = classLabel;
+        this.propToType = propToType;
+    }
+    
     public void constructShape() {
         Model m = null;
         ModelBuilder b = new ModelBuilder();

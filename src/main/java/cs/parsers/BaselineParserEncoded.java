@@ -1,6 +1,6 @@
 package cs.parsers;
 
-import org.apache.commons.collections4.CollectionUtils;
+import cs.utils.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -10,10 +10,13 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BaselineParser {
+public class BaselineParserEncoded {
     String rdfFile = "";
     SHACLER shacler = new SHACLER();
     
@@ -23,18 +26,19 @@ public class BaselineParser {
     
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
-    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<Node, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    HashMap<String, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     //HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
-    HashMap<Node, List<Node>> instanceToClass = new HashMap<>();
+    HashMap<Node, List<Integer>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
+    Encoder encoder = new Encoder();
     
     // Constructor
-    BaselineParser(String filePath) {
+    BaselineParserEncoded(String filePath) {
         this.rdfFile = filePath;
     }
     
-    public BaselineParser(String filePath, int expSizeOfClasses) {
+    public BaselineParserEncoded(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
     }
@@ -51,10 +55,10 @@ public class BaselineParser {
                             classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
                             // Track classes per instance
                             if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).add(nodes[2]);
+                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
                             } else {
-                                List<Node> list = new ArrayList<>();
-                                list.add(nodes[2]);
+                                List<Integer> list = new ArrayList<>();
+                                list.add(encoder.encode(nodes[2].getLabel()));
                                 instanceToClass.put(nodes[0], list);
                             }
                         } catch (ParseException e) {
@@ -79,12 +83,12 @@ public class BaselineParser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    if (classToPropWithObjTypes.containsKey(c)) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                    if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
                                         HashSet<String> objTypes = new HashSet<String>();
                                         if (instanceToClass.containsKey(nodes[2])) // object is an instance of some class e.g., :Paris is an instance of :City.
                                             instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(node.toString());
+                                                objTypes.add(encoder.decode(node));
                                             });
                                         else {
                                             objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
@@ -94,36 +98,36 @@ public class BaselineParser {
                                         else {
                                             propToObjTypes.put(nodes[1], objTypes);
                                         }
-                                        classToPropWithObjTypes.put(c, propToObjTypes);
-    
-                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(c);
-                                        if(propToCount.containsKey(nodes[1])){
+                                        classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
+                                        
+                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(encoder.decode(c));
+                                        if (propToCount.containsKey(nodes[1])) {
                                             propToCount.replace(nodes[1], propToCount.get(nodes[1]) + 1);
                                         } else {
-                                            propToCount.put(nodes[1],1);
+                                            propToCount.put(nodes[1], 1);
                                         }
-                                        classToPropWithCount.put(c, propToCount);
+                                        classToPropWithCount.put(encoder.decode(c), propToCount);
                                         
                                     } else {
                                         HashSet<String> objTypes = new HashSet<String>();
                                         if (instanceToClass.containsKey(nodes[2]))  // object is an instance of some class e.g., :Paris is an instance of :City.
                                             instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(node.toString());
+                                                objTypes.add(encoder.decode(node));
                                             });
                                         else {
                                             objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
                                         }
                                         HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                         propToObjTypes.put(nodes[1], objTypes);
-                                      
+                                        
                                         
                                         //Add Count of Props
                                         HashMap<Node, Integer> propToCount = new HashMap<>();
-                                        propToCount.put(nodes[1],1);
-    
+                                        propToCount.put(nodes[1], 1);
+                                        
                                         instanceToClass.get(nodes[0]).forEach(cl -> {
-                                            classToPropWithObjTypes.put(cl, propToObjTypes);
-                                            classToPropWithCount.put(cl, propToCount);
+                                            classToPropWithObjTypes.put(encoder.decode(cl), propToObjTypes);
+                                            classToPropWithCount.put(encoder.decode(cl), propToCount);
                                         });
                                     }
                                 });
