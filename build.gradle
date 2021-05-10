@@ -63,7 +63,9 @@ dependencies {
     implementation group: 'org.mapdb', name: 'mapdb', version: '3.0.8'
 
     // https://mvnrepository.com/artifact/redis.clients/jedis
-    implementation group: 'redis.clients', name: 'jedis', version: '3.6.0'
+    //implementation group: 'redis.clients', name: 'jedis', version: '3.6.0'
+
+    compile 'me.tongfei:progressbar:0.9.1'
 
     //implementation files('address/file.jar')
 }

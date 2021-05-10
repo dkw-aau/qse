@@ -3,6 +3,8 @@ package cs.parsers;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import cs.utils.LRUCache;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -73,65 +75,70 @@ public class BaselineParserWithBloomFilterCache {
         StopWatch watch = new StopWatch();
         watch.start();
         LRUCache itcCache = new LRUCache(100000);
+        ProgressBarBuilder pbb = new ProgressBarBuilder();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
-                    .forEach(line -> {                              // - A terminal operation
-                        try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            List<Node> instanceTypes = new ArrayList<>();
-                            HashSet<String> objTypes = new HashSet<String>();
-                            
-                            boolean literalTypeFlag = nodes[2].toString().contains("\"");
-                            
-                            if (literalTypeFlag) {
-                                //check the subject entry in the cache
-                                if (itcCache.containsKey(nodes[0])) {
-                                    instanceTypes.addAll(itcCache.get(nodes[0]));
-                                } else {
-                                    lookUpSubjInBf(itcCache, nodes, instanceTypes);
-                                }
+            try (ProgressBar pb = new ProgressBar("Progress", 1)) {
+                Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
+                        .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
+                        .forEach(line -> {                              // - A terminal operation
+                            pb.step();
+                            pb.setExtraMessage("Reading...");
+                            try {
+                                Node[] nodes = NxParser.parseNodes(line);
+                                List<Node> instanceTypes = new ArrayList<>();
+                                HashSet<String> objTypes = new HashSet<String>();
                                 
-                            } else {
-                                //check the subject and the object entry in the cache
-                                if (itcCache.containsKey(nodes[0]) && itcCache.containsKey(nodes[2])) {
-                                    instanceTypes.addAll(itcCache.get(nodes[0]));
-                                    itcCache.get(nodes[2]).forEach(val -> {
-                                        objTypes.add(val.getLabel());
-                                    });
-                                } else {
-                                    lookUpSubjObjInBf(itcCache, nodes, instanceTypes, objTypes);
-                                }
-                            }
-                            
-                            instanceTypes.forEach(c -> {
-                                if (objTypes.isEmpty()) {
-                                    objTypes.add(getType(nodes[2].toString()));
-                                }
+                                boolean literalTypeFlag = nodes[2].toString().contains("\"");
                                 
-                                if (classToPropWithObjTypes.containsKey(c)) {
-                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-                                    
-                                    if (propToObjTypes.containsKey(nodes[1]))
-                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                    else {
-                                        propToObjTypes.put(nodes[1], objTypes);
+                                if (literalTypeFlag) {
+                                    //check the subject entry in the cache
+                                    if (itcCache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(itcCache.get(nodes[0]));
+                                    } else {
+                                        lookUpSubjInBf(itcCache, nodes, instanceTypes);
                                     }
-                                    classToPropWithObjTypes.put(c, propToObjTypes);
                                     
                                 } else {
-                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
-                                    propToObjTypes.put(nodes[1], objTypes);
-                                    instanceTypes.forEach(type -> {
-                                        classToPropWithObjTypes.put(type, propToObjTypes);
-                                    });
+                                    //check the subject and the object entry in the cache
+                                    if (itcCache.containsKey(nodes[0]) && itcCache.containsKey(nodes[2])) {
+                                        instanceTypes.addAll(itcCache.get(nodes[0]));
+                                        itcCache.get(nodes[2]).forEach(val -> {
+                                            objTypes.add(val.getLabel());
+                                        });
+                                    } else {
+                                        lookUpSubjObjInBf(itcCache, nodes, instanceTypes, objTypes);
+                                    }
                                 }
-                            });
-                            properties.add(nodes[1]);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                                
+                                instanceTypes.forEach(c -> {
+                                    if (objTypes.isEmpty()) {
+                                        objTypes.add(getType(nodes[2].toString()));
+                                    }
+                                    
+                                    if (classToPropWithObjTypes.containsKey(c)) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                        
+                                        if (propToObjTypes.containsKey(nodes[1]))
+                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                        else {
+                                            propToObjTypes.put(nodes[1], objTypes);
+                                        }
+                                        classToPropWithObjTypes.put(c, propToObjTypes);
+                                        
+                                    } else {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                        instanceTypes.forEach(type -> {
+                                            classToPropWithObjTypes.put(type, propToObjTypes);
+                                        });
+                                    }
+                                });
+                                properties.add(nodes[1]);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                        });
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
