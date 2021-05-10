@@ -20,4 +20,8 @@ public class Encoder {
     public String decode(int val) {
         return this.table.get(val);
     }
+    
+    public HashMap<Integer, String> getTable() {
+        return table;
+    }
 }
