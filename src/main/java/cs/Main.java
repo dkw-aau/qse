@@ -39,13 +39,15 @@ public class Main {
         
         //BaselineWithART baselineWithART = new BaselineWithART(datasetPath, numberOfClasses);
         //baselineWithART.run();
-        System.out.println("Running: BaselineParserWithBloomFilters");
-        BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
-        baselineParserWithBloomFilters.run();
-        
         System.out.println("\n\nRunning: BaselineParserWithBloomFilterCache");
         BaselineParserWithBloomFilterCache baselineParserWithBloomFilterCache = new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses);
         baselineParserWithBloomFilterCache.run();
+        
+        System.out.println("\n\nRunning: BaselineParserWithBloomFilters");
+        BaselineParserWithBloomFilters baselineParserWithBloomFilters = new BaselineParserWithBloomFilters(datasetPath, numberOfClasses);
+        baselineParserWithBloomFilters.run();
+        
+       
         
         
         //BaselineParserEncoded baselineParserEncoded = new BaselineParserEncoded(datasetPath, numberOfClasses);
