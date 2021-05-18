@@ -84,9 +84,16 @@ public class BLParserWithBloomFilterLFRUCache {
         watch.start();
         //LRUCache itcCache = new LRUCache(1000000);
         
-        Cache<Node, List<Node>> sItcCache = new Cache2kBuilder<Node, List<Node>>() {}
+        Cache<Node, List<Node>> subjItcCache = new Cache2kBuilder<Node, List<Node>>() {}
                 .expireAfterWrite(5, TimeUnit.MINUTES)
-                .entryCapacity(10000)
+                .entryCapacity(1000000)
+                .name("cache")
+                //.refreshAhead(true)
+                .build();
+    
+        Cache<Node, List<Node>> objItcCache = new Cache2kBuilder<Node, List<Node>>() {}
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .entryCapacity(1000000)
                 .name("cache")
                 //.refreshAhead(true)
                 .build();
@@ -105,21 +112,21 @@ public class BLParserWithBloomFilterLFRUCache {
                                 
                                 if (literalTypeFlag) {
                                     //check the subject entry in the cache
-                                    if (sItcCache.containsKey(nodes[0])) {
-                                        instanceTypes.addAll(Objects.requireNonNull(sItcCache.get(nodes[0])));
+                                    if (subjItcCache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(Objects.requireNonNull(subjItcCache.get(nodes[0])));
                                     } else {
-                                        lookUpSubjInBf(sItcCache, nodes, instanceTypes);
+                                        lookUpSubjInBf(subjItcCache, nodes, instanceTypes);
                                     }
                                     
                                 } else {
                                     //check the subject and the object entry in the cache
-                                    if (sItcCache.containsKey(nodes[0]) && sItcCache.containsKey(nodes[2])) {
-                                        instanceTypes.addAll(sItcCache.get(nodes[0]));
-                                        sItcCache.get(nodes[2]).forEach(val -> {
+                                    if (subjItcCache.containsKey(nodes[0]) && objItcCache.containsKey(nodes[2])) {
+                                        instanceTypes.addAll(subjItcCache.get(nodes[0]));
+                                        objItcCache.get(nodes[2]).forEach(val -> {
                                             objTypes.add(val.getLabel());
                                         });
                                     } else {
-                                        lookUpSubjObjInBf(sItcCache, nodes, instanceTypes, objTypes);
+                                        lookUpSubjObjInBf(subjItcCache, objItcCache, nodes, instanceTypes, objTypes);
                                     }
                                 }
                                 
@@ -176,27 +183,27 @@ public class BLParserWithBloomFilterLFRUCache {
         });
     }
     
-    private void lookUpSubjObjInBf(Cache<Node, List<Node>>  itcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
+    private void lookUpSubjObjInBf(Cache<Node, List<Node>> subjItcCache, Cache<Node, List<Node>> objItcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
         ctiBf.forEach((c, bf) -> {
             if (bf.mightContain(nodes[0].getLabel())) {
                 instanceTypes.add(c);
-                if (itcCache.containsKey(nodes[0])) {
-                    itcCache.get(nodes[0]).add(c);
+                if (subjItcCache.containsKey(nodes[0])) {
+                    subjItcCache.get(nodes[0]).add(c);
                 } else {
                     List<Node> list = new ArrayList<>();
                     list.add(c);
-                    itcCache.put(nodes[0], list);
+                    subjItcCache.put(nodes[0], list);
                 }
             }
             if (bf.mightContain(nodes[2].getLabel())) {
                 objTypes.add(c.getLabel());
                 
-                if (itcCache.containsKey(nodes[2])) {
-                    itcCache.get(nodes[2]).add(c);
+                if (objItcCache.containsKey(nodes[2])) {
+                    objItcCache.get(nodes[2]).add(c);
                 } else {
                     List<Node> list = new ArrayList<>();
                     list.add(c);
-                    itcCache.put(nodes[2], list);
+                    objItcCache.put(nodes[2], list);
                 }
             }
         });
