@@ -6,6 +6,7 @@ import cs.extras.ExtractTaxonomy;
 import cs.extras.RDFVault;
 import cs.extras.VariousFileReadingApproaches;
 import cs.parsers.*;
+import cs.trees.BlParserWithTrees;
 import cs.utils.ConfigManager;
 
 import java.util.NavigableMap;
@@ -20,14 +21,11 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         
-        System.out.println("1. BLParserWithBloomFilterLFRUCache\n\n");
-        new BLParserWithBloomFilterLFRUCache(datasetPath, numberOfClasses).run();
+        new BlParserWithTrees(datasetPath, numberOfClasses).run();
         
-        System.out.println("2. BaselineParserWithBloomFilters\n\n");
-        new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
+        //new BaselineParser(datasetPath, numberOfClasses).run();
         
         //new ExtractTaxonomy(datasetPath, numberOfClasses).run();
-        //new BaselineParser(datasetPath, numberOfClasses).run();
         
         //WikidataParser wikidataParser = new WikidataParser(datasetPath, numberOfClasses);
         //wikidataParser.run();

@@ -181,9 +181,7 @@ public class BlParserWithTrees {
     private void runParser() {
         firstPass();
         buildBinaryTree();
-        System.out.println( bt.getSize());
-        bt.traversePreOrder(bt.root);
-        //System.out.println("\n");
+        System.out.println("Binary Tree Size: " + bt.getSize());
         secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         populateShapes();
