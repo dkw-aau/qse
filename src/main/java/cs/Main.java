@@ -20,11 +20,13 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         
-        new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();
+        System.out.println("1. BLParserWithBloomFilterLFRUCache\n\n");
+        new BLParserWithBloomFilterLFRUCache(datasetPath, numberOfClasses).run();
+        
+        System.out.println("2. BaselineParserWithBloomFilters\n\n");
         new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
         
         //new ExtractTaxonomy(datasetPath, numberOfClasses).run();
-        
         //new BaselineParser(datasetPath, numberOfClasses).run();
         
         //WikidataParser wikidataParser = new WikidataParser(datasetPath, numberOfClasses);
