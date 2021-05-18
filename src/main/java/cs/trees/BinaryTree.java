@@ -201,11 +201,13 @@ public class BinaryTree {
                 node = current.classNode;
                 break;
             }
-            if (current.right != null)
-                stack.push(current.right);
-            
+          
             if (current.left != null)
                 stack.push(current.left);
+    
+            if (current.right != null)
+                stack.push(current.right);
+    
         }
         return node;
     }
