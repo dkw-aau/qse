@@ -67,6 +67,15 @@ dependencies {
 
     compile 'me.tongfei:progressbar:0.9.1'
 
+    // https://mvnrepository.com/artifact/org.cache2k/cache2k-core
+    implementation group: 'org.cache2k', name: 'cache2k-core', version: '2.1.2.Alpha'
+
+    // https://mvnrepository.com/artifact/org.cache2k/cache2k-addon
+    implementation group: 'org.cache2k', name: 'cache2k-addon', version: '2.1.2.Alpha'
+
+    // https://mvnrepository.com/artifact/org.cache2k/cache2k-api
+    implementation group: 'org.cache2k', name: 'cache2k-api', version: '2.1.2.Alpha'
+
     //implementation files('address/file.jar')
 }
 

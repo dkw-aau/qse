@@ -5,7 +5,12 @@ import com.google.common.hash.Funnels;
 import cs.utils.ConfigManager;
 import cs.utils.LRUCache;
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.lang3.time.StopWatch;
+import org.cache2k.Cache;
+import org.cache2k.Cache2kBuilder;
+import org.cache2k.addon.UniversalResiliencePolicy;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Node;
@@ -15,13 +20,10 @@ import org.semanticweb.yars.nx.parser.ParseException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class BaselineParserWithBloomFilterCache {
+public class BLParserWithBloomFilterLFRUCache {
     private String rdfFile = "";
     private SHACLER shacler = new SHACLER();
     
@@ -37,7 +39,7 @@ public class BaselineParserWithBloomFilterCache {
     HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
     
     // Constructor
-    public BaselineParserWithBloomFilterCache(String filePath, int expSizeOfClasses) {
+    public BLParserWithBloomFilterLFRUCache(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
     }
@@ -80,8 +82,15 @@ public class BaselineParserWithBloomFilterCache {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        LRUCache subItcCache = new LRUCache(1000000);
-        LRUCache objItcCache = new LRUCache(1000000);
+        //LRUCache itcCache = new LRUCache(1000000);
+        
+        Cache<Node, List<Node>> sItcCache = new Cache2kBuilder<Node, List<Node>>() {}
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .entryCapacity(10000)
+                .name("cache")
+                //.refreshAhead(true)
+                .build();
+        
         try {
             try (ProgressBar pb = new ProgressBar("Progress2ndPass", sizeOfDataset)) {
                 Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
@@ -96,21 +105,21 @@ public class BaselineParserWithBloomFilterCache {
                                 
                                 if (literalTypeFlag) {
                                     //check the subject entry in the cache
-                                    if (subItcCache.containsKey(nodes[0])) {
-                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
+                                    if (sItcCache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(Objects.requireNonNull(sItcCache.get(nodes[0])));
                                     } else {
-                                        lookUpSubjInBf(subItcCache, nodes, instanceTypes);
+                                        lookUpSubjInBf(sItcCache, nodes, instanceTypes);
                                     }
                                     
                                 } else {
                                     //check the subject and the object entry in the cache
-                                    if (subItcCache.containsKey(nodes[0]) && objItcCache.containsKey(nodes[2])) {
-                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
-                                        objItcCache.get(nodes[2]).forEach(val -> {
+                                    if (sItcCache.containsKey(nodes[0]) && sItcCache.containsKey(nodes[2])) {
+                                        instanceTypes.addAll(sItcCache.get(nodes[0]));
+                                        sItcCache.get(nodes[2]).forEach(val -> {
                                             objTypes.add(val.getLabel());
                                         });
                                     } else {
-                                        lookUpSubjObjInBf(subItcCache, objItcCache, nodes, instanceTypes, objTypes);
+                                        lookUpSubjObjInBf(sItcCache, nodes, instanceTypes, objTypes);
                                     }
                                 }
                                 
@@ -152,42 +161,42 @@ public class BaselineParserWithBloomFilterCache {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    private void lookUpSubjInBf(LRUCache sItcCache, Node[] nodes, List<Node> instanceTypes) {
+    private void lookUpSubjInBf(Cache<Node, List<Node>> itcCache, Node[] nodes, List<Node> instanceTypes) {
         ctiBf.forEach((c, bf) -> {
             if (bf.mightContain(nodes[0].getLabel())) {
                 instanceTypes.add(c);
-                if (sItcCache.containsKey(nodes[0])) {
-                    sItcCache.get(nodes[0]).add(c);
+                if (itcCache.containsKey(nodes[0])) {
+                    itcCache.get(nodes[0]).add(c);
                 } else {
                     List<Node> list = new ArrayList<>();
                     list.add(c);
-                    sItcCache.put(nodes[0], list);
+                    itcCache.put(nodes[0], list);
                 }
             }
         });
     }
     
-    private void lookUpSubjObjInBf(LRUCache sItcCache, LRUCache oItcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
+    private void lookUpSubjObjInBf(Cache<Node, List<Node>>  itcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
         ctiBf.forEach((c, bf) -> {
             if (bf.mightContain(nodes[0].getLabel())) {
                 instanceTypes.add(c);
-                if (sItcCache.containsKey(nodes[0])) {
-                    sItcCache.get(nodes[0]).add(c);
+                if (itcCache.containsKey(nodes[0])) {
+                    itcCache.get(nodes[0]).add(c);
                 } else {
                     List<Node> list = new ArrayList<>();
                     list.add(c);
-                    sItcCache.put(nodes[0], list);
+                    itcCache.put(nodes[0], list);
                 }
             }
             if (bf.mightContain(nodes[2].getLabel())) {
                 objTypes.add(c.getLabel());
                 
-                if (oItcCache.containsKey(nodes[2])) {
-                    oItcCache.get(nodes[2]).add(c);
+                if (itcCache.containsKey(nodes[2])) {
+                    itcCache.get(nodes[2]).add(c);
                 } else {
                     List<Node> list = new ArrayList<>();
                     list.add(c);
-                    oItcCache.put(nodes[2], list);
+                    itcCache.put(nodes[2], list);
                 }
             }
         });
