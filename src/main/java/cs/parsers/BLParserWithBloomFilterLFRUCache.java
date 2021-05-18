@@ -87,15 +87,11 @@ public class BLParserWithBloomFilterLFRUCache {
         Cache<Node, List<Node>> subjItcCache = new Cache2kBuilder<Node, List<Node>>() {}
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .entryCapacity(1000000)
-                .name("cache")
-                //.refreshAhead(true)
                 .build();
     
         Cache<Node, List<Node>> objItcCache = new Cache2kBuilder<Node, List<Node>>() {}
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .entryCapacity(1000000)
-                .name("cache")
-                //.refreshAhead(true)
                 .build();
         
         try {
