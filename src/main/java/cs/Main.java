@@ -21,9 +21,9 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         
-        new BlParserWithTrees(datasetPath, numberOfClasses).run();
+        //new BlParserWithTrees(datasetPath, numberOfClasses).run();
         
-        //new BaselineParser(datasetPath, numberOfClasses).run();
+        new BaselineParser(datasetPath, numberOfClasses).run();
         
         //new ExtractTaxonomy(datasetPath, numberOfClasses).run();
         
