@@ -21,16 +21,7 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         
-        //new BaselineParser(datasetPath, numberOfClasses).run();
-        
-        System.out.println("BaselineParserWithBloomFilters");
-        new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
-        
-        System.out.println("BLParserWithBloomFilterLFRUCache");
-        new BLParserWithBloomFilterLFRUCache(datasetPath, numberOfClasses).run();
-        
-        System.out.println("BaselineParserEncoded");
         new BaselineParserEncoded(datasetPath, numberOfClasses).run();
-        
+        //new BLParserWithSupport(datasetPath, numberOfClasses).run();
     }
 }
