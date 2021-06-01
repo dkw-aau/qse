@@ -76,6 +76,12 @@ dependencies {
     // https://mvnrepository.com/artifact/org.cache2k/cache2k-api
     implementation group: 'org.cache2k', name: 'cache2k-api', version: '2.1.2.Alpha'
 
+    // https://mvnrepository.com/artifact/org.ejml/ejml-all
+    implementation group: 'org.ejml', name: 'ejml-all', version: '0.40'
+
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-core
+    implementation group: 'org.jgrapht', name: 'jgrapht-core', version: '1.5.1'
+
     //implementation files('address/file.jar')
 }
 
