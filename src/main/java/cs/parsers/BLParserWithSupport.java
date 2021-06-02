@@ -5,6 +5,9 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
@@ -12,12 +15,11 @@ import org.semanticweb.yars.nx.parser.ParseException;
 import java.text.DecimalFormat;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static org.ejml.UtilEjml.assertTrue;
 
 public class BLParserWithSupport {
     String rdfFile = "";
@@ -56,7 +58,7 @@ public class BLParserWithSupport {
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
+                            classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
                             // Track classes per instance
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
@@ -84,9 +86,33 @@ public class BLParserWithSupport {
             System.out.println(val);
         });
         
-        instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((e,v) -> {
-            System.out.println(e + " - " + v);
-       });
+        
+        Graph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+        
+        instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((groupSize, groupSlot) -> {
+            System.out.println(groupSize + " - " + groupSlot);
+            if (groupSize == 1) {
+                groupSlot.forEach(group -> {
+                    group.forEach(directedGraph::addVertex);
+                });
+            } else if (groupSize > 1) {
+                groupSlot.forEach(group -> {
+                    HashMap<Integer, Integer> memberFrequency = new HashMap<>();
+                    group.forEach(groupMember -> {
+                        memberFrequency.put(groupMember, classInstanceCount.get(encoder.decode(groupMember)));
+                        if (!directedGraph.containsVertex(groupMember)) directedGraph.addVertex(groupMember);
+                    });
+                    Integer[] sortedGroupMembers = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
+                    //System.out.println(Arrays.toString(sortedGroupMembers));
+                    
+                    for (int i = 1; i < sortedGroupMembers.length; i++) {
+                        directedGraph.addEdge(sortedGroupMembers[i - 1], sortedGroupMembers[i]);
+                    }
+                });
+            }
+            
+        });
+        System.out.println(directedGraph.toString());
         
     }
     
@@ -201,7 +227,7 @@ public class BLParserWithSupport {
         
         System.out.println();
         
-    /*    classToPropWithCount.forEach((k, v) -> {
+        /*    classToPropWithCount.forEach((k, v) -> {
             System.out.println(k);
             v.forEach((k1, v1) -> {
                 System.out.println("\t " + k1 + " -> " + formatter.format(v1));
@@ -211,6 +237,23 @@ public class BLParserWithSupport {
         
         //populateShapes();
         //shacler.writeModelToFile();
+    }
+    
+    //https://www.baeldung.com/java-sorting
+    public Map<Integer, Integer> sortingKeysOfMapByValues(HashMap<Integer, Integer> map) {
+        List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(map.entrySet());
+        entries.sort(new Comparator<Map.Entry<Integer, Integer>>() {
+            @Override
+            public int compare(
+                    Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2) {
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
+        Map<Integer, Integer> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Integer> entry : entries) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+        return sortedMap;
     }
     
     private void measureMemoryUsage() {
