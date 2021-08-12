@@ -1,27 +1,31 @@
 package cs.parsers;
 
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnels;
 import cs.utils.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
-import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.traverse.BreadthFirstIterator;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.text.DecimalFormat;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static org.ejml.UtilEjml.assertTrue;
-
-public class BLParserWithSupport {
+public class BLParserWithBloomFiltersAndBFS {
     String rdfFile = "";
     SHACLER shacler = new SHACLER();
     
@@ -38,12 +42,14 @@ public class BLParserWithSupport {
     HashSet<Node> properties = new HashSet<>();
     Encoder encoder = new Encoder();
     
+    HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
+    
     // Constructor
-    BLParserWithSupport(String filePath) {
+    BLParserWithBloomFiltersAndBFS(String filePath) {
         this.rdfFile = filePath;
     }
     
-    public BLParserWithSupport(String filePath, int expSizeOfClasses) {
+    public BLParserWithBloomFiltersAndBFS(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
     }
@@ -67,6 +73,15 @@ public class BLParserWithSupport {
                                 list.add(encoder.encode(nodes[2].getLabel()));
                                 instanceToClass.put(nodes[0], list);
                             }
+    
+                            if (ctiBf.containsKey(nodes[2])) {
+                                ctiBf.get(nodes[2]).put(nodes[0].getLabel());
+                            } else {
+                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
+                                bf.put(nodes[0].getLabel());
+                                ctiBf.put(nodes[2], bf);
+                            }
+                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -78,42 +93,103 @@ public class BLParserWithSupport {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    private void grouping() {
-        encoder.getTable().forEach((k, v) -> {
-            System.out.println(k + " - " + v);
+    private void grouping() throws IOException {
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        
+        /*     encoder.getTable().forEach((k, v) -> {
+            System.out.println(k + " - " + v + " - " + formatter.format(classInstanceCount.get(v)));
         });
+        
         instanceToClass.values().stream().distinct().forEachOrdered(val -> {
             System.out.println(val);
-        });
+        });*/
         
+        DefaultDirectedGraph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+        //Graph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
         
-        Graph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-        
-        instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((groupSize, groupSlot) -> {
-            System.out.println(groupSize + " - " + groupSlot);
-            if (groupSize == 1) {
-                groupSlot.forEach(group -> {
-                    group.forEach(directedGraph::addVertex);
+        instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((mSize, mSets) -> {
+            //System.out.println(mSize + " - " + mSets);
+            if (mSize == 1) {
+                mSets.forEach(set -> {
+                    set.forEach(directedGraph::addVertex);
                 });
-            } else if (groupSize > 1) {
-                groupSlot.forEach(group -> {
+            } else if (mSize > 1) {
+                mSets.forEach(set -> {
                     HashMap<Integer, Integer> memberFrequency = new HashMap<>();
-                    group.forEach(groupMember -> {
-                        memberFrequency.put(groupMember, classInstanceCount.get(encoder.decode(groupMember)));
-                        if (!directedGraph.containsVertex(groupMember)) directedGraph.addVertex(groupMember);
+                    set.forEach(element -> {
+                        memberFrequency.put(element, classInstanceCount.get(encoder.decode(element)));
+                        if (!directedGraph.containsVertex(element)) directedGraph.addVertex(element);
                     });
-                    Integer[] sortedGroupMembers = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
+                    Integer[] sortedElementsOfMemberSet = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
                     //System.out.println(Arrays.toString(sortedGroupMembers));
                     
-                    for (int i = 1; i < sortedGroupMembers.length; i++) {
-                        directedGraph.addEdge(sortedGroupMembers[i - 1], sortedGroupMembers[i]);
+                    for (int i = 1; i < sortedElementsOfMemberSet.length; i++) {
+                        if (memberFrequency.get(sortedElementsOfMemberSet[i - 1]).equals(memberFrequency.get(sortedElementsOfMemberSet[i]))) {
+                            //System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
+                            directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
+                            directedGraph.addEdge(sortedElementsOfMemberSet[i], sortedElementsOfMemberSet[i - 1]);
+                        } else {
+                            directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
+                        }
                     }
                 });
             }
-            
         });
-        System.out.println(directedGraph.toString());
         
+        //System.out.println("Printing graph"); System.out.println(directedGraph);
+        
+        AtomicBoolean flag = new AtomicBoolean(false);
+        AtomicInteger rootNodeCount = new AtomicInteger();
+        AtomicInteger rootNodeAbsenceCount = new AtomicInteger();
+        AtomicInteger onlyOneNodeSubGraphCount = new AtomicInteger();
+        
+        ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
+        
+        System.out.println("Sub-graphs:");
+        ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
+        System.out.println("Number of Sub-graphs: " + connectivityInspector.connectedSets().size());
+        System.out.println("The Sub-graphs" + connectivityInspector.connectedSets());
+        
+        System.out.println("Sorted Sub-graphs");
+        connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
+            System.out.println("Size: " + subGraphVertices.size());
+            
+            if (subGraphVertices.size() > 1) {
+                subGraphVertices.forEach(vertex -> {
+                    if (directedGraph.inDegreeOf(vertex) == 0) {
+                        System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
+                        rootNodesOfSubGraphs.add(vertex);
+                        rootNodeCount.getAndIncrement();
+                        flag.set(true);
+                    }
+                    
+                    if (!flag.get()) {
+                        System.out.println("There doesn't exist root node in this graph");
+                        rootNodeAbsenceCount.getAndIncrement();
+                    }
+                });
+                
+            } else if (subGraphVertices.size() == 1) {
+                onlyOneNodeSubGraphCount.getAndIncrement();
+                rootNodesOfSubGraphs.addAll(subGraphVertices);
+            }
+        });
+        
+        System.out.println("Root Node count:" + rootNodeCount);
+        System.out.println("Root Node Absence count:" + rootNodeAbsenceCount);
+        System.out.println("Only one node sub-graph count:" + onlyOneNodeSubGraphCount);
+        
+        //Add a main root to connect all the sub-graphs
+        directedGraph.addVertex(-999);
+        rootNodesOfSubGraphs.forEach(node -> {
+            directedGraph.addEdge(-999, node);
+        });
+        
+        System.out.println("BFS World:");
+        BreadthFirstIterator<Integer, DefaultEdge> bfs = new BreadthFirstIterator<>(directedGraph, -999);
+        bfs.forEachRemaining(val -> {
+            System.out.print(val + " , ");
+        });
     }
     
     private void secondPass() {
@@ -214,18 +290,15 @@ public class BLParserWithSupport {
         return theType;
     }
     
-    private void runParser() {
+    private void runParser() throws IOException {
         firstPass();
         //secondPass();
         grouping();
+        System.out.println("Done Grouping");
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         
-        DecimalFormat formatter = new DecimalFormat("#,###");
-        classInstanceCount.forEach((c, i) -> {
-            System.out.println(c + " -> " + formatter.format(i));
-        });
-        
-        System.out.println();
+        //DecimalFormat formatter = new DecimalFormat("#,###");
+        //classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
         
         /*    classToPropWithCount.forEach((k, v) -> {
             System.out.println(k);
@@ -265,7 +338,7 @@ public class BLParserWithSupport {
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
     
-    public void run() {
+    public void run() throws IOException {
         runParser();
         //measureMemoryUsage();
     }

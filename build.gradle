@@ -82,6 +82,10 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-core
     implementation group: 'org.jgrapht', name: 'jgrapht-core', version: '1.5.1'
 
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-ext
+    implementation group: 'org.jgrapht', name: 'jgrapht-ext', version: '1.5.1'
+
+
     //implementation files('address/file.jar')
 }
 
