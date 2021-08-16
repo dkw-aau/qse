@@ -2,14 +2,17 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.utils.Encoder;
+import cs.utils.ConfigManager;
+import cs.utils.NodeEncoder;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
+import org.jgrapht.Graphs;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
+import org.jgrapht.alg.util.NeighborCache;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.traverse.BreadthFirstIterator;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
@@ -22,7 +25,6 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class BLParserWithBloomFiltersAndBFS {
@@ -31,18 +33,20 @@ public class BLParserWithBloomFiltersAndBFS {
     
     // Constants
     final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
+    private int sizeOfDataset = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
     int expectedNumberOfClasses = 10000;
     
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
-    HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     //HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
     HashMap<Node, List<Integer>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
-    Encoder encoder = new Encoder();
+    NodeEncoder encoder = new NodeEncoder();
+    DefaultDirectedGraph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
     
-    HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
+    HashMap<Integer, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
     
     // Constructor
     BLParserWithBloomFiltersAndBFS(String filePath) {
@@ -65,21 +69,22 @@ public class BLParserWithBloomFiltersAndBFS {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
+                            
                             // Track classes per instance
                             if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
+                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2]));
                             } else {
                                 List<Integer> list = new ArrayList<>();
-                                list.add(encoder.encode(nodes[2].getLabel()));
+                                list.add(encoder.encode(nodes[2]));
                                 instanceToClass.put(nodes[0], list);
                             }
-    
-                            if (ctiBf.containsKey(nodes[2])) {
-                                ctiBf.get(nodes[2]).put(nodes[0].getLabel());
+                            
+                            if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
+                                ctiBf.get(encoder.encode(nodes[2])).put(nodes[0].getLabel());
                             } else {
                                 BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
                                 bf.put(nodes[0].getLabel());
-                                ctiBf.put(nodes[2], bf);
+                                ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
                             
                         } catch (ParseException e) {
@@ -93,20 +98,9 @@ public class BLParserWithBloomFiltersAndBFS {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    private void grouping() throws IOException {
-        DecimalFormat formatter = new DecimalFormat("#,###");
-        
-        /*     encoder.getTable().forEach((k, v) -> {
-            System.out.println(k + " - " + v + " - " + formatter.format(classInstanceCount.get(v)));
-        });
-        
-        instanceToClass.values().stream().distinct().forEachOrdered(val -> {
-            System.out.println(val);
-        });*/
-        
-        DefaultDirectedGraph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-        //Graph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-        
+    private void hierarchicalSchemaGraphConstruction() {
+        StopWatch watch = new StopWatch();
+        watch.start();
         instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((mSize, mSets) -> {
             //System.out.println(mSize + " - " + mSets);
             if (mSize == 1) {
@@ -117,7 +111,7 @@ public class BLParserWithBloomFiltersAndBFS {
                 mSets.forEach(set -> {
                     HashMap<Integer, Integer> memberFrequency = new HashMap<>();
                     set.forEach(element -> {
-                        memberFrequency.put(element, classInstanceCount.get(encoder.decode(element)));
+                        memberFrequency.put(element, classInstanceCount.get(encoder.decode(element).getLabel()));
                         if (!directedGraph.containsVertex(element)) directedGraph.addVertex(element);
                     });
                     Integer[] sortedElementsOfMemberSet = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
@@ -139,45 +133,28 @@ public class BLParserWithBloomFiltersAndBFS {
         //System.out.println("Printing graph"); System.out.println(directedGraph);
         
         AtomicBoolean flag = new AtomicBoolean(false);
-        AtomicInteger rootNodeCount = new AtomicInteger();
-        AtomicInteger rootNodeAbsenceCount = new AtomicInteger();
-        AtomicInteger onlyOneNodeSubGraphCount = new AtomicInteger();
-        
         ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
         
-        System.out.println("Sub-graphs:");
         ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
-        System.out.println("Number of Sub-graphs: " + connectivityInspector.connectedSets().size());
-        System.out.println("The Sub-graphs" + connectivityInspector.connectedSets());
-        
-        System.out.println("Sorted Sub-graphs");
         connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
-            System.out.println("Size: " + subGraphVertices.size());
-            
+            //System.out.println("Size: " + subGraphVertices.size());
             if (subGraphVertices.size() > 1) {
                 subGraphVertices.forEach(vertex -> {
                     if (directedGraph.inDegreeOf(vertex) == 0) {
-                        System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
+                        //System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
                         rootNodesOfSubGraphs.add(vertex);
-                        rootNodeCount.getAndIncrement();
                         flag.set(true);
                     }
                     
                     if (!flag.get()) {
-                        System.out.println("There doesn't exist root node in this graph");
-                        rootNodeAbsenceCount.getAndIncrement();
+                        //System.out.println("There doesn't exist root node in this graph");
                     }
                 });
                 
             } else if (subGraphVertices.size() == 1) {
-                onlyOneNodeSubGraphCount.getAndIncrement();
                 rootNodesOfSubGraphs.addAll(subGraphVertices);
             }
         });
-        
-        System.out.println("Root Node count:" + rootNodeCount);
-        System.out.println("Root Node Absence count:" + rootNodeAbsenceCount);
-        System.out.println("Only one node sub-graph count:" + onlyOneNodeSubGraphCount);
         
         //Add a main root to connect all the sub-graphs
         directedGraph.addVertex(-999);
@@ -185,78 +162,93 @@ public class BLParserWithBloomFiltersAndBFS {
             directedGraph.addEdge(-999, node);
         });
         
-        System.out.println("BFS World:");
-        BreadthFirstIterator<Integer, DefaultEdge> bfs = new BreadthFirstIterator<>(directedGraph, -999);
-        bfs.forEachRemaining(val -> {
-            System.out.print(val + " , ");
-        });
+        watch.stop();
+        System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
+            
+            NeighborCache<Integer, DefaultEdge> neighborCache = new NeighborCache<Integer, DefaultEdge>(directedGraph);
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).forEach(c -> {
-                                    if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
-                                        HashSet<String> objTypes = new HashSet<String>();
-                                        if (instanceToClass.containsKey(nodes[2])) // object is an instance of some class e.g., :Paris is an instance of :City.
-                                            instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(encoder.decode(node));
-                                            });
-                                        else {
-                                            objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
+                            
+                            List<Node> instanceTypes = new ArrayList<>();
+                            HashSet<String> objTypes = new HashSet<String>();
+                            
+                            // Mark all the vertices as not visited(By default set as false)
+                            //boolean[] visited = new boolean[directedGraph.vertexSet().size()];
+                            List<Integer> visited = new ArrayList<Integer>();
+                            // Create a queue for BFS
+                            LinkedList<Integer> queue = new LinkedList<Integer>();
+                            
+                            // Mark the current node as visited and enqueue it
+                            int node = -999;
+                            queue.add(node);
+                            visited.add(node);
+                            
+                            while (queue.size() != 0) {
+                                // Dequeue a vertex from queue and print it
+                                node = queue.poll();
+                                //System.out.println("Node to be polled: " + node);
+                                //System.out.println("Neighbours: ");
+                                //System.out.println(Graphs.successorListOf(directedGraph, node));
+                                // Get all adjacent vertices of the dequeued node
+                                // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
+                                for (Integer neigh : Graphs.successorListOf(directedGraph, node)) {
+                                    if (!visited.contains(neigh)) {
+                                        boolean flag = false;
+                                        if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
+                                            instanceTypes.add(encoder.decode(neigh));
+                                            flag = true;
                                         }
-                                        if (propToObjTypes.containsKey(nodes[1]))
-                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                        else {
-                                            propToObjTypes.put(nodes[1], objTypes);
+                                        if (ctiBf.get(neigh).mightContain(nodes[2].getLabel())) {
+                                            objTypes.add(encoder.decode(neigh).getLabel());
+                                            flag = true;
                                         }
-                                        classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
-                                        
-                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(encoder.decode(c));
-                                        if (propToCount.containsKey(nodes[1])) {
-                                            propToCount.replace(nodes[1], propToCount.get(nodes[1]) + 1);
-                                        } else {
-                                            propToCount.put(nodes[1], 1);
+                                        if (flag) {
+                                            queue.add(neigh);
                                         }
-                                        classToPropWithCount.put(encoder.decode(c), propToCount);
-                                        
-                                    } else {
-                                        HashSet<String> objTypes = new HashSet<String>();
-                                        if (instanceToClass.containsKey(nodes[2]))  // object is an instance of some class e.g., :Paris is an instance of :City.
-                                            instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(encoder.decode(node));
-                                            });
-                                        else {
-                                            objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
-                                        }
-                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
-                                        propToObjTypes.put(nodes[1], objTypes);
-                                        
-                                        
-                                        //Add Count of Props
-                                        HashMap<Node, Integer> propToCount = new HashMap<>();
-                                        propToCount.put(nodes[1], 1);
-                                        
-                                        instanceToClass.get(nodes[0]).forEach(cl -> {
-                                            classToPropWithObjTypes.put(encoder.decode(cl), propToObjTypes);
-                                            classToPropWithCount.put(encoder.decode(cl), propToCount);
-                                        });
+                                        visited.add(neigh);
                                     }
-                                });
+                                }
                             }
+                            
+                            
+                            instanceTypes.forEach(c -> {
+                                if (objTypes.isEmpty()) {
+                                    objTypes.add(getType(nodes[2].toString()));
+                                }
+                                
+                                if (classToPropWithObjTypes.containsKey(c)) {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                    
+                                    if (propToObjTypes.containsKey(nodes[1]))
+                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                    else {
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                    }
+                                    classToPropWithObjTypes.put(c, propToObjTypes);
+                                    
+                                } else {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                    propToObjTypes.put(nodes[1], objTypes);
+                                    instanceTypes.forEach(type -> {
+                                        classToPropWithObjTypes.put(type, propToObjTypes);
+                                    });
+                                }
+                            });
                             properties.add(nodes[1]);
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -292,24 +284,24 @@ public class BLParserWithBloomFiltersAndBFS {
     
     private void runParser() throws IOException {
         firstPass();
-        //secondPass();
-        grouping();
+        hierarchicalSchemaGraphConstruction();
+        secondPass();
         System.out.println("Done Grouping");
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         
-        //DecimalFormat formatter = new DecimalFormat("#,###");
-        //classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
         
-        /*    classToPropWithCount.forEach((k, v) -> {
+            classToPropWithCount.forEach((k, v) -> {
             System.out.println(k);
             v.forEach((k1, v1) -> {
                 System.out.println("\t " + k1 + " -> " + formatter.format(v1));
             });
             System.out.println();
-        });*/
+        });
         
-        //populateShapes();
-        //shacler.writeModelToFile();
+        populateShapes();
+        shacler.writeModelToFile();
     }
     
     //https://www.baeldung.com/java-sorting
