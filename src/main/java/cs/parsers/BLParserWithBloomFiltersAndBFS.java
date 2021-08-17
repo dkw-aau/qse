@@ -77,7 +77,7 @@ public class BLParserWithBloomFiltersAndBFS {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).put(nodes[0].getLabel());
                             } else {
-                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000_000, 0.000001);
+                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.000001);
                                 bf.put(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
@@ -187,6 +187,9 @@ public class BLParserWithBloomFiltersAndBFS {
                             int node = -999;
                             queue.add(node);
                             visited.add(node);
+                            if (nodes[0].getLabel().equals("http://www.Department18.University1.edu/AssistantProfessor0")) {
+                                System.out.println("Test this node: " + nodes[0].getLabel() + " " + nodes[1].getLabel() + " " + nodes[2].getLabel());
+                            }
                             while (queue.size() != 0) {
                                 // Dequeue a vertex from queue and print it
                                 node = queue.poll();
@@ -197,6 +200,11 @@ public class BLParserWithBloomFiltersAndBFS {
                                 // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
                                 for (Integer neigh : Graphs.successorListOf(directedGraph, node)) {
                                     if (!visited.contains(neigh)) {
+                                        if (nodes[0].getLabel().equals("http://www.Department18.University1.edu/AssistantProfessor0")) {
+                                            System.out.println("Test this node: " + nodes[0].getLabel() + " " + nodes[1].getLabel() + " " + nodes[2].getLabel());
+                                            System.out.println("Visiting Neighbour: " + neigh);
+                                        }
+                                       
                                         boolean flag = false;
                                         if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
                                             instanceTypes.add(encoder.decode(neigh));
