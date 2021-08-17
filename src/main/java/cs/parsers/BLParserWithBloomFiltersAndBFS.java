@@ -2,15 +2,12 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.utils.ConfigManager;
 import cs.utils.NodeEncoder;
-import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
-import org.jgrapht.alg.util.NeighborCache;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
@@ -33,7 +30,6 @@ public class BLParserWithBloomFiltersAndBFS {
     
     // Constants
     final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    private int sizeOfDataset = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
     int expectedNumberOfClasses = 10000;
     
     // Classes, instances, properties
@@ -61,7 +57,6 @@ public class BLParserWithBloomFiltersAndBFS {
     private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        //HashMap<String, List<Integer>> groups = new HashMap<>();
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> line.contains(RDFType))
@@ -82,15 +77,16 @@ public class BLParserWithBloomFiltersAndBFS {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).put(nodes[0].getLabel());
                             } else {
-                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
+                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000_000, 0.000001);
                                 bf.put(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
-                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
+            
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -171,7 +167,7 @@ public class BLParserWithBloomFiltersAndBFS {
         watch.start();
         try {
             
-            NeighborCache<Integer, DefaultEdge> neighborCache = new NeighborCache<Integer, DefaultEdge>(directedGraph);
+            //NeighborCache<Integer, DefaultEdge> neighborCache = new NeighborCache<Integer, DefaultEdge>(directedGraph);
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
@@ -191,7 +187,6 @@ public class BLParserWithBloomFiltersAndBFS {
                             int node = -999;
                             queue.add(node);
                             visited.add(node);
-                            
                             while (queue.size() != 0) {
                                 // Dequeue a vertex from queue and print it
                                 node = queue.poll();
@@ -292,7 +287,7 @@ public class BLParserWithBloomFiltersAndBFS {
         DecimalFormat formatter = new DecimalFormat("#,###");
         classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
         
-            classToPropWithCount.forEach((k, v) -> {
+        classToPropWithCount.forEach((k, v) -> {
             System.out.println(k);
             v.forEach((k1, v1) -> {
                 System.out.println("\t " + k1 + " -> " + formatter.format(v1));
