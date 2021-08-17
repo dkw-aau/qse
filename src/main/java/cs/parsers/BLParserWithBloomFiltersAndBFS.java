@@ -187,24 +187,14 @@ public class BLParserWithBloomFiltersAndBFS {
                             int node = -999;
                             queue.add(node);
                             visited.add(node);
-                            if (nodes[0].getLabel().equals("http://www.Department18.University1.edu/AssistantProfessor0")) {
-                                System.out.println("Test this node: " + nodes[0].getLabel() + " " + nodes[1].getLabel() + " " + nodes[2].getLabel());
-                            }
                             while (queue.size() != 0) {
                                 // Dequeue a vertex from queue and print it
                                 node = queue.poll();
-                                //System.out.println("Node to be polled: " + node);
-                                //System.out.println("Neighbours: ");
-                                //System.out.println(Graphs.successorListOf(directedGraph, node));
+                                //System.out.println("Neighbours: "); -> Graphs.successorListOf(directedGraph, node)
                                 // Get all adjacent vertices of the dequeued node
                                 // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
                                 for (Integer neigh : Graphs.successorListOf(directedGraph, node)) {
                                     if (!visited.contains(neigh)) {
-                                        if (nodes[0].getLabel().equals("http://www.Department18.University1.edu/AssistantProfessor0")) {
-                                            System.out.println("Test this node: " + nodes[0].getLabel() + " " + nodes[1].getLabel() + " " + nodes[2].getLabel());
-                                            System.out.println("Visiting Neighbour: " + neigh);
-                                        }
-                                       
                                         boolean flag = false;
                                         if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
                                             instanceTypes.add(encoder.decode(neigh));
