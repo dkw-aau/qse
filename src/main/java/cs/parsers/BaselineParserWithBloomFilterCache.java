@@ -237,6 +237,6 @@ public class BaselineParserWithBloomFilterCache {
     
     public void run() {
         runParser();
-        measureMemoryUsage();
+        //measureMemoryUsage();
     }
 }
