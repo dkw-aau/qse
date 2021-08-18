@@ -144,6 +144,7 @@ public class BLParserWithBloomFiltersAndBFS {
                     
                     if (!flag.get()) {
                         //System.out.println("There doesn't exist root node in this graph");
+                        rootNodesOfSubGraphs.add(new Random().nextInt(subGraphVertices.size()));
                     }
                 });
                 
@@ -189,7 +190,7 @@ public class BLParserWithBloomFiltersAndBFS {
                             visited.add(node);
                             while (queue.size() != 0) {
                                 // Dequeue a vertex from queue and print it
-                                node = queue.poll(); 
+                                node = queue.poll();
                                 //System.out.println("Neighbours: "); -> Graphs.successorListOf(directedGraph, node)
                                 // Get all adjacent vertices of the dequeued node
                                 // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
