@@ -283,7 +283,7 @@ public class BLParserWithBloomFiltersAndBFS {
         System.out.println("Done Grouping");
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         
-        DecimalFormat formatter = new DecimalFormat("#,###");
+        /*DecimalFormat formatter = new DecimalFormat("#,###");
         classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
         
         classToPropWithCount.forEach((k, v) -> {
@@ -292,7 +292,7 @@ public class BLParserWithBloomFiltersAndBFS {
                 System.out.println("\t " + k1 + " -> " + formatter.format(v1));
             });
             System.out.println();
-        });
+        });*/
         
         populateShapes();
         shacler.writeModelToFile();

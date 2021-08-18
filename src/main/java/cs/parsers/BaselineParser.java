@@ -171,9 +171,9 @@ public class BaselineParser {
         secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         
-        instanceToClass.forEach( (i, k) -> {
+        /*instanceToClass.forEach( (i, k) -> {
             System.out.println(i + " -> " + k);
-        });
+        });*/
         
         populateShapes();
         shacler.writeModelToFile();
