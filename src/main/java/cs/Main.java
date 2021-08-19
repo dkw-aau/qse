@@ -13,6 +13,7 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
     
+        /*
         System.out.println("BaselineParser");
         new BaselineParser(datasetPath, numberOfClasses).run();
         System.out.println("BaselineParserEncoded");
@@ -20,7 +21,7 @@ public class Main {
         System.out.println("BaselineParserWithBloomFilters");
         new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
         System.out.println("BaselineParserWithBloomFilterCache");
-        new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();
+        new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();*/
         System.out.println("BLParserWithBloomFiltersAndBFS");
         new BLParserWithBloomFiltersAndBFS(datasetPath, numberOfClasses).run();
     }
