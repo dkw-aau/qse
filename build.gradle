@@ -85,6 +85,17 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-ext
     implementation group: 'org.jgrapht', name: 'jgrapht-ext', version: '1.5.1'
 
+    compile "org.neo4j:neo4j:4.3.2"
+
+// https://mvnrepository.com/artifact/com.sun.jersey/jersey-client
+    implementation group: 'com.sun.jersey', name: 'jersey-client', version: '1.19.4'
+
+// https://mvnrepository.com/artifact/org.neo4j/neo4j-bolt
+    testImplementation group: 'org.neo4j', name: 'neo4j-bolt', version: '4.3.3'
+
+// https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver
+    implementation group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '4.3.4'
+
 
     //implementation files('address/file.jar')
 }

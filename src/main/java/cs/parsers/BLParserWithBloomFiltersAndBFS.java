@@ -97,8 +97,15 @@ public class BLParserWithBloomFiltersAndBFS {
     private void hierarchicalSchemaGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        instanceToClass.values().stream().distinct().collect(Collectors.groupingBy(List::size)).forEach((mSize, mSets) -> {
-            //System.out.println(mSize + " - " + mSets);
+        
+        Map<Integer, List<List<Integer>>> sortedMembershipSets = instanceToClass.values().stream().distinct()
+                .collect(Collectors.groupingBy(List::size)).entrySet().stream().sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                    throw new AssertionError();
+                }, LinkedHashMap::new));
+        
+        sortedMembershipSets.forEach((mSize, mSets) -> {
+            //System.out.println(mSize + " - " + mSets.size());
             if (mSize == 1) {
                 mSets.forEach(set -> {
                     set.forEach(directedGraph::addVertex);
@@ -130,10 +137,13 @@ public class BLParserWithBloomFiltersAndBFS {
         
         AtomicBoolean flag = new AtomicBoolean(false);
         ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
+        Graphs.successorListOf(directedGraph, 7).forEach(val -> {
+            System.out.println(encoder.decode(val));
+        });
         
         ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
         connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
-            //System.out.println("Size: " + subGraphVertices.size());
+            //System.out.println("subGraphVertices.size(): " + subGraphVertices.size());
             if (subGraphVertices.size() > 1) {
                 subGraphVertices.forEach(vertex -> {
                     if (directedGraph.inDegreeOf(vertex) == 0) {
@@ -173,6 +183,8 @@ public class BLParserWithBloomFiltersAndBFS {
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
+                            //StopWatch innerWatch = new StopWatch();
+                            //innerWatch.start();
                             Node[] nodes = NxParser.parseNodes(line);
                             
                             List<Node> instanceTypes = new ArrayList<>();
@@ -180,7 +192,7 @@ public class BLParserWithBloomFiltersAndBFS {
                             
                             // Mark all the vertices as not visited(By default set as false)
                             //boolean[] visited = new boolean[directedGraph.vertexSet().size()];
-                            List<Integer> visited = new ArrayList<Integer>();
+                            HashSet<Integer> visited = new HashSet<>();
                             // Create a queue for BFS
                             LinkedList<Integer> queue = new LinkedList<Integer>();
                             
@@ -194,7 +206,15 @@ public class BLParserWithBloomFiltersAndBFS {
                                 //System.out.println("Neighbours: "); -> Graphs.successorListOf(directedGraph, node)
                                 // Get all adjacent vertices of the dequeued node
                                 // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
-                                for (Integer neigh : Graphs.successorListOf(directedGraph, node)) {
+                                List<Integer> neighbours = new ArrayList<>();
+                                for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
+                                    Integer source = directedGraph.getEdgeSource(edge);
+                                    Integer target = directedGraph.getEdgeTarget(edge);
+                                    if (node == source) neighbours.add(target);
+                                    else if (node == target) neighbours.add(source);
+                                }
+                                
+                                neighbours.forEach(neigh -> {
                                     if (!visited.contains(neigh)) {
                                         boolean flag = false;
                                         if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
@@ -210,7 +230,7 @@ public class BLParserWithBloomFiltersAndBFS {
                                         }
                                         visited.add(neigh);
                                     }
-                                }
+                                });
                             }
                             
                             
@@ -238,6 +258,9 @@ public class BLParserWithBloomFiltersAndBFS {
                                 }
                             });
                             properties.add(nodes[1]);
+                            
+                            //innerWatch.stop();
+                            //System.out.println("Time Elapsed inner watch: " + innerWatch.getTime());
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
