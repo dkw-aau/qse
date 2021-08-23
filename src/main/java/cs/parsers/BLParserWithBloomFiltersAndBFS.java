@@ -2,6 +2,7 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import cs.extras.Neo4jGraph;
 import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -11,6 +12,7 @@ import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.Resource;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
@@ -31,7 +33,7 @@ public class BLParserWithBloomFiltersAndBFS {
     // Constants
     final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     int expectedNumberOfClasses = 10000;
-    
+    int hng_root = 0;
     // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
@@ -97,80 +99,113 @@ public class BLParserWithBloomFiltersAndBFS {
     private void hierarchicalSchemaGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        
-        Map<Integer, List<List<Integer>>> sortedMembershipSets = instanceToClass.values().stream().distinct()
-                .collect(Collectors.groupingBy(List::size)).entrySet().stream().sorted(Map.Entry.comparingByKey())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
-                    throw new AssertionError();
-                }, LinkedHashMap::new));
-        
-        sortedMembershipSets.forEach((mSize, mSets) -> {
-            //System.out.println(mSize + " - " + mSets.size());
-            if (mSize == 1) {
-                mSets.forEach(set -> {
-                    set.forEach(directedGraph::addVertex);
-                });
-            } else if (mSize > 1) {
-                mSets.forEach(set -> {
-                    HashMap<Integer, Integer> memberFrequency = new HashMap<>();
-                    set.forEach(element -> {
-                        memberFrequency.put(element, classInstanceCount.get(encoder.decode(element).getLabel()));
-                        if (!directedGraph.containsVertex(element)) directedGraph.addVertex(element);
+        try {
+            Map<Integer, List<List<Integer>>> sortedMembershipSets = instanceToClass.values().stream().distinct()
+                    .collect(Collectors.groupingBy(List::size)).entrySet().stream().sorted(Map.Entry.comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                        throw new AssertionError();
+                    }, LinkedHashMap::new));
+            
+            sortedMembershipSets.forEach((mSize, mSets) -> {
+                //System.out.println(mSize + " - " + mSets.size());
+                if (mSize == 1) {
+                    mSets.forEach(set -> {
+                        set.forEach(directedGraph::addVertex);
                     });
-                    Integer[] sortedElementsOfMemberSet = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
-                    //System.out.println(Arrays.toString(sortedGroupMembers));
-                    
-                    for (int i = 1; i < sortedElementsOfMemberSet.length; i++) {
-                        if (memberFrequency.get(sortedElementsOfMemberSet[i - 1]).equals(memberFrequency.get(sortedElementsOfMemberSet[i]))) {
-                            //System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
-                            directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
-                            directedGraph.addEdge(sortedElementsOfMemberSet[i], sortedElementsOfMemberSet[i - 1]);
-                        } else {
-                            directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
+                } else if (mSize > 1) {
+                    mSets.forEach(set -> {
+                        HashMap<Integer, Integer> memberFrequency = new HashMap<>();
+                        set.forEach(element -> {
+                            memberFrequency.put(element, classInstanceCount.get(encoder.decode(element).getLabel()));
+                            if (!directedGraph.containsVertex(element)) directedGraph.addVertex(element);
+                        });
+                        Integer[] sortedElementsOfMemberSet = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
+                        //System.out.println(Arrays.toString(sortedGroupMembers));
+                        
+                        for (int i = 1; i < sortedElementsOfMemberSet.length; i++) {
+                            if (memberFrequency.get(sortedElementsOfMemberSet[i - 1]).equals(memberFrequency.get(sortedElementsOfMemberSet[i]))) {
+                                System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
+                                directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
+                                directedGraph.addEdge(sortedElementsOfMemberSet[i], sortedElementsOfMemberSet[i - 1]);
+                            } else {
+                                directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
+                            }
                         }
-                    }
-                });
-            }
-        });
-        
-        //System.out.println("Printing graph"); System.out.println(directedGraph);
-        
-        AtomicBoolean flag = new AtomicBoolean(false);
-        ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
-        Graphs.successorListOf(directedGraph, 7).forEach(val -> {
-            System.out.println(encoder.decode(val));
-        });
-        
-        ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
-        connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
-            //System.out.println("subGraphVertices.size(): " + subGraphVertices.size());
-            if (subGraphVertices.size() > 1) {
-                subGraphVertices.forEach(vertex -> {
-                    if (directedGraph.inDegreeOf(vertex) == 0) {
-                        //System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
-                        rootNodesOfSubGraphs.add(vertex);
-                        flag.set(true);
-                    }
+                    });
+                }
+            });
+            
+            //System.out.println("Printing graph"); System.out.println(directedGraph);
+            
+            AtomicBoolean flag = new AtomicBoolean(false);
+            ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
+            Graphs.successorListOf(directedGraph, 7).forEach(val -> {
+                System.out.println(encoder.decode(val));
+            });
+            
+            ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
+            connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
+                //System.out.println("subGraphVertices.size(): " + subGraphVertices.size());
+                if (subGraphVertices.size() > 1) {
+                    subGraphVertices.forEach(vertex -> {
+                        if (directedGraph.inDegreeOf(vertex) == 0) {
+                            //System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
+                            rootNodesOfSubGraphs.add(vertex);
+                            flag.set(true);
+                        }
+                        
+                        if (!flag.get()) {
+                            //System.out.println("There doesn't exist root node in this graph");
+                            //rootNodesOfSubGraphs.add(new Random().nextInt(subGraphVertices.size()));
+                        }
+                    });
                     
-                    if (!flag.get()) {
-                        //System.out.println("There doesn't exist root node in this graph");
-                        rootNodesOfSubGraphs.add(new Random().nextInt(subGraphVertices.size()));
-                    }
-                });
-                
-            } else if (subGraphVertices.size() == 1) {
-                rootNodesOfSubGraphs.addAll(subGraphVertices);
-            }
-        });
-        
-        //Add a main root to connect all the sub-graphs
-        directedGraph.addVertex(-999);
-        rootNodesOfSubGraphs.forEach(node -> {
-            directedGraph.addEdge(-999, node);
-        });
-        
+                } else if (subGraphVertices.size() == 1) {
+                    rootNodesOfSubGraphs.addAll(subGraphVertices);
+                }
+            });
+            
+            String line = "<http://www.schema.hng.root> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.schema.hng.root#HNG_Root> .";
+            Node[] nodes = NxParser.parseNodes(line);
+            this.hng_root = encoder.encode(nodes[2]);
+            
+            //Add a main root to connect all the sub-graphs
+            directedGraph.addVertex(hng_root);
+            rootNodesOfSubGraphs.forEach(node -> {
+                directedGraph.addEdge(hng_root, node);
+            });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         watch.stop();
         System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+    }
+    
+    private void visualizeGraph() {
+        
+        Neo4jGraph neo = new Neo4jGraph();
+        directedGraph.iterables().vertices().forEach(vertex -> {
+            neo.addNode(encoder.decode(vertex).getLabel());
+        });
+        
+        HashSet<Integer> visited = new HashSet<>();
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        int node = this.hng_root;
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            int finalNode = node;
+            for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
+                Integer child = directedGraph.getEdgeTarget(edge);
+                if (!visited.contains(child)) {
+                    neo.connectNodes(encoder.decode(finalNode).getLabel(), encoder.decode(child).getLabel());
+                    queue.add(child);
+                    visited.add(child);
+                }
+            }
+        }
     }
     
     private void secondPass() {
@@ -190,31 +225,16 @@ public class BLParserWithBloomFiltersAndBFS {
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            // Mark all the vertices as not visited(By default set as false)
-                            //boolean[] visited = new boolean[directedGraph.vertexSet().size()];
                             HashSet<Integer> visited = new HashSet<>();
-                            // Create a queue for BFS
                             LinkedList<Integer> queue = new LinkedList<Integer>();
                             
-                            // Mark the current node as visited and enqueue it
-                            int node = -999;
+                            int node = this.hng_root;
                             queue.add(node);
                             visited.add(node);
                             while (queue.size() != 0) {
-                                // Dequeue a vertex from queue and print it
                                 node = queue.poll();
-                                //System.out.println("Neighbours: "); -> Graphs.successorListOf(directedGraph, node)
-                                // Get all adjacent vertices of the dequeued node
-                                // If a adjacent has not been visited, then mark it visited and enqueue it, else continue
-                                List<Integer> neighbours = new ArrayList<>();
                                 for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
-                                    Integer source = directedGraph.getEdgeSource(edge);
-                                    Integer target = directedGraph.getEdgeTarget(edge);
-                                    if (node == source) neighbours.add(target);
-                                    else if (node == target) neighbours.add(source);
-                                }
-                                
-                                neighbours.forEach(neigh -> {
+                                    Integer neigh = directedGraph.getEdgeTarget(edge);
                                     if (!visited.contains(neigh)) {
                                         boolean flag = false;
                                         if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
@@ -230,7 +250,7 @@ public class BLParserWithBloomFiltersAndBFS {
                                         }
                                         visited.add(neigh);
                                     }
-                                });
+                                }
                             }
                             
                             
@@ -299,28 +319,6 @@ public class BLParserWithBloomFiltersAndBFS {
         return theType;
     }
     
-    private void runParser() throws IOException {
-        firstPass();
-        hierarchicalSchemaGraphConstruction();
-        secondPass();
-        System.out.println("Done Grouping");
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        
-        /*DecimalFormat formatter = new DecimalFormat("#,###");
-        classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
-        
-        classToPropWithCount.forEach((k, v) -> {
-            System.out.println(k);
-            v.forEach((k1, v1) -> {
-                System.out.println("\t " + k1 + " -> " + formatter.format(v1));
-            });
-            System.out.println();
-        });*/
-        
-        populateShapes();
-        shacler.writeModelToFile();
-    }
-    
     //https://www.baeldung.com/java-sorting
     public Map<Integer, Integer> sortingKeysOfMapByValues(HashMap<Integer, Integer> map) {
         List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(map.entrySet());
@@ -346,6 +344,30 @@ public class BLParserWithBloomFiltersAndBFS {
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
+    
+    private void runParser() throws IOException {
+        firstPass();
+        hierarchicalSchemaGraphConstruction();
+        visualizeGraph();
+        //secondPass();
+        //System.out.println("Done Grouping");
+        //System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
+        
+        /*DecimalFormat formatter = new DecimalFormat("#,###");
+        classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
+        
+        classToPropWithCount.forEach((k, v) -> {
+            System.out.println(k);
+            v.forEach((k1, v1) -> {
+                System.out.println("\t " + k1 + " -> " + formatter.format(v1));
+            });
+            System.out.println();
+        });*/
+        
+        //populateShapes();
+        //shacler.writeModelToFile();
+    }
+    
     
     public void run() throws IOException {
         runParser();

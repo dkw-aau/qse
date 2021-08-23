@@ -25,9 +25,19 @@ public class Neo4jGraph {
         this.driver = GraphDatabase.driver(SERVER_ROOT_URI, AuthTokens.basic("neo4j", "12345"));
     }
     
-    public void addPersonSimple(String name) {
+    public void addNode(String value) {
         try (Session session = driver.session()) {
-            session.run("CREATE (a:Person {name: $name})", parameters("name", name));
+            session.run("CREATE (:Node {value: $value})", parameters("value", value));
+        }
+    }
+    
+    public void connectNodes(String source, String target) {
+        try (Session session = driver.session()) {
+            session.run("MATCH\n" +
+                    "  (a:Node),\n" +
+                    "  (b:Node)\n" +
+                    "WHERE a.value = $A AND b.value = $B\n" +
+                    "CREATE (a)-[r:RELTYPE {name: a.value + '<->' + b.value}]->(b)", parameters("A", source, "B", target));
         }
     }
     
@@ -49,7 +59,10 @@ public class Neo4jGraph {
     }
     
     public static void main(String[] args) throws URISyntaxException {
-        new Neo4jGraph();
+        Neo4jGraph neo = new Neo4jGraph();
+        neo.addNode(String.valueOf(1));
+        neo.addNode(String.valueOf(2));
+        neo.connectNodes(String.valueOf(1), String.valueOf(2));
     }
     
 }
