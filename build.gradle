@@ -106,4 +106,5 @@ shadowJar {
     manifest {
         attributes 'Main-Class': 'cs.Main'
     }
+    zip64 true
 }
