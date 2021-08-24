@@ -79,12 +79,14 @@ public class BlParserWithTrees {
     }
     
     private void buildBinaryTree() {
-        //FIXME: Given: A: HashMap <class, BF of its instances> ; -> B:  HashMap<Class, count of instances>
-        
+        //Given: A: HashMap <class, BF of its instances> ; -> B:  HashMap<Class, count of instances>
+        StopWatch watch = new StopWatch();
+        watch.start();
         ctiBf.forEach((c, bf) -> {
-            
             bt.add(classInstanceCount.get(c.getLabel()), c, bf);
         });
+        watch.stop();
+        System.out.println("Time Elapsed to buildBinaryTree: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
     

@@ -23,8 +23,6 @@ public class BinaryTree {
         
         if (value < current.value) {
             current.left = addRecursive(current.left, value, node, bf);
-        } else if (value > current.value) {
-            current.right = addRecursive(current.right, value, node, bf);
         } else {
             current.right = addRecursive(current.right, value, node, bf);
         }
@@ -201,13 +199,11 @@ public class BinaryTree {
                 node = current.classNode;
                 break;
             }
-          
-            if (current.left != null)
-                stack.push(current.left);
-    
             if (current.right != null)
                 stack.push(current.right);
-    
+            
+            if (current.left != null)
+                stack.push(current.left);
         }
         return node;
     }
