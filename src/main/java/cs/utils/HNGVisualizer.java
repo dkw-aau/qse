@@ -75,4 +75,32 @@ public class HNGVisualizer {
         }
     }
     
+    
+    public void createBfsTraversedEncodedShortenIRIsNodesGraph(DefaultDirectedGraph<Integer, DefaultEdge> directedGraph, NodeEncoder encoder, Integer hng_root) {
+        Neo4jGraph neo = new Neo4jGraph();
+        directedGraph.iterables().vertices().forEach(vertex -> {
+            //neo.addNode(encoder.decode(vertex).getLabel());
+            neo.addNode(iri(encoder.decode(vertex).getLabel()).getLocalName());
+        });
+        
+        HashSet<Integer> visited = new HashSet<>();
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        int node = hng_root;
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            int finalNode = node;
+            for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
+                Integer child = directedGraph.getEdgeTarget(edge);
+                if (!visited.contains(child)) {
+                    //neo.connectNodes(encoder.decode(finalNode).getLabel(), encoder.decode(child).getLabel());
+                    neo.connectNodes(iri(encoder.decode(finalNode).getLabel()).getLocalName(), iri(encoder.decode(child).getLabel()).getLocalName());
+                    queue.add(child);
+                    visited.add(child);
+                }
+            }
+        }
+    }
+    
 }
