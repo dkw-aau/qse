@@ -199,12 +199,13 @@ public class BLParserWithBloomFiltersAndBFS {
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            HashSet<Integer> visited = new HashSet<>();
+                            HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
                             LinkedList<Integer> queue = new LinkedList<Integer>();
                             
                             int node = this.hng_root;
                             queue.add(node);
                             visited.add(node);
+                            //int counter = 0;
                             while (queue.size() != 0) {
                                 node = queue.poll();
                                 for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
@@ -223,9 +224,11 @@ public class BLParserWithBloomFiltersAndBFS {
                                             queue.add(neigh);
                                         }
                                         visited.add(neigh);
+                                        //counter++;
                                     }
                                 }
                             }
+                            //System.out.print(counter + " , ");
                             
                             
                             instanceTypes.forEach(c -> {
@@ -252,14 +255,14 @@ public class BLParserWithBloomFiltersAndBFS {
                                 }
                             });
                             properties.add(nodes[1]);
-                            
+                           
                             //innerWatch.stop();
                             //System.out.println("Time Elapsed inner watch: " + innerWatch.getTime());
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-            
+            //System.out.println("---");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -323,7 +326,7 @@ public class BLParserWithBloomFiltersAndBFS {
         firstPass();
         hierarchicalSchemaGraphConstruction();
         //new HNGVisualizer().createEncodedShortenIRIsNodesGraph(directedGraph, encoder);
-        //new HNGVisualizer().createBfsTraversedEncodedIRIsNodesGraph(directedGraph, encoder, hng_root);
+        //new HNGVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(directedGraph, encoder, hng_root);
         System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
         secondPass();
         populateShapes();
