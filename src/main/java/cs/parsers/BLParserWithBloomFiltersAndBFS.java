@@ -3,6 +3,7 @@ package cs.parsers;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import cs.extras.Neo4jGraph;
+import cs.utils.HNGVisualizer;
 import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -124,7 +125,7 @@ public class BLParserWithBloomFiltersAndBFS {
                         
                         for (int i = 1; i < sortedElementsOfMemberSet.length; i++) {
                             if (memberFrequency.get(sortedElementsOfMemberSet[i - 1]).equals(memberFrequency.get(sortedElementsOfMemberSet[i]))) {
-                                System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
+                                //System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
                                 directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
                                 directedGraph.addEdge(sortedElementsOfMemberSet[i], sortedElementsOfMemberSet[i - 1]);
                             } else {
@@ -135,45 +136,34 @@ public class BLParserWithBloomFiltersAndBFS {
                 }
             });
             
-            //System.out.println("Printing graph"); System.out.println(directedGraph);
-            
             AtomicBoolean flag = new AtomicBoolean(false);
             ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
-            Graphs.successorListOf(directedGraph, 7).forEach(val -> {
-                System.out.println(encoder.decode(val));
-            });
             
             ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
             connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
-                //System.out.println("subGraphVertices.size(): " + subGraphVertices.size());
                 if (subGraphVertices.size() > 1) {
                     subGraphVertices.forEach(vertex -> {
                         if (directedGraph.inDegreeOf(vertex) == 0) {
-                            //System.out.println("Root Node of Current Sub-graph: " + vertex + " :: " + encoder.decode(vertex));
                             rootNodesOfSubGraphs.add(vertex);
                             flag.set(true);
                         }
-                        
-                        if (!flag.get()) {
-                            //System.out.println("There doesn't exist root node in this graph");
-                            //rootNodesOfSubGraphs.add(new Random().nextInt(subGraphVertices.size()));
-                        }
                     });
                     
+                    //Handle the graph having no node with inDegree 0
+                    if (!flag.get()) {
+                        for (Integer v : subGraphVertices) {
+                            if (directedGraph.inDegreeOf(v) == 1) {
+                                rootNodesOfSubGraphs.add(v);
+                                break;
+                            }
+                        }
+                    }
                 } else if (subGraphVertices.size() == 1) {
                     rootNodesOfSubGraphs.addAll(subGraphVertices);
                 }
             });
             
-            String line = "<http://www.schema.hng.root> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.schema.hng.root#HNG_Root> .";
-            Node[] nodes = NxParser.parseNodes(line);
-            this.hng_root = encoder.encode(nodes[2]);
-            
-            //Add a main root to connect all the sub-graphs
-            directedGraph.addVertex(hng_root);
-            rootNodesOfSubGraphs.forEach(node -> {
-                directedGraph.addEdge(hng_root, node);
-            });
+            connectHngRootNodeWithSubgraphRootNodes(rootNodesOfSubGraphs);
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,38 +172,22 @@ public class BLParserWithBloomFiltersAndBFS {
         System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
-    private void visualizeGraph() {
+    private void connectHngRootNodeWithSubgraphRootNodes(ArrayList<Integer> rootNodesOfSubGraphs) throws ParseException {
+        String line = "<http://www.schema.hng.root> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.schema.hng.root#HNG_Root> .";
+        Node[] nodes = NxParser.parseNodes(line);
+        this.hng_root = encoder.encode(nodes[2]);
         
-        Neo4jGraph neo = new Neo4jGraph();
-        directedGraph.iterables().vertices().forEach(vertex -> {
-            neo.addNode(encoder.decode(vertex).getLabel());
+        //Add a main root to connect all the sub-graphs
+        directedGraph.addVertex(hng_root);
+        rootNodesOfSubGraphs.forEach(node -> {
+            directedGraph.addEdge(hng_root, node);
         });
-        
-        HashSet<Integer> visited = new HashSet<>();
-        LinkedList<Integer> queue = new LinkedList<Integer>();
-        int node = this.hng_root;
-        queue.add(node);
-        visited.add(node);
-        while (queue.size() != 0) {
-            node = queue.poll();
-            int finalNode = node;
-            for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
-                Integer child = directedGraph.getEdgeTarget(edge);
-                if (!visited.contains(child)) {
-                    neo.connectNodes(encoder.decode(finalNode).getLabel(), encoder.decode(child).getLabel());
-                    queue.add(child);
-                    visited.add(child);
-                }
-            }
-        }
     }
     
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            
-            //NeighborCache<Integer, DefaultEdge> neighborCache = new NeighborCache<Integer, DefaultEdge>(directedGraph);
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
@@ -348,24 +322,13 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         hierarchicalSchemaGraphConstruction();
-        visualizeGraph();
-        //secondPass();
-        //System.out.println("Done Grouping");
-        //System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        
-        /*DecimalFormat formatter = new DecimalFormat("#,###");
-        classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
-        
-        classToPropWithCount.forEach((k, v) -> {
-            System.out.println(k);
-            v.forEach((k1, v1) -> {
-                System.out.println("\t " + k1 + " -> " + formatter.format(v1));
-            });
-            System.out.println();
-        });*/
-        
-        //populateShapes();
-        //shacler.writeModelToFile();
+        //new HNGVisualizer().createEncodedShortenIRIsNodesGraph(directedGraph, encoder);
+        //new HNGVisualizer().createBfsTraversedEncodedIRIsNodesGraph(directedGraph, encoder, hng_root);
+        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
+        secondPass();
+        populateShapes();
+        shacler.writeModelToFile();
+        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
     
     
@@ -374,3 +337,14 @@ public class BLParserWithBloomFiltersAndBFS {
         //measureMemoryUsage();
     }
 }
+
+ /*DecimalFormat formatter = new DecimalFormat("#,###");
+classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
+
+classToPropWithCount.forEach((k, v) -> {
+System.out.println(k);
+v.forEach((k1, v1) -> {
+System.out.println("\t " + k1 + " -> " + formatter.format(v1));
+});
+System.out.println();
+});*/
