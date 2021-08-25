@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class BLParserWithBloomFiltersAndBFS {
     String rdfFile = "";
@@ -90,7 +91,7 @@ public class BLParserWithBloomFiltersAndBFS {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void hierarchicalSchemaGraphConstruction() {
@@ -165,7 +166,7 @@ public class BLParserWithBloomFiltersAndBFS {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void connectHngRootNodeWithSubgraphRootNodes(ArrayList<Integer> rootNodesOfSubGraphs) throws ParseException {
@@ -273,7 +274,7 @@ public class BLParserWithBloomFiltersAndBFS {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         computeStatistics(innerWatchTime, innerInnerWatchTime, coverage);
     }
     
@@ -282,33 +283,59 @@ public class BLParserWithBloomFiltersAndBFS {
         watch.start();
         
         //Average
+        StopWatch avgWatch = new StopWatch();
+        avgWatch.start();
         double avgInnerWatchTime = innerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
         double avgInnerInnerWatchTime = innerInnerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
         double avgCoverage = coverage.stream().mapToDouble(d -> d).average().orElse(0.0);
-        
-        
-        //Sorting
-        double[] sortedInnerWatchTime = innerWatchTime.stream().mapToDouble(d -> d).sorted().toArray();
-        double[] sortedInnerInnerWatchTime = innerInnerWatchTime.stream().mapToDouble(d -> d).sorted().toArray();
-        double[] sortedCoverage = coverage.stream().mapToDouble(d -> d).sorted().toArray();
+        avgWatch.stop();
+        System.out.println("Time Elapsed computing average: " + TimeUnit.MILLISECONDS.toSeconds(avgWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(avgWatch.getTime()));
         
         //Median
-        double medianInnerWatchTime = Quantiles.median().compute(sortedInnerWatchTime);
-        double medianInnerInnerWatchTime = Quantiles.median().compute(sortedInnerInnerWatchTime);
-        double medianCoverage = Quantiles.median().compute(sortedCoverage);
+       /* StopWatch medianWatch = new StopWatch();
+        medianWatch.start();
+        double medianInnerWatchTime = Quantiles.median().compute(innerWatchTime);
+        double medianInnerInnerWatchTime = Quantiles.median().compute(innerInnerWatchTime);
+        double medianCoverage = Quantiles.median().compute(coverage);
+        medianWatch.stop();
+        System.out.println("Time Elapsed computing median: " + TimeUnit.MILLISECONDS.toSeconds(medianWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(medianWatch.getTime()));
+        */
+        //Percentiles
+        StopWatch percentileWatch = new StopWatch();
+        percentileWatch.start();
+        int[] indexes = IntStream.range(1, 100).toArray();
+        Map<Integer, Double> percentileInnerWatchTime = Quantiles.percentiles().indexes(indexes).compute(innerWatchTime);
+        Map<Integer, Double> percentileInnerInnerWatchTime = Quantiles.percentiles().indexes(indexes).compute(innerInnerWatchTime);
+        Map<Integer, Double> percentileCoverage = Quantiles.percentiles().indexes(indexes).compute(coverage);
+        percentileWatch.stop();
+        System.out.println("Time Elapsed computing percentiles: " + TimeUnit.MILLISECONDS.toSeconds(percentileWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(percentileWatch.getTime()));
         
-        //Percentile
-        double percentileInnerWatchTime = Quantiles.percentiles().index(90).compute(sortedInnerWatchTime);
-        double percentileInnerInnerWatchTime = Quantiles.percentiles().index(90).compute(sortedInnerInnerWatchTime);
-        double percentileCoverage = Quantiles.percentiles().index(90).compute(sortedCoverage);
         
-        System.out.println("RESULTS:");
-        System.out.println(avgInnerWatchTime + "," + avgInnerInnerWatchTime + "," + avgCoverage);
-        System.out.println(medianInnerWatchTime + "," + medianInnerInnerWatchTime + "," + medianCoverage);
-        System.out.println(percentileInnerWatchTime + "," + percentileInnerInnerWatchTime + "," + percentileCoverage);
+        System.out.println("RESULTS :::");
+        
+        System.out.println("\nAverageInnerWatchTime, AverageInnerInnerWatchTime, AverageCoverage");
+        System.out.println(avgInnerWatchTime + ", " + avgInnerInnerWatchTime + ", " + avgCoverage);
+        
+        //System.out.println("\nMedianInnerWatchTime, MedianInnerInnerWatchTime, MedianCoverage");
+        //System.out.println(medianInnerWatchTime + ", " + medianInnerInnerWatchTime + ", " + medianCoverage);
+        
+        System.out.println("\nPercentileInnerWatchTime");
+        percentileInnerWatchTime.forEach((a, b) -> {
+            System.out.println(a + "," + b);
+        });
+        
+        System.out.println("\nPercentileInnerInnerWatchTime");
+        percentileInnerInnerWatchTime.forEach((a, b) -> {
+            System.out.println(a + "," + b);
+        });
+        
+        System.out.println("\nPercentileCoverage");
+        percentileCoverage.forEach((a, b) -> {
+            System.out.println(a + "," + b);
+        });
         
         watch.stop();
-        System.out.println("Time Elapsed computing statistics: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        System.out.println("Time Elapsed computing statistics: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void populateShapes() {
