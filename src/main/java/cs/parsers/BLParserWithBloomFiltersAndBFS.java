@@ -4,6 +4,7 @@ import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import com.google.common.math.Quantiles;
 import cs.utils.ConfigManager;
+import cs.utils.FilesUtil;
 import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -289,6 +290,8 @@ public class BLParserWithBloomFiltersAndBFS {
         double avgInnerInnerWatchTime = innerInnerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
         double avgCoverage = coverage.stream().mapToDouble(d -> d).average().orElse(0.0);
         avgWatch.stop();
+        System.out.println("\nAverageInnerWatchTime, AverageInnerInnerWatchTime, AverageCoverage");
+        System.out.println(avgInnerWatchTime + ", " + avgInnerInnerWatchTime + ", " + avgCoverage);
         System.out.println("Time Elapsed computing average: " + TimeUnit.MILLISECONDS.toSeconds(avgWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(avgWatch.getTime()));
         
         //Median
@@ -303,36 +306,29 @@ public class BLParserWithBloomFiltersAndBFS {
         //Percentiles
         StopWatch percentileWatch = new StopWatch();
         percentileWatch.start();
-        int[] indexes = IntStream.range(1, 100).toArray();
-        Map<Integer, Double> percentileInnerWatchTime = Quantiles.percentiles().indexes(indexes).compute(innerWatchTime);
-        Map<Integer, Double> percentileInnerInnerWatchTime = Quantiles.percentiles().indexes(indexes).compute(innerInnerWatchTime);
-        Map<Integer, Double> percentileCoverage = Quantiles.percentiles().indexes(indexes).compute(coverage);
+        
+        System.out.println("50 Percentile - innerWatchTime: " + Quantiles.percentiles().index(50).compute(innerWatchTime));
+        System.out.println("50 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(50).compute(innerInnerWatchTime));
+        System.out.println("50 Percentile - coverage: " + Quantiles.percentiles().index(50).compute(coverage));
+        
+        System.out.println("90 Percentile - innerWatchTime: " + Quantiles.percentiles().index(90).compute(innerWatchTime));
+        System.out.println("90 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(90).compute(innerInnerWatchTime));
+        System.out.println("90 Percentile - coverage: " + Quantiles.percentiles().index(90).compute(coverage));
+        
+        System.out.println("75 Percentile - innerWatchTime: " + Quantiles.percentiles().index(75).compute(innerWatchTime));
+        System.out.println("75 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(75).compute(innerInnerWatchTime));
+        System.out.println("75 Percentile - coverage: " + Quantiles.percentiles().index(75).compute(coverage));
+        
+        System.out.println("25 Percentile - innerWatchTime: " + Quantiles.percentiles().index(25).compute(innerWatchTime));
+        System.out.println("25 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(25).compute(innerInnerWatchTime));
+        System.out.println("25 Percentile - coverage: " + Quantiles.percentiles().index(25).compute(coverage));
+        
+        System.out.println("10 Percentile - innerWatchTime: " + Quantiles.percentiles().index(10).compute(innerWatchTime));
+        System.out.println("10 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(10).compute(innerInnerWatchTime));
+        System.out.println("10 Percentile - coverage: " + Quantiles.percentiles().index(10).compute(coverage));
+        
         percentileWatch.stop();
         System.out.println("Time Elapsed computing percentiles: " + TimeUnit.MILLISECONDS.toSeconds(percentileWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(percentileWatch.getTime()));
-        
-        
-        System.out.println("RESULTS :::");
-        
-        System.out.println("\nAverageInnerWatchTime, AverageInnerInnerWatchTime, AverageCoverage");
-        System.out.println(avgInnerWatchTime + ", " + avgInnerInnerWatchTime + ", " + avgCoverage);
-        
-        //System.out.println("\nMedianInnerWatchTime, MedianInnerInnerWatchTime, MedianCoverage");
-        //System.out.println(medianInnerWatchTime + ", " + medianInnerInnerWatchTime + ", " + medianCoverage);
-        
-        System.out.println("\nPercentileInnerWatchTime");
-        percentileInnerWatchTime.forEach((a, b) -> {
-            System.out.println(a + "," + b);
-        });
-        
-        System.out.println("\nPercentileInnerInnerWatchTime");
-        percentileInnerInnerWatchTime.forEach((a, b) -> {
-            System.out.println(a + "," + b);
-        });
-        
-        System.out.println("\nPercentileCoverage");
-        percentileCoverage.forEach((a, b) -> {
-            System.out.println(a + "," + b);
-        });
         
         watch.stop();
         System.out.println("Time Elapsed computing statistics: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
@@ -393,6 +389,11 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         hierarchicalSchemaGraphConstruction();
+        System.out.println("DEGREE DISTRIBUTION");
+        directedGraph.vertexSet().forEach(v -> {
+            FilesUtil.writeToFileInAppendMode(String.valueOf(directedGraph.degreeOf(v)), ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "degreeDistribution.csv");
+        });
+        System.out.println("END");
         secondPass();
         populateShapes();
         shacler.writeModelToFile();
