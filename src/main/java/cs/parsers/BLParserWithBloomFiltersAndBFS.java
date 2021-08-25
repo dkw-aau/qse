@@ -2,18 +2,16 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.extras.Neo4jGraph;
-import cs.utils.HNGVisualizer;
+import com.google.common.math.Quantiles;
+import cs.utils.ConfigManager;
 import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
-import org.jgrapht.Graphs;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
-import org.semanticweb.yars.nx.Resource;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
@@ -21,7 +19,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,11 +32,10 @@ public class BLParserWithBloomFiltersAndBFS {
     final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     int expectedNumberOfClasses = 10000;
     int hng_root = 0;
-    // Classes, instances, properties
     HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    //HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
+    
     HashMap<Node, List<Integer>> instanceToClass = new HashMap<>();
     HashSet<Node> properties = new HashSet<>();
     NodeEncoder encoder = new NodeEncoder();
@@ -187,15 +183,21 @@ public class BLParserWithBloomFiltersAndBFS {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
+        int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
+        ArrayList<Long> innerWatchTime = new ArrayList<>(nol);
+        ArrayList<Long> innerInnerWatchTime = new ArrayList<>(nol);
+        ArrayList<Double> coverage = new ArrayList<>(nol);
+        
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
-                            //StopWatch innerWatch = new StopWatch();
-                            //innerWatch.start();
-                            Node[] nodes = NxParser.parseNodes(line);
+                            StopWatch innerWatch = new StopWatch();
+                            innerWatch.start();
+                            int visitedNodesCounter = 0;
                             
+                            Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
@@ -205,8 +207,10 @@ public class BLParserWithBloomFiltersAndBFS {
                             int node = this.hng_root;
                             queue.add(node);
                             visited.add(node);
-                            //int counter = 0;
+                            
                             while (queue.size() != 0) {
+                                StopWatch innerInnerWatch = new StopWatch();
+                                innerInnerWatch.start();
                                 node = queue.poll();
                                 for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
                                     Integer neigh = directedGraph.getEdgeTarget(edge);
@@ -224,12 +228,12 @@ public class BLParserWithBloomFiltersAndBFS {
                                             queue.add(neigh);
                                         }
                                         visited.add(neigh);
-                                        //counter++;
+                                        visitedNodesCounter++;
                                     }
                                 }
+                                innerInnerWatch.stop();
+                                innerInnerWatchTime.add(innerInnerWatch.getTime());
                             }
-                            //System.out.print(counter + " , ");
-                            
                             
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
@@ -255,19 +259,56 @@ public class BLParserWithBloomFiltersAndBFS {
                                 }
                             });
                             properties.add(nodes[1]);
-                           
-                            //innerWatch.stop();
-                            //System.out.println("Time Elapsed inner watch: " + innerWatch.getTime());
+                            
+                            innerWatch.stop();
+                            innerWatchTime.add(innerWatch.getTime());
+                            coverage.add(((double) visitedNodesCounter / (double) directedGraph.vertexSet().size()));
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-            //System.out.println("---");
+            
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+        computeStatistics(innerWatchTime, innerInnerWatchTime, coverage);
+    }
+    
+    private void computeStatistics(ArrayList<Long> innerWatchTime, ArrayList<Long> innerInnerWatchTime, ArrayList<Double> coverage) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
+        //Average
+        double avgInnerWatchTime = innerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
+        double avgInnerInnerWatchTime = innerInnerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
+        double avgCoverage = coverage.stream().mapToDouble(d -> d).average().orElse(0.0);
+        
+        
+        //Sorting
+        double[] sortedInnerWatchTime = innerWatchTime.stream().mapToDouble(d -> d).sorted().toArray();
+        double[] sortedInnerInnerWatchTime = innerInnerWatchTime.stream().mapToDouble(d -> d).sorted().toArray();
+        double[] sortedCoverage = coverage.stream().mapToDouble(d -> d).sorted().toArray();
+        
+        //Median
+        double medianInnerWatchTime = Quantiles.median().compute(sortedInnerWatchTime);
+        double medianInnerInnerWatchTime = Quantiles.median().compute(sortedInnerInnerWatchTime);
+        double medianCoverage = Quantiles.median().compute(sortedCoverage);
+        
+        //Percentile
+        double percentileInnerWatchTime = Quantiles.percentiles().index(90).compute(sortedInnerWatchTime);
+        double percentileInnerInnerWatchTime = Quantiles.percentiles().index(90).compute(sortedInnerInnerWatchTime);
+        double percentileCoverage = Quantiles.percentiles().index(90).compute(sortedCoverage);
+        
+        System.out.println("RESULTS:");
+        System.out.println(avgInnerWatchTime + "," + avgInnerInnerWatchTime + "," + avgCoverage);
+        System.out.println(medianInnerWatchTime + "," + medianInnerInnerWatchTime + "," + medianCoverage);
+        System.out.println(percentileInnerWatchTime + "," + percentileInnerInnerWatchTime + "," + percentileCoverage);
+        
+        watch.stop();
+        System.out.println("Time Elapsed computing statistics: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
     }
     
     private void populateShapes() {
@@ -296,8 +337,8 @@ public class BLParserWithBloomFiltersAndBFS {
         return theType;
     }
     
-    //https://www.baeldung.com/java-sorting
     public Map<Integer, Integer> sortingKeysOfMapByValues(HashMap<Integer, Integer> map) {
+        //https://www.baeldung.com/java-sorting
         List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(map.entrySet());
         entries.sort(new Comparator<Map.Entry<Integer, Integer>>() {
             @Override
@@ -325,12 +366,10 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         hierarchicalSchemaGraphConstruction();
-        //new HNGVisualizer().createEncodedShortenIRIsNodesGraph(directedGraph, encoder);
-        //new HNGVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(directedGraph, encoder, hng_root);
-        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
         secondPass();
         populateShapes();
         shacler.writeModelToFile();
+        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
     
