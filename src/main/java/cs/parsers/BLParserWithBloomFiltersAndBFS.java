@@ -195,6 +195,7 @@ public class BLParserWithBloomFiltersAndBFS {
                     .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
+                            String result = "";
                             StopWatch innerWatch = new StopWatch();
                             innerWatch.start();
                             int visitedNodesCounter = 0;
@@ -235,6 +236,7 @@ public class BLParserWithBloomFiltersAndBFS {
                                 }
                                 innerInnerWatch.stop();
                                 innerInnerWatchTime.add(innerInnerWatch.getTime());
+                                result = innerInnerWatch.getTime() + ",";
                             }
                             
                             instanceTypes.forEach(c -> {
@@ -265,6 +267,8 @@ public class BLParserWithBloomFiltersAndBFS {
                             innerWatch.stop();
                             innerWatchTime.add(innerWatch.getTime());
                             coverage.add(((double) visitedNodesCounter / (double) directedGraph.vertexSet().size()));
+                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) directedGraph.vertexSet().size());
+                            FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -276,7 +280,7 @@ public class BLParserWithBloomFiltersAndBFS {
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        computeStatistics(innerWatchTime, innerInnerWatchTime, coverage);
+        //computeStatistics(innerWatchTime, innerInnerWatchTime, coverage);
     }
     
     private void computeStatistics(ArrayList<Long> innerWatchTime, ArrayList<Long> innerInnerWatchTime, ArrayList<Double> coverage) {
@@ -389,14 +393,14 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         hierarchicalSchemaGraphConstruction();
-        System.out.println("DEGREE DISTRIBUTION");
-        directedGraph.vertexSet().forEach(v -> {
-            FilesUtil.writeToFileInAppendMode(String.valueOf(directedGraph.degreeOf(v)), ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "degreeDistribution.csv");
-        });
-        System.out.println("END");
+//        System.out.println("DEGREE DISTRIBUTION");
+//        directedGraph.vertexSet().forEach(v -> {
+//            FilesUtil.writeToFileInAppendMode(String.valueOf(directedGraph.degreeOf(v)), ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "degreeDistribution.csv");
+//        });
+//        System.out.println("END");
         secondPass();
-        populateShapes();
-        shacler.writeModelToFile();
+//        populateShapes();
+//        shacler.writeModelToFile();
         System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
