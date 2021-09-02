@@ -1,9 +1,12 @@
 package cs.utils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
+import java.io.*;
+import java.util.List;
 
 public class FilesUtil {
     
@@ -28,6 +31,31 @@ public class FilesUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static List<String[]> readCsvAllDataOnceWithPipeSeparator(String fileAddress) {
+        List<String[]> allData = null;
+        try {
+            FileReader filereader = new FileReader(fileAddress);
+            // create csvParser object with
+            // custom separator pipe
+            CSVParser parser = new CSVParserBuilder().withSeparator('|').build();
+            
+            // create csvReader object with
+            // parameter file reader and parser
+            CSVReader csvReader = new CSVReaderBuilder(filereader).withCSVParser(parser).build();
+            
+            // Read all data at once
+            allData = csvReader.readAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return allData;
+    }
+    
+    public static boolean deleteFile(String fileAddress) {
+        File file = new File(fileAddress);
+        return file.delete();
     }
     
 }

@@ -85,6 +85,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-ext
     implementation group: 'org.jgrapht', name: 'jgrapht-ext', version: '1.5.1'
 
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-io
+    implementation group: 'org.jgrapht', name: 'jgrapht-io', version: '1.5.1'
+
     compile "org.neo4j:neo4j:4.3.2"
 
     // https://mvnrepository.com/artifact/com.sun.jersey/jersey-client
@@ -95,6 +98,12 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver
     implementation group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '4.3.4'
+
+    // https://mvnrepository.com/artifact/com.baqend/bloom-filter
+    implementation group: 'com.baqend', name: 'bloom-filter', version: '2.2.4'
+
+    // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.1'
 
 
     //implementation files('address/file.jar')

@@ -1,15 +1,15 @@
 package cs.parsers;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
 import com.google.common.math.Quantiles;
 import cs.utils.ConfigManager;
+import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.NodeEncoder;
+import orestes.bloomfilter.BloomFilter;
+import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
-import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
@@ -17,51 +17,49 @@ import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class BLParserWithBloomFiltersAndBFS {
-    String rdfFile = "";
+    String rdfFile;
     SHACLER shacler = new SHACLER();
     
-    // Constants
-    final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    int expectedNumberOfClasses = 10000;
-    int hng_root = 0;
-    HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
-    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<String, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+    Integer expectedNumberOfClasses;
+    Integer membershipGraphRootNode;
+    HashMap<String, Integer> classInstanceCount;
+    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+    HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     
-    HashMap<Node, List<Integer>> instanceToClass = new HashMap<>();
-    HashSet<Node> properties = new HashSet<>();
-    NodeEncoder encoder = new NodeEncoder();
-    DefaultDirectedGraph<Integer, DefaultEdge> directedGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-    
-    HashMap<Integer, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
+    HashMap<Node, List<Integer>> instanceToClass;
+    HashSet<Node> properties;
+    NodeEncoder encoder;
+    DefaultDirectedGraph<Integer, DefaultEdge> membershipGraph;
+    HashMap<Integer, BloomFilter<String>> ctiBf;
     
     // Constructor
-    BLParserWithBloomFiltersAndBFS(String filePath) {
-        this.rdfFile = filePath;
-    }
-    
     public BLParserWithBloomFiltersAndBFS(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
+        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
+        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        
+        //FIXME : Initialize in a proper way
+        this.instanceToClass = new HashMap<>();
+        this.properties = new HashSet<>();
+        this.encoder = new NodeEncoder();
+        this.ctiBf = new HashMap<>();
     }
     
     private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> line.contains(RDFType))
-                    .forEach(line -> {                              // - A terminal operation
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
@@ -76,10 +74,10 @@ public class BLParserWithBloomFiltersAndBFS {
                             }
                             
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
-                                ctiBf.get(encoder.encode(nodes[2])).put(nodes[0].getLabel());
+                                ctiBf.get(encoder.encode(nodes[2])).add(nodes[0].getLabel());
                             } else {
-                                BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.000001);
-                                bf.put(nodes[0].getLabel());
+                                BloomFilter<String> bf = new FilterBuilder(100_000, 0.000001).buildBloomFilter();
+                                bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
                         } catch (ParseException e) {
@@ -95,91 +93,20 @@ public class BLParserWithBloomFiltersAndBFS {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void hierarchicalSchemaGraphConstruction() {
+    private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        try {
-            Map<Integer, List<List<Integer>>> sortedMembershipSets = instanceToClass.values().stream().distinct()
-                    .collect(Collectors.groupingBy(List::size)).entrySet().stream().sorted(Map.Entry.comparingByKey())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
-                        throw new AssertionError();
-                    }, LinkedHashMap::new));
-            
-            sortedMembershipSets.forEach((mSize, mSets) -> {
-                //System.out.println(mSize + " - " + mSets.size());
-                if (mSize == 1) {
-                    mSets.forEach(set -> {
-                        set.forEach(directedGraph::addVertex);
-                    });
-                } else if (mSize > 1) {
-                    mSets.forEach(set -> {
-                        HashMap<Integer, Integer> memberFrequency = new HashMap<>();
-                        set.forEach(element -> {
-                            memberFrequency.put(element, classInstanceCount.get(encoder.decode(element).getLabel()));
-                            if (!directedGraph.containsVertex(element)) directedGraph.addVertex(element);
-                        });
-                        Integer[] sortedElementsOfMemberSet = sortingKeysOfMapByValues(memberFrequency).keySet().toArray(new Integer[0]);
-                        //System.out.println(Arrays.toString(sortedGroupMembers));
-                        
-                        for (int i = 1; i < sortedElementsOfMemberSet.length; i++) {
-                            if (memberFrequency.get(sortedElementsOfMemberSet[i - 1]).equals(memberFrequency.get(sortedElementsOfMemberSet[i]))) {
-                                //System.out.println("SAME " + sortedElementsOfMemberSet[i - 1] + " -- " + sortedElementsOfMemberSet[i]);
-                                directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
-                                directedGraph.addEdge(sortedElementsOfMemberSet[i], sortedElementsOfMemberSet[i - 1]);
-                            } else {
-                                directedGraph.addEdge(sortedElementsOfMemberSet[i - 1], sortedElementsOfMemberSet[i]);
-                            }
-                        }
-                    });
-                }
-            });
-            
-            AtomicBoolean flag = new AtomicBoolean(false);
-            ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
-            
-            ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(directedGraph);
-            connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
-                if (subGraphVertices.size() > 1) {
-                    subGraphVertices.forEach(vertex -> {
-                        if (directedGraph.inDegreeOf(vertex) == 0) {
-                            rootNodesOfSubGraphs.add(vertex);
-                            flag.set(true);
-                        }
-                    });
-                    
-                    //Handle the graph having no node with inDegree 0
-                    if (!flag.get()) {
-                        for (Integer v : subGraphVertices) {
-                            if (directedGraph.inDegreeOf(v) == 1) {
-                                rootNodesOfSubGraphs.add(v);
-                                break;
-                            }
-                        }
-                    }
-                } else if (subGraphVertices.size() == 1) {
-                    rootNodesOfSubGraphs.addAll(subGraphVertices);
-                }
-            });
-            
-            connectHngRootNodeWithSubgraphRootNodes(rootNodesOfSubGraphs);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        System.out.println("Time Elapsed hierarchicalSchemaGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
-    private void connectHngRootNodeWithSubgraphRootNodes(ArrayList<Integer> rootNodesOfSubGraphs) throws ParseException {
-        String line = "<http://www.schema.hng.root> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.schema.hng.root#HNG_Root> .";
-        Node[] nodes = NxParser.parseNodes(line);
-        this.hng_root = encoder.encode(nodes[2]);
+        MembershipGraph mg = new MembershipGraph(encoder);
+        mg.createMembershipSets(instanceToClass);
+        mg.createMembershipGraph(classInstanceCount);
+        mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
+        //mg.exportGraphRelatedData();
+        //mg.importGraphRelatedData();
+        this.membershipGraph = mg.getMembershipGraph();
+        this.membershipGraphRootNode = mg.getMembershipGraphRootNode();
         
-        //Add a main root to connect all the sub-graphs
-        directedGraph.addVertex(hng_root);
-        rootNodesOfSubGraphs.forEach(node -> {
-            directedGraph.addEdge(hng_root, node);
-        });
+        watch.stop();
+        System.out.println("Time Elapsed MembershipGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void secondPass() {
@@ -192,7 +119,7 @@ public class BLParserWithBloomFiltersAndBFS {
         
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             String result = "";
@@ -204,26 +131,23 @@ public class BLParserWithBloomFiltersAndBFS {
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
+                            int node = this.membershipGraphRootNode;
                             HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
                             LinkedList<Integer> queue = new LinkedList<Integer>();
-                            
-                            int node = this.hng_root;
                             queue.add(node);
                             visited.add(node);
                             
                             while (queue.size() != 0) {
-                                StopWatch innerInnerWatch = new StopWatch();
-                                innerInnerWatch.start();
                                 node = queue.poll();
-                                for (DefaultEdge edge : directedGraph.outgoingEdgesOf(node)) {
-                                    Integer neigh = directedGraph.getEdgeTarget(edge);
+                                for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
+                                    Integer neigh = membershipGraph.getEdgeTarget(edge);
                                     if (!visited.contains(neigh)) {
                                         boolean flag = false;
-                                        if (ctiBf.get(neigh).mightContain(nodes[0].getLabel())) {
+                                        if (ctiBf.get(neigh).contains(nodes[0].getLabel())) {
                                             instanceTypes.add(encoder.decode(neigh));
                                             flag = true;
                                         }
-                                        if (ctiBf.get(neigh).mightContain(nodes[2].getLabel())) {
+                                        if (ctiBf.get(neigh).contains(nodes[2].getLabel())) {
                                             objTypes.add(encoder.decode(neigh).getLabel());
                                             flag = true;
                                         }
@@ -234,9 +158,6 @@ public class BLParserWithBloomFiltersAndBFS {
                                         visitedNodesCounter++;
                                     }
                                 }
-                                innerInnerWatch.stop();
-                                innerInnerWatchTime.add(innerInnerWatch.getTime());
-                                result = innerInnerWatch.getTime() + ",";
                             }
                             
                             instanceTypes.forEach(c -> {
@@ -266,8 +187,8 @@ public class BLParserWithBloomFiltersAndBFS {
                             
                             innerWatch.stop();
                             innerWatchTime.add(innerWatch.getTime());
-                            coverage.add(((double) visitedNodesCounter / (double) directedGraph.vertexSet().size()));
-                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) directedGraph.vertexSet().size());
+                            coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
+                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
                             FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -276,6 +197,7 @@ public class BLParserWithBloomFiltersAndBFS {
             
             
         } catch (Exception e) {
+            
             e.printStackTrace();
         }
         watch.stop();
@@ -364,23 +286,6 @@ public class BLParserWithBloomFiltersAndBFS {
         return theType;
     }
     
-    public Map<Integer, Integer> sortingKeysOfMapByValues(HashMap<Integer, Integer> map) {
-        //https://www.baeldung.com/java-sorting
-        List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(map.entrySet());
-        entries.sort(new Comparator<Map.Entry<Integer, Integer>>() {
-            @Override
-            public int compare(
-                    Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2) {
-                return o2.getValue().compareTo(o1.getValue());
-            }
-        });
-        Map<Integer, Integer> sortedMap = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Integer> entry : entries) {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-        return sortedMap;
-    }
-    
     private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
@@ -392,16 +297,15 @@ public class BLParserWithBloomFiltersAndBFS {
     
     private void runParser() throws IOException {
         firstPass();
-        hierarchicalSchemaGraphConstruction();
-//        System.out.println("DEGREE DISTRIBUTION");
-//        directedGraph.vertexSet().forEach(v -> {
-//            FilesUtil.writeToFileInAppendMode(String.valueOf(directedGraph.degreeOf(v)), ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "degreeDistribution.csv");
-//        });
-//        System.out.println("END");
-        secondPass();
-//        populateShapes();
-//        shacler.writeModelToFile();
-        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + directedGraph.outDegreeOf(hng_root));
+        membershipGraphConstruction();
+        
+        //there is one node having degree = 1630 in the current membership graph
+        //System.out.println(encoder.decode(new DegreeDistribution(membershipGraph).getNodeWithDegree(1630)));
+        
+        //secondPass();
+        //populateShapes();
+        //shacler.writeModelToFile();
+        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
     
