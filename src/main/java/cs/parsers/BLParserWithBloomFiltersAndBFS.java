@@ -102,7 +102,7 @@ public class BLParserWithBloomFiltersAndBFS {
         this.mg = new MembershipGraph(encoder);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
-        mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
+        //mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
@@ -116,20 +116,25 @@ public class BLParserWithBloomFiltersAndBFS {
         StopWatch watch = new StopWatch();
         watch.start();
         System.out.println("Started secondPassToFilterInstancesOnly");
-        Map<Integer, List<List<Integer>>> copy = this.mg.membershipSets;
-        HashSet<List<Integer>> markedSets = new HashSet<>();
+        HashMap<List<Integer>, Integer> membersCount = new HashMap<>();
+        HashSet<List<Integer>> membersHashSet = new HashSet<>();
+        for (List<List<Integer>> lists : this.mg.membershipSets.values()) {
+            lists.forEach(val -> {
+                membersHashSet.add(val);
+                membersCount.put(val, 0);
+            });
+        }
+        
         HashSet<Node> instancesToKeep = new HashSet<>();
         this.instanceToClass.forEach((instance, classes) -> {
-            copy.forEach((member, memberSets) -> {
-                memberSets.forEach(set -> {
-                    if (!markedSets.contains(set)) {
-                        if (set.equals(classes)) {
-                            markedSets.add(set);
-                            instancesToKeep.add(instance);
-                        }
-                    }
-                });
-            });
+            if (membersHashSet.contains(classes)) {
+                instancesToKeep.add(instance);
+                if (membersCount.get(classes).equals(20)) {
+                    membersHashSet.remove(classes);
+                } else {
+                    membersCount.put(classes, membersCount.get(classes) + 1);
+                }
+            }
         });
         System.out.println("Pre filtering Done: Size" + instancesToKeep.size());
         System.out.println("Started Writing into a File:");
