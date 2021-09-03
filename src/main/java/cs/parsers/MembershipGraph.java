@@ -4,6 +4,7 @@ import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
+import orestes.bloomfilter.FilterBuilder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -28,7 +29,11 @@ public class MembershipGraph {
     
     public MembershipGraph(boolean devMode) {
         this.importGraphRelatedData();
-        //this.membershipGraphOutlierNormalization();
+        HashMap<Integer, BloomFilter<String>> ctiBf = new HashMap<>();
+        this.membershipGraph.vertexSet().forEach(v -> {
+            ctiBf.put(v, new FilterBuilder(100, 0.01).buildBloomFilter());
+        });
+        this.membershipGraphOutlierNormalization(this.membershipGraph.vertexSet().size(), ctiBf);
     }
     
     public void createMembershipSets(HashMap<Node, List<Integer>> instanceToClass) {

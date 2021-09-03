@@ -38,6 +38,8 @@ public class BLParserWithBloomFiltersAndBFS {
     DefaultDirectedGraph<Integer, DefaultEdge> membershipGraph;
     HashMap<Integer, BloomFilter<String>> ctiBf;
     
+    MembershipGraph mg;
+    
     // Constructor
     public BLParserWithBloomFiltersAndBFS(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -51,6 +53,7 @@ public class BLParserWithBloomFiltersAndBFS {
         this.properties = new HashSet<>();
         this.encoder = new NodeEncoder();
         this.ctiBf = new HashMap<>();
+        
     }
     
     private void firstPass() {
@@ -96,7 +99,7 @@ public class BLParserWithBloomFiltersAndBFS {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        MembershipGraph mg = new MembershipGraph(encoder);
+        this.mg = new MembershipGraph(encoder);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
         mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
@@ -107,6 +110,47 @@ public class BLParserWithBloomFiltersAndBFS {
         
         watch.stop();
         System.out.println("Time Elapsed MembershipGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void secondPassToFilterInstancesOnly() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.out.println("Started secondPassToFilterInstancesOnly");
+        Map<Integer, List<List<Integer>>> copy = this.mg.membershipSets;
+        HashSet<List<Integer>> markedSets = new HashSet<>();
+        HashSet<Node> instancesToKeep = new HashSet<>();
+        this.instanceToClass.forEach((instance, classes) -> {
+            copy.forEach((member, memberSets) -> {
+                memberSets.forEach(set -> {
+                    if (!markedSets.contains(set)) {
+                        if (set.equals(classes)) {
+                            markedSets.add(set);
+                            instancesToKeep.add(instance);
+                        }
+                    }
+                });
+            });
+        });
+        System.out.println("Pre filtering Done: Size" + instancesToKeep.size());
+        System.out.println("Started Writing into a File:");
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (instancesToKeep.contains(nodes[0])) {
+                                FilesUtil.writeToFileInAppendMode(line, Constants.FILTERED_DATASET);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        watch.stop();
+        System.out.println("Time Elapsed secondPassToFilterInstancesOnly: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void secondPass() {
@@ -298,7 +342,7 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         membershipGraphConstruction();
-        
+        secondPassToFilterInstancesOnly();
         //there is one node having degree = 1630 in the current membership graph
         //System.out.println(encoder.decode(new DegreeDistribution(membershipGraph).getNodeWithDegree(1630)));
         
