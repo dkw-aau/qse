@@ -37,10 +37,8 @@ public class BLParserWithBloomFiltersAndBFS {
     NodeEncoder encoder;
     DefaultDirectedGraph<Integer, DefaultEdge> membershipGraph;
     HashMap<Integer, BloomFilter<String>> ctiBf;
-    
     MembershipGraph mg;
     
-    // Constructor
     public BLParserWithBloomFiltersAndBFS(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
@@ -107,55 +105,8 @@ public class BLParserWithBloomFiltersAndBFS {
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
         this.membershipGraphRootNode = mg.getMembershipGraphRootNode();
-        
         watch.stop();
         System.out.println("Time Elapsed MembershipGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
-    private void secondPassToFilterInstancesOnly() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.out.println("Started secondPassToFilterInstancesOnly");
-        HashMap<List<Integer>, Integer> membersCount = new HashMap<>();
-        HashSet<List<Integer>> membersHashSet = new HashSet<>();
-        for (List<List<Integer>> lists : this.mg.membershipSets.values()) {
-            lists.forEach(val -> {
-                membersHashSet.add(val);
-                membersCount.put(val, 0);
-            });
-        }
-        
-        HashSet<Node> instancesToKeep = new HashSet<>();
-        this.instanceToClass.forEach((instance, classes) -> {
-            if (membersHashSet.contains(classes)) {
-                instancesToKeep.add(instance);
-                if (membersCount.get(classes).equals(20)) {
-                    membersHashSet.remove(classes);
-                } else {
-                    membersCount.put(classes, membersCount.get(classes) + 1);
-                }
-            }
-        });
-        System.out.println("Pre filtering Done: Size" + instancesToKeep.size());
-        System.out.println("Started Writing into a File:");
-        try {
-            Files.lines(Path.of(rdfFile))
-                    .forEach(line -> {
-                        try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            if (instancesToKeep.contains(nodes[0])) {
-                                FilesUtil.writeToFileInAppendMode(line, Constants.FILTERED_DATASET);
-                            }
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                    });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        watch.stop();
-        System.out.println("Time Elapsed secondPassToFilterInstancesOnly: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void secondPass() {
@@ -347,7 +298,6 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         membershipGraphConstruction();
-        secondPassToFilterInstancesOnly();
         //there is one node having degree = 1630 in the current membership graph
         //System.out.println(encoder.decode(new DegreeDistribution(membershipGraph).getNodeWithDegree(1630)));
         
@@ -364,14 +314,3 @@ public class BLParserWithBloomFiltersAndBFS {
         //measureMemoryUsage();
     }
 }
-
- /*DecimalFormat formatter = new DecimalFormat("#,###");
-classInstanceCount.forEach((c, i) -> { System.out.println(c + " -> " + formatter.format(i)); });
-
-classToPropWithCount.forEach((k, v) -> {
-System.out.println(k);
-v.forEach((k1, v1) -> {
-System.out.println("\t " + k1 + " -> " + formatter.format(v1));
-});
-System.out.println();
-});*/
