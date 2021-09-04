@@ -80,7 +80,6 @@ public class MembershipGraph {
                 }
             });
             
-            
             ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(membershipGraph);
             connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
                 if (subGraphVertices.size() > 1) {
@@ -116,24 +115,19 @@ public class MembershipGraph {
     }
     
     public void membershipGraphOutlierNormalization(Integer enoc, HashMap<Integer, BloomFilter<String>> ctiBf) {
-        //FIXME: When calling from the iterator class, uncomment this: int node = this.membershipGraphRootNode;
-        System.out.println("Membership Graph Vertices Size: " + this.membershipGraph.vertexSet().size());
-        
+        //FIXME: When calling from the iterator class, uncomment this:
+        int node = this.membershipGraphRootNode;
+        System.out.println("Membership Graph Vertices Before Normalization: " + this.membershipGraph.vertexSet().size());
         int threshold = 50;
-        int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH
-        
+        //int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH
         //int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
-        int counter = 0;
-        while (getFocusNodeViaBFS(node, threshold) != -1) {
-            int focusNode = getFocusNodeViaBFS(node, threshold);
-            System.out.println("Focus Node: " + focusNode);
+        getFocusNodesViaBFS(node, threshold).forEach(focusNode -> {
+            //System.out.println(focusNode + " : " + encoder.decode(focusNode).getLabel());
             normalization(ctiBf, threshold, focusNode);
-            counter++;
-        }
-        System.out.println("Number of focus nodes normalized: " + counter);
+        });
+        System.out.println("Membership Graph Vertices After Normalization: " + this.membershipGraph.vertexSet().size());
         //VISUALIZING
-        new MembershipGraphVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(this.membershipGraph, encoder, node);
-        //System.out.println(focusNode + " : " + focusedSubGraphSize + " : " + directChildrenOfNode.size() + " : " + numberOfGroups);
+        //new MembershipGraphVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(this.membershipGraph, encoder, node);
     }
     
     private void normalization(HashMap<Integer, BloomFilter<String>> ctiBf, int threshold, int focusNode) {
@@ -179,19 +173,21 @@ public class MembershipGraph {
         return size;
     }
     
-    private Integer getFocusNodeViaBFS(Integer startNode, Integer threshold) {
+    private List<Integer> getFocusNodesViaBFS(Integer startNode, Integer threshold) {
         BreadthFirstIterator<Integer, DefaultEdge> bfsIterator = new BreadthFirstIterator<>(membershipGraph, startNode);
-        int focusNode = -1;
-        int focusNodeCount = 0;
+        //int focusNode = -1;
+        //int focusNodeCount = 0;
+        List<Integer> focusNodes = new ArrayList<>();
         while (bfsIterator.hasNext()) {
             int child = bfsIterator.next();
             if (membershipGraph.outDegreeOf(child) > threshold) {
-                focusNode = child;
-                focusNodeCount = membershipGraph.outDegreeOf(child);
-                break;
+                //focusNode = child;
+                //focusNodeCount = membershipGraph.outDegreeOf(child);
+                focusNodes.add(child);
+                //break;
             }
         }
-        return focusNode;
+        return focusNodes;
     }
     
     public void exportGraphRelatedData() {

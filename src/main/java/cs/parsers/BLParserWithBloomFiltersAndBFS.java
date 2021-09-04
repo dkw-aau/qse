@@ -100,7 +100,7 @@ public class BLParserWithBloomFiltersAndBFS {
         this.mg = new MembershipGraph(encoder);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
-        //mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
+        mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
