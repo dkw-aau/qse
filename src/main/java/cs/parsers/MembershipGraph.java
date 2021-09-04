@@ -1,13 +1,16 @@
 package cs.parsers;
 
+import com.google.common.collect.Lists;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
+import cs.utils.MembershipGraphVisualizer;
 import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.traverse.BreadthFirstIterator;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
@@ -31,7 +34,7 @@ public class MembershipGraph {
         this.importGraphRelatedData();
         HashMap<Integer, BloomFilter<String>> ctiBf = new HashMap<>();
         this.membershipGraph.vertexSet().forEach(v -> {
-            ctiBf.put(v, new FilterBuilder(100, 0.01).buildBloomFilter());
+            ctiBf.put(v, new FilterBuilder(10, 0.01).buildBloomFilter());
         });
         this.membershipGraphOutlierNormalization(this.membershipGraph.vertexSet().size(), ctiBf);
     }
@@ -113,31 +116,82 @@ public class MembershipGraph {
     }
     
     public void membershipGraphOutlierNormalization(Integer enoc, HashMap<Integer, BloomFilter<String>> ctiBf) {
+        //FIXME: When calling from the iterator class, uncomment this: int node = this.membershipGraphRootNode;
+        System.out.println("Membership Graph Vertices Size: " + this.membershipGraph.vertexSet().size());
+        
         int threshold = 50;
+        int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH
+        
+        //int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
+        int counter = 0;
+        while (getFocusNodeViaBFS(node, threshold) != -1) {
+            int focusNode = getFocusNodeViaBFS(node, threshold);
+            System.out.println("Focus Node: " + focusNode);
+            normalization(ctiBf, threshold, focusNode);
+            counter++;
+        }
+        System.out.println("Number of focus nodes normalized: " + counter);
+        //VISUALIZING
+        new MembershipGraphVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(this.membershipGraph, encoder, node);
+        //System.out.println(focusNode + " : " + focusedSubGraphSize + " : " + directChildrenOfNode.size() + " : " + numberOfGroups);
+    }
+    
+    private void normalization(HashMap<Integer, BloomFilter<String>> ctiBf, int threshold, int focusNode) {
+        //RETRIEVING DIRECT CHILDREN OF FOCUS NODE
+        List<Integer> directChildrenOfNode = getDirectChildrenOfNode(focusNode);
+        int numberOfGroups = (directChildrenOfNode.size() / threshold) + 1;
+        
+        //PARTITIONING THE CHILDREN
+        directChildrenOfNode.sort(Collections.reverseOrder());
+        List<List<Integer>> groups = Lists.partition(directChildrenOfNode, numberOfGroups);
+        
+        //CREATING GROUP NODES + Performing Union of Bloom Filters.
+        List<Group> groupInstances = new ArrayList<>();
+        for (int i = 0, groupsSize = groups.size(); i < groupsSize; i++) {
+            groupInstances.add(new Group(i, groups.get(i), focusNode, encoder, ctiBf));
+        }
+        //CORE: Using group nodes to create and remove edges
+        groupInstances.forEach(group -> {
+            this.membershipGraph.addVertex(group.getGroupNodeId());
+            group.getNodes().forEach(n -> {
+                this.membershipGraph.removeEdge(focusNode, n);
+                this.membershipGraph.addEdge(group.getGroupNodeId(), n);
+            });
+            this.membershipGraph.addEdge(focusNode, group.getGroupNodeId());
+        });
+    }
+    
+    private List<Integer> getDirectChildrenOfNode(Integer node) {
+        List<Integer> directChildren = new ArrayList<>();
+        this.membershipGraph.outgoingEdgesOf(node).forEach(edge -> {
+            directChildren.add(this.membershipGraph.getEdgeTarget(edge));
+        });
+        return directChildren;
+    }
+    
+    private Integer getGraphSizeViaBFS(Integer startNode) {
+        BreadthFirstIterator<Integer, DefaultEdge> bfsIterator = new BreadthFirstIterator<>(membershipGraph, startNode);
+        int size = 0;
+        while (bfsIterator.hasNext()) {
+            bfsIterator.next();
+            size++;
+        }
+        return size;
+    }
+    
+    private Integer getFocusNodeViaBFS(Integer startNode, Integer threshold) {
+        BreadthFirstIterator<Integer, DefaultEdge> bfsIterator = new BreadthFirstIterator<>(membershipGraph, startNode);
+        int focusNode = -1;
         int focusNodeCount = 0;
-        int node = this.membershipGraphRootNode;
-        int focusNode;
-        
-        HashSet<Integer> visited = new HashSet<>(enoc);
-        LinkedList<Integer> queue = new LinkedList<Integer>();
-        queue.add(node);
-        visited.add(node);
-        
-        while (queue.size() != 0) {
-            node = queue.poll();
-            for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
-                Integer child = membershipGraph.getEdgeTarget(edge);
-                if (!visited.contains(child)) {
-                    if (membershipGraph.outDegreeOf(child) > threshold) {
-                        focusNode = child;
-                        focusNodeCount = membershipGraph.outDegreeOf(child);
-                        break;
-                    }
-                    queue.add(child);
-                    visited.add(child);
-                }
+        while (bfsIterator.hasNext()) {
+            int child = bfsIterator.next();
+            if (membershipGraph.outDegreeOf(child) > threshold) {
+                focusNode = child;
+                focusNodeCount = membershipGraph.outDegreeOf(child);
+                break;
             }
         }
+        return focusNode;
     }
     
     public void exportGraphRelatedData() {
@@ -186,7 +240,6 @@ public class MembershipGraph {
         
         encodedTable.forEach(line -> {
             try {
-                String x = line[1];
                 Node[] nodes = NxParser.parseNodes(String.valueOf(line[1]));
                 table.put(Integer.valueOf(line[0]), nodes[2]);
             } catch (ParseException e) {

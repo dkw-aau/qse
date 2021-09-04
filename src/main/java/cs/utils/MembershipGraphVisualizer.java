@@ -9,8 +9,8 @@ import java.util.LinkedList;
 
 import static org.eclipse.rdf4j.model.util.Values.iri;
 
-public class HNGVisualizer {
-    public HNGVisualizer() {}
+public class MembershipGraphVisualizer {
+    public MembershipGraphVisualizer() {}
     
     public void createIntegerNodesGraph(DefaultDirectedGraph<Integer, DefaultEdge> directedGraph) {
         Neo4jGraph neo = new Neo4jGraph();
