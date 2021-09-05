@@ -125,10 +125,10 @@ public class BLParserWithBloomFiltersAndBFS {
                     .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
-                            //String result = "";
-                            //StopWatch innerWatch = new StopWatch();
-                            //innerWatch.start();
-                            //int visitedNodesCounter = 0;
+                            String result = "";
+                            StopWatch innerWatch = new StopWatch();
+                            innerWatch.start();
+                            int visitedNodesCounter = 0;
                             
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
@@ -140,6 +140,8 @@ public class BLParserWithBloomFiltersAndBFS {
                             queue.add(node);
                             visited.add(node);
                             
+                            StopWatch innerInnerWatch = new StopWatch();
+                            innerInnerWatch.start();
                             while (queue.size() != 0) {
                                 node = queue.poll();
                                 for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
@@ -158,10 +160,13 @@ public class BLParserWithBloomFiltersAndBFS {
                                             queue.add(neigh);
                                         }
                                         visited.add(neigh);
-                                        //visitedNodesCounter++;
+                                        visitedNodesCounter++;
                                     }
                                 }
                             }
+                            innerInnerWatch.stop();
+                            //innerInnerWatchTime.add(innerInnerWatch.getTime());
+                            result +=  innerInnerWatch.getTime() + ",";
                             
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
@@ -186,13 +191,13 @@ public class BLParserWithBloomFiltersAndBFS {
                                     });
                                 }
                             });
-                            properties.add(nodes[1]);
                             
-                            //innerWatch.stop();
+                            properties.add(nodes[1]);
+                            innerWatch.stop();
                             //innerWatchTime.add(innerWatch.getTime());
                             //coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
-                            //result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
-                            //FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "stats.csv");
+                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
+                            FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_new_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
