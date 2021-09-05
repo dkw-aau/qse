@@ -92,7 +92,7 @@ public class SmartTriplesFilterator {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.mg = new MembershipGraph(encoder);
+        this.mg = new MembershipGraph(encoder, ctiBf);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
         this.membershipGraph = mg.getMembershipGraph();

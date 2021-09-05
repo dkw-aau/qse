@@ -20,7 +20,6 @@ public class Group {
     Node groupNode;
     BloomFilter<String> groupBloomFilter;
     
-    
     public Group(Integer groupId, List<Integer> group, int focusNode, NodeEncoder encoder, HashMap<Integer, BloomFilter<String>> ctiBf) {
         this.nodes = group;
         this.parentNode = focusNode;
@@ -60,4 +59,6 @@ public class Group {
     }
     
     public Integer getGroupNodeId() {return groupNodeId;}
+    
+    public BloomFilter<String> getGroupBloomFilter() {return groupBloomFilter;}
 }

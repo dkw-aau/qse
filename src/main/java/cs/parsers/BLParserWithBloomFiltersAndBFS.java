@@ -97,14 +97,17 @@ public class BLParserWithBloomFiltersAndBFS {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.mg = new MembershipGraph(encoder);
+        
+        this.mg = new MembershipGraph(encoder, ctiBf);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
-        mg.membershipGraphOutlierNormalization(expectedNumberOfClasses, ctiBf);
+        mg.membershipGraphOutlierNormalization();
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
         this.membershipGraphRootNode = mg.getMembershipGraphRootNode();
+        this.ctiBf = mg.getCtiBf();
+        
         watch.stop();
         System.out.println("Time Elapsed MembershipGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
@@ -112,20 +115,20 @@ public class BLParserWithBloomFiltersAndBFS {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
-        ArrayList<Long> innerWatchTime = new ArrayList<>(nol);
-        ArrayList<Long> innerInnerWatchTime = new ArrayList<>(nol);
-        ArrayList<Double> coverage = new ArrayList<>(nol);
+        //int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
+        //ArrayList<Long> innerWatchTime = new ArrayList<>(nol);
+        //ArrayList<Long> innerInnerWatchTime = new ArrayList<>(nol);
+        //ArrayList<Double> coverage = new ArrayList<>(nol);
         
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
-                            String result = "";
-                            StopWatch innerWatch = new StopWatch();
-                            innerWatch.start();
-                            int visitedNodesCounter = 0;
+                            //String result = "";
+                            //StopWatch innerWatch = new StopWatch();
+                            //innerWatch.start();
+                            //int visitedNodesCounter = 0;
                             
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
@@ -155,7 +158,7 @@ public class BLParserWithBloomFiltersAndBFS {
                                             queue.add(neigh);
                                         }
                                         visited.add(neigh);
-                                        visitedNodesCounter++;
+                                        //visitedNodesCounter++;
                                     }
                                 }
                             }
@@ -185,11 +188,11 @@ public class BLParserWithBloomFiltersAndBFS {
                             });
                             properties.add(nodes[1]);
                             
-                            innerWatch.stop();
-                            innerWatchTime.add(innerWatch.getTime());
-                            coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
-                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
-                            FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "stats.csv");
+                            //innerWatch.stop();
+                            //innerWatchTime.add(innerWatch.getTime());
+                            //coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
+                            //result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
+                            //FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -301,7 +304,7 @@ public class BLParserWithBloomFiltersAndBFS {
         //there is one node having degree = 1630 in the current membership graph
         //System.out.println(encoder.decode(new DegreeDistribution(membershipGraph).getNodeWithDegree(1630)));
         
-        //secondPass();
+        secondPass();
         //populateShapes();
         //shacler.writeModelToFile();
         System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));

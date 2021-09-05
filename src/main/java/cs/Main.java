@@ -24,5 +24,6 @@ public class Main {
         new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();*/
         System.out.println("BLParserWithBloomFiltersAndBFS");
         new BLParserWithBloomFiltersAndBFS(datasetPath, numberOfClasses).run();
+        //new MembershipGraph(true);
     }
 }

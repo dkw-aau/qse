@@ -24,10 +24,12 @@ public class MembershipGraph {
     NodeEncoder encoder;
     Map<Integer, List<List<Integer>>> membershipSets;
     Integer membershipGraphRootNode;
+    HashMap<Integer, BloomFilter<String>> ctiBf;
     
-    public MembershipGraph(NodeEncoder e) {
+    public MembershipGraph(NodeEncoder e, HashMap<Integer, BloomFilter<String>> ctiBf) {
         this.membershipGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
         this.encoder = e;
+        this.ctiBf = ctiBf;
     }
     
     public MembershipGraph(boolean devMode) {
@@ -36,7 +38,7 @@ public class MembershipGraph {
         this.membershipGraph.vertexSet().forEach(v -> {
             ctiBf.put(v, new FilterBuilder(10, 0.01).buildBloomFilter());
         });
-        this.membershipGraphOutlierNormalization(this.membershipGraph.vertexSet().size(), ctiBf);
+        this.membershipGraphOutlierNormalization();
     }
     
     public void createMembershipSets(HashMap<Node, List<Integer>> instanceToClass) {
@@ -114,23 +116,21 @@ public class MembershipGraph {
         }
     }
     
-    public void membershipGraphOutlierNormalization(Integer enoc, HashMap<Integer, BloomFilter<String>> ctiBf) {
-        //FIXME: When calling from the iterator class, uncomment this:
+    public void membershipGraphOutlierNormalization() {
         int node = this.membershipGraphRootNode;
         System.out.println("Membership Graph Vertices Before Normalization: " + this.membershipGraph.vertexSet().size());
         int threshold = 50;
-        //int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH
-        //int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
+        //int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH; int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
         getFocusNodesViaBFS(node, threshold).forEach(focusNode -> {
             //System.out.println(focusNode + " : " + encoder.decode(focusNode).getLabel());
-            normalization(ctiBf, threshold, focusNode);
+            normalization(threshold, focusNode);
         });
         System.out.println("Membership Graph Vertices After Normalization: " + this.membershipGraph.vertexSet().size());
         //VISUALIZING
         //new MembershipGraphVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(this.membershipGraph, encoder, node);
     }
     
-    private void normalization(HashMap<Integer, BloomFilter<String>> ctiBf, int threshold, int focusNode) {
+    private void normalization(int threshold, int focusNode) {
         //RETRIEVING DIRECT CHILDREN OF FOCUS NODE
         List<Integer> directChildrenOfNode = getDirectChildrenOfNode(focusNode);
         int numberOfGroups = (directChildrenOfNode.size() / threshold) + 1;
@@ -152,6 +152,7 @@ public class MembershipGraph {
                 this.membershipGraph.addEdge(group.getGroupNodeId(), n);
             });
             this.membershipGraph.addEdge(focusNode, group.getGroupNodeId());
+            this.ctiBf.put(group.groupNodeId, group.getGroupBloomFilter());
         });
     }
     
@@ -262,6 +263,8 @@ public class MembershipGraph {
     public Integer getMembershipGraphRootNode() {
         return membershipGraphRootNode;
     }
+    
+    public HashMap<Integer, BloomFilter<String>> getCtiBf() {return ctiBf;}
     
     public DefaultDirectedGraph<Integer, DefaultEdge> getMembershipGraph() {
         return membershipGraph;
