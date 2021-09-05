@@ -1,10 +1,7 @@
 package cs.parsers;
 
 import com.google.common.collect.Lists;
-import cs.utils.Constants;
-import cs.utils.FilesUtil;
-import cs.utils.MembershipGraphVisualizer;
-import cs.utils.NodeEncoder;
+import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
@@ -38,7 +35,7 @@ public class MembershipGraph {
         this.membershipGraph.vertexSet().forEach(v -> {
             ctiBf.put(v, new FilterBuilder(10, 0.01).buildBloomFilter());
         });
-        this.membershipGraphOutlierNormalization();
+        this.membershipGraphOutlierNormalization(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
     }
     
     public void createMembershipSets(HashMap<Node, List<Integer>> instanceToClass) {
@@ -116,10 +113,9 @@ public class MembershipGraph {
         }
     }
     
-    public void membershipGraphOutlierNormalization() {
+    public void membershipGraphOutlierNormalization(Integer threshold) {
         int node = this.membershipGraphRootNode;
         System.out.println("Membership Graph Vertices Before Normalization: " + this.membershipGraph.vertexSet().size());
-        int threshold = 50;
         //int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH; int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
         getFocusNodesViaBFS(node, threshold).forEach(focusNode -> {
             //System.out.println(focusNode + " : " + encoder.decode(focusNode).getLabel());

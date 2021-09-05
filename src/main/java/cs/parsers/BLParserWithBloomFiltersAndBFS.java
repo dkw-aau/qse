@@ -97,11 +97,10 @@ public class BLParserWithBloomFiltersAndBFS {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        
         this.mg = new MembershipGraph(encoder, ctiBf);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph(classInstanceCount);
-        mg.membershipGraphOutlierNormalization();
+        mg.membershipGraphOutlierNormalization(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
