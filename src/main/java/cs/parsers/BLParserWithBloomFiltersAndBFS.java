@@ -122,6 +122,7 @@ public class BLParserWithBloomFiltersAndBFS {
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
+                    .parallel()
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             String result = "";
