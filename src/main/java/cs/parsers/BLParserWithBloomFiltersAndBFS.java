@@ -166,8 +166,9 @@ public class BLParserWithBloomFiltersAndBFS {
                             }
                             innerInnerWatch.stop();
                             //innerInnerWatchTime.add(innerInnerWatch.getTime());
-                            result +=  innerInnerWatch.getTime() + ",";
+                            result += innerInnerWatch.getTime() + ",";
                             
+                            /*
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
                                     objTypes.add(getType(nodes[2].toString()));
@@ -190,7 +191,7 @@ public class BLParserWithBloomFiltersAndBFS {
                                         classToPropWithObjTypes.put(type, propToObjTypes);
                                     });
                                 }
-                            });
+                            });*/
                             
                             properties.add(nodes[1]);
                             innerWatch.stop();

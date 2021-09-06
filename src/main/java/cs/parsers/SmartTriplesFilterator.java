@@ -34,7 +34,12 @@ public class SmartTriplesFilterator {
     HashMap<Integer, BloomFilter<String>> ctiBf;
     MembershipGraph mg;
     
-    SmartTriplesFilterator(String filePath, Integer expSizeOfClasses) {
+    public SmartTriplesFilterator(String filePath) {
+        this.rdfFile = filePath;
+    }
+    
+    
+    public SmartTriplesFilterator(String filePath, Integer expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -144,6 +149,28 @@ public class SmartTriplesFilterator {
         
         watch.stop();
         System.out.println("Time Elapsed secondPassToFilterInstancesOnly: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    public void extractSubClassOfTriples() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.SUB_CLASS_OF))
+                    .forEach(line -> {
+                        try {
+                            FilesUtil.writeToFileInAppendMode(line, Constants.SUBCLASSOF_DATASET);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed extractSubClassOfTriples: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void run() {
