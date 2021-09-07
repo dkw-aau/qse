@@ -13,19 +13,21 @@ public class Main {
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
     
-        /*
-        System.out.println("BaselineParser");
-        new BaselineParser(datasetPath, numberOfClasses).run();
-        System.out.println("BaselineParserEncoded");
+        
+        //System.out.println("BaselineParser");
+        //new BaselineParser(datasetPath, numberOfClasses).run();
+        System.out.println("Baseline Algorithm A - Encoded Strings");
         new BaselineParserEncoded(datasetPath, numberOfClasses).run();
-        System.out.println("BaselineParserWithBloomFilters");
+        
+        System.out.println("\n\n\n\nBaseline Algorithm B - Bloom Filters");
         new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
-        System.out.println("BaselineParserWithBloomFilterCache");
-        new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();*/
-        //System.out.println("BLParserWithBloomFiltersAndBFS");
-        //new BLParserWithBloomFiltersAndBFS(datasetPath, numberOfClasses).run();
+        
+        System.out.println("\n\n\n\n Optimal Algorithm - Bloom Filters - BFS - Membership Graph");
+        new MembershipGraphBasedParser(datasetPath, numberOfClasses).run();
+
         //new MembershipGraph(true);
         //new SmartTriplesFilterator(datasetPath).extractSubClassOfTriples();
-        new SmartTriplesFilterator(datasetPath, numberOfClasses).run();
+        // If you want to extract Triples mapping to membership sets
+        //new SmartTriplesFilterator(datasetPath, numberOfClasses).run();
     }
 }

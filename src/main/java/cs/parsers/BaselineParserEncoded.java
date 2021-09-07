@@ -1,6 +1,9 @@
 package cs.parsers;
 
+import cs.utils.ConfigManager;
+import cs.utils.Constants;
 import cs.utils.Encoder;
+import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -17,30 +20,27 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class BaselineParserEncoded {
-    String rdfFile = "";
+    String rdfFile;
     SHACLER shacler = new SHACLER();
     
-    // Constants
-    final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    int expectedNumberOfClasses = 10000;
-    
-    // Classes, instances, properties
-    HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
-    HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashMap<String, HashMap<Node, Integer>> classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    //HashMap<Node, List<Node>> instanceToClass = new HashMap<>((int) (1000000 / 0.75 + 1));
-    HashMap<Node, List<Integer>> instanceToClass = new HashMap<>();
-    HashSet<Node> properties = new HashSet<>();
-    Encoder encoder = new Encoder();
-    
-    // Constructor
-    BaselineParserEncoded(String filePath) {
-        this.rdfFile = filePath;
-    }
+    Integer expectedNumberOfClasses;
+    HashMap<String, Integer> classInstanceCount;
+    HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+    HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
+    HashMap<Node, List<Integer>> instanceToClass;
+    HashSet<Node> properties;
+    Encoder encoder;
     
     public BaselineParserEncoded(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
+        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
+        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
+        this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
+        this.properties = new HashSet<>((int) (1000 * 1.33));
+        this.encoder = new Encoder();
     }
     
     private void firstPass() {
@@ -48,7 +48,7 @@ public class BaselineParserEncoded {
         watch.start();
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> line.contains(RDFType))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -77,7 +77,7 @@ public class BaselineParserEncoded {
         watch.start();
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation
                         try {
                             Node[] nodes = NxParser.parseNodes(line);

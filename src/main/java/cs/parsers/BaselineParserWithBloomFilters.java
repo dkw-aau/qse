@@ -1,9 +1,8 @@
 package cs.parsers;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
-import cs.utils.ConfigManager;
-import me.tongfei.progressbar.ProgressBar;
+import cs.utils.Constants;
+import orestes.bloomfilter.BloomFilter;
+import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -11,7 +10,6 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -19,57 +17,51 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class BaselineParserWithBloomFilters {
-    private String rdfFile = "";
-    private SHACLER shacler = new SHACLER();
-    private int sizeOfDataset = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
-    
-    // Constants
-    private final String RDFType = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    private int expectedNumberOfClasses = 10000; // default value
-    
-    // Classes, instances, properties
-    HashMap<String, Integer> classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
-    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-    HashSet<Node> properties = new HashSet<>();
-    //Bloom Filter Mapping classes to instances
-    HashMap<Node, BloomFilter<CharSequence>> ctiBf = new HashMap<>();
+    String rdfFile;
+    SHACLER shacler = new SHACLER();
+    Integer expectedNumberOfClasses;
+    HashMap<String, Integer> classInstanceCount;
+    HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+    HashSet<Node> properties;
+    HashMap<Node, BloomFilter<String>> ctiBf;
     
     // Constructor
     public BaselineParserWithBloomFilters(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
+        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
+        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.properties = new HashSet<>((int) (1000 * 1.33));
+        this.ctiBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            try (ProgressBar pb = new ProgressBar("Progress1stPass", sizeOfDataset)) {
-                Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                        .filter(line -> line.contains(RDFType))
-                        .forEach(line -> {                              // - A terminal operation
-                            try {
-                                Node[] nodes = NxParser.parseNodes(line);
-                                classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
-                                
-                                if (ctiBf.containsKey(nodes[2])) {
-                                    ctiBf.get(nodes[2]).put(nodes[0].getLabel());
-                                } else {
-                                    BloomFilter<CharSequence> bf = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.01);
-                                    bf.put(nodes[0].getLabel());
-                                    ctiBf.put(nodes[2], bf);
-                                }
-                                
-                            } catch (ParseException e) {
-                                e.printStackTrace();
+            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {                              // - A terminal operation
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
+                            
+                            if (ctiBf.containsKey(nodes[2])) {
+                                ctiBf.get(nodes[2]).add(nodes[0].getLabel());
+                            } else {
+                                BloomFilter<String> bf = new FilterBuilder(100_000, 0.000001).buildBloomFilter();
+                                bf.add(nodes[0].getLabel());
+                                ctiBf.put(nodes[2], bf);
                             }
-                            pb.step();
-                            pb.setExtraMessage("Reading...");
-                        });
-            }
+                            
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -81,56 +73,53 @@ public class BaselineParserWithBloomFilters {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            try (ProgressBar pb = new ProgressBar("Progress2ndPass", sizeOfDataset)) {
-                Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                        .filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
-                        .forEach(line -> {                              // - A terminal operation
-                            try {
-                                Node[] nodes = NxParser.parseNodes(line);
-                    
-                                //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
-                                List<Node> instanceTypes = new ArrayList<>();
-                                HashSet<String> objTypes = new HashSet<String>();
-                                ctiBf.forEach((c, bf) -> {
-                                    if (bf.mightContain(nodes[0].getLabel())) {
-                                        instanceTypes.add(c);
-                                    }
-                                    if (bf.mightContain(nodes[2].getLabel())) {
-                                        objTypes.add(c.getLabel());
-                                    }
-                                });
+            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
+                    .forEach(line -> {                              // - A terminal operation
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            
+                            //What's the type of this instance? To find the type, you need to iterate over the ctiBf and check in all the bloom filters
+                            List<Node> instanceTypes = new ArrayList<>();
+                            HashSet<String> objTypes = new HashSet<String>();
+                            ctiBf.forEach((c, bf) -> {
+                                if (bf.contains(nodes[0].getLabel())) {
+                                    instanceTypes.add(c);
+                                }
+                                if (bf.contains(nodes[2].getLabel())) {
+                                    objTypes.add(c.getLabel());
+                                }
+                            });
+                            
+                            instanceTypes.forEach(c -> {
+                                if (objTypes.isEmpty()) {
+                                    objTypes.add(getType(nodes[2].toString()));
+                                }
                                 
-                                instanceTypes.forEach(c -> {
-                                    if (objTypes.isEmpty()) {
-                                        objTypes.add(getType(nodes[2].toString()));
-                                    }
-                        
-                                    if (classToPropWithObjTypes.containsKey(c)) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-                            
-                                        if (propToObjTypes.containsKey(nodes[1]))
-                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                        else {
-                                            propToObjTypes.put(nodes[1], objTypes);
-                                        }
-                                        classToPropWithObjTypes.put(c, propToObjTypes);
-                            
-                                    } else {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                if (classToPropWithObjTypes.containsKey(c)) {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                    
+                                    if (propToObjTypes.containsKey(nodes[1]))
+                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                    else {
                                         propToObjTypes.put(nodes[1], objTypes);
-                                        instanceTypes.forEach(type -> {
-                                            classToPropWithObjTypes.put(type, propToObjTypes);
-                                        });
                                     }
-                                });
-                                properties.add(nodes[1]);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-                            pb.step();
-                            pb.setExtraMessage("Reading...");
-                        });
-            }
+                                    classToPropWithObjTypes.put(c, propToObjTypes);
+                                    
+                                } else {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                    propToObjTypes.put(nodes[1], objTypes);
+                                    instanceTypes.forEach(type -> {
+                                        classToPropWithObjTypes.put(type, propToObjTypes);
+                                    });
+                                }
+                            });
+                            properties.add(nodes[1]);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+            
         } catch (Exception e) {
             e.printStackTrace();
         }

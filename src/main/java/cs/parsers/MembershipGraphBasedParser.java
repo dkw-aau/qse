@@ -1,9 +1,7 @@
 package cs.parsers;
 
-import com.google.common.math.Quantiles;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.FilesUtil;
 import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
@@ -22,7 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class BLParserWithBloomFiltersAndBFS {
+public class MembershipGraphBasedParser {
     String rdfFile;
     SHACLER shacler = new SHACLER();
     
@@ -39,19 +37,17 @@ public class BLParserWithBloomFiltersAndBFS {
     HashMap<Integer, BloomFilter<String>> ctiBf;
     MembershipGraph mg;
     
-    public BLParserWithBloomFiltersAndBFS(String filePath, int expSizeOfClasses) {
+    public MembershipGraphBasedParser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        
-        //FIXME : Initialize in a proper way
-        this.instanceToClass = new HashMap<>();
-        this.properties = new HashSet<>();
+        int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
+        this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
+        this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new NodeEncoder();
-        this.ctiBf = new HashMap<>();
-        
+        this.ctiBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     private void firstPass() {
@@ -120,16 +116,17 @@ public class BLParserWithBloomFiltersAndBFS {
         //ArrayList<Double> coverage = new ArrayList<>(nol);
         
         try {
+            //AtomicInteger counter = new AtomicInteger();
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
-                    .parallel()
                     .forEach(line -> {                              // - A terminal operation
+                        //counter.getAndIncrement();
+                        //System.out.println(counter);
                         try {
-                            String result = "";
+                            //String result = "";
                             StopWatch innerWatch = new StopWatch();
                             innerWatch.start();
-                            int visitedNodesCounter = 0;
-                            
+                            //int visitedNodesCounter = 0;
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
@@ -140,8 +137,8 @@ public class BLParserWithBloomFiltersAndBFS {
                             queue.add(node);
                             visited.add(node);
                             
-                            StopWatch innerInnerWatch = new StopWatch();
-                            innerInnerWatch.start();
+                            //StopWatch innerInnerWatch = new StopWatch();
+                            //innerInnerWatch.start();
                             while (queue.size() != 0) {
                                 node = queue.poll();
                                 for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
@@ -160,15 +157,15 @@ public class BLParserWithBloomFiltersAndBFS {
                                             queue.add(neigh);
                                         }
                                         visited.add(neigh);
-                                        visitedNodesCounter++;
+                                        //visitedNodesCounter++;
                                     }
                                 }
                             }
-                            innerInnerWatch.stop();
+                            //innerInnerWatch.stop();
                             //innerInnerWatchTime.add(innerInnerWatch.getTime());
-                            result += innerInnerWatch.getTime() + ",";
+                            //result += innerInnerWatch.getTime() + ",";
                             
-                            /*
+                            
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
                                     objTypes.add(getType(nodes[2].toString()));
@@ -191,14 +188,14 @@ public class BLParserWithBloomFiltersAndBFS {
                                         classToPropWithObjTypes.put(type, propToObjTypes);
                                     });
                                 }
-                            });*/
+                            });
                             
                             properties.add(nodes[1]);
-                            innerWatch.stop();
+                            //innerWatch.stop();
                             //innerWatchTime.add(innerWatch.getTime());
                             //coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
-                            result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
-                            FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_new_" + "stats.csv");
+                            //result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
+                            //FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_new_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -206,67 +203,10 @@ public class BLParserWithBloomFiltersAndBFS {
             
             
         } catch (Exception e) {
-            
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        //computeStatistics(innerWatchTime, innerInnerWatchTime, coverage);
-    }
-    
-    private void computeStatistics(ArrayList<Long> innerWatchTime, ArrayList<Long> innerInnerWatchTime, ArrayList<Double> coverage) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        
-        //Average
-        StopWatch avgWatch = new StopWatch();
-        avgWatch.start();
-        double avgInnerWatchTime = innerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
-        double avgInnerInnerWatchTime = innerInnerWatchTime.stream().mapToLong(d -> d).average().orElse(0.0);
-        double avgCoverage = coverage.stream().mapToDouble(d -> d).average().orElse(0.0);
-        avgWatch.stop();
-        System.out.println("\nAverageInnerWatchTime, AverageInnerInnerWatchTime, AverageCoverage");
-        System.out.println(avgInnerWatchTime + ", " + avgInnerInnerWatchTime + ", " + avgCoverage);
-        System.out.println("Time Elapsed computing average: " + TimeUnit.MILLISECONDS.toSeconds(avgWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(avgWatch.getTime()));
-        
-        //Median
-       /* StopWatch medianWatch = new StopWatch();
-        medianWatch.start();
-        double medianInnerWatchTime = Quantiles.median().compute(innerWatchTime);
-        double medianInnerInnerWatchTime = Quantiles.median().compute(innerInnerWatchTime);
-        double medianCoverage = Quantiles.median().compute(coverage);
-        medianWatch.stop();
-        System.out.println("Time Elapsed computing median: " + TimeUnit.MILLISECONDS.toSeconds(medianWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(medianWatch.getTime()));
-        */
-        //Percentiles
-        StopWatch percentileWatch = new StopWatch();
-        percentileWatch.start();
-        
-        System.out.println("50 Percentile - innerWatchTime: " + Quantiles.percentiles().index(50).compute(innerWatchTime));
-        System.out.println("50 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(50).compute(innerInnerWatchTime));
-        System.out.println("50 Percentile - coverage: " + Quantiles.percentiles().index(50).compute(coverage));
-        
-        System.out.println("90 Percentile - innerWatchTime: " + Quantiles.percentiles().index(90).compute(innerWatchTime));
-        System.out.println("90 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(90).compute(innerInnerWatchTime));
-        System.out.println("90 Percentile - coverage: " + Quantiles.percentiles().index(90).compute(coverage));
-        
-        System.out.println("75 Percentile - innerWatchTime: " + Quantiles.percentiles().index(75).compute(innerWatchTime));
-        System.out.println("75 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(75).compute(innerInnerWatchTime));
-        System.out.println("75 Percentile - coverage: " + Quantiles.percentiles().index(75).compute(coverage));
-        
-        System.out.println("25 Percentile - innerWatchTime: " + Quantiles.percentiles().index(25).compute(innerWatchTime));
-        System.out.println("25 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(25).compute(innerInnerWatchTime));
-        System.out.println("25 Percentile - coverage: " + Quantiles.percentiles().index(25).compute(coverage));
-        
-        System.out.println("10 Percentile - innerWatchTime: " + Quantiles.percentiles().index(10).compute(innerWatchTime));
-        System.out.println("10 Percentile - innerInnerWatchTime: " + Quantiles.percentiles().index(10).compute(innerInnerWatchTime));
-        System.out.println("10 Percentile - coverage: " + Quantiles.percentiles().index(10).compute(coverage));
-        
-        percentileWatch.stop();
-        System.out.println("Time Elapsed computing percentiles: " + TimeUnit.MILLISECONDS.toSeconds(percentileWatch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(percentileWatch.getTime()));
-        
-        watch.stop();
-        System.out.println("Time Elapsed computing statistics: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void populateShapes() {
@@ -307,13 +247,10 @@ public class BLParserWithBloomFiltersAndBFS {
     private void runParser() throws IOException {
         firstPass();
         membershipGraphConstruction();
-        //there is one node having degree = 1630 in the current membership graph
-        //System.out.println(encoder.decode(new DegreeDistribution(membershipGraph).getNodeWithDegree(1630)));
-        
         secondPass();
-        //populateShapes();
-        //shacler.writeModelToFile();
-        System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
+        populateShapes();
+        shacler.writeModelToFile();
+        //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
     
