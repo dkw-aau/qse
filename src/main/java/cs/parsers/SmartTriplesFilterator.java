@@ -1,5 +1,6 @@
 package cs.parsers;
 
+import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.NodeEncoder;
@@ -123,7 +124,7 @@ public class SmartTriplesFilterator {
         this.instanceToClass.forEach((instance, classMembers) -> {
             if (membersHashSet.contains(classMembers)) {
                 instancesToKeep.add(instance);
-                if (membersCount.get(classMembers).equals(20)) {
+                if (membersCount.get(classMembers).equals(Integer.parseInt(ConfigManager.getProperty("numberOfTriplesPerMembershipSet")))) {
                     membersHashSet.remove(classMembers);
                 } else {
                     membersCount.put(classMembers, membersCount.get(classMembers) + 1);
@@ -173,7 +174,7 @@ public class SmartTriplesFilterator {
         System.out.println("Time Elapsed extractSubClassOfTriples: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void run() {
+    public void run() {
         firstPass();
         membershipGraphConstruction();
         filteringInstances();

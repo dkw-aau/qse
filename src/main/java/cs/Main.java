@@ -22,8 +22,10 @@ public class Main {
         new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
         System.out.println("BaselineParserWithBloomFilterCache");
         new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();*/
-        System.out.println("BLParserWithBloomFiltersAndBFS");
-        new BLParserWithBloomFiltersAndBFS(datasetPath, numberOfClasses).run();
+        //System.out.println("BLParserWithBloomFiltersAndBFS");
+        //new BLParserWithBloomFiltersAndBFS(datasetPath, numberOfClasses).run();
         //new MembershipGraph(true);
+        //new SmartTriplesFilterator(datasetPath).extractSubClassOfTriples();
+        new SmartTriplesFilterator(datasetPath, numberOfClasses).run();
     }
 }
