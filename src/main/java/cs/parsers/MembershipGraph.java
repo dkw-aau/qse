@@ -47,7 +47,7 @@ public class MembershipGraph {
     }
     
     public void createMembershipGraph(HashMap<String, Integer> classInstanceCount) {
-        AtomicBoolean flag = new AtomicBoolean(false);
+        //AtomicBoolean flag = new AtomicBoolean(false);
         ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
         try {
             this.membershipSets.forEach((mSize, mSets) -> {
@@ -81,16 +81,17 @@ public class MembershipGraph {
             
             ConnectivityInspector<Integer, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(membershipGraph);
             connectivityInspector.connectedSets().stream().sorted(Comparator.comparingInt(Set::size)).forEach(subGraphVertices -> {
+                boolean flag = false;
                 if (subGraphVertices.size() > 1) {
-                    subGraphVertices.forEach(vertex -> {
+                    for (Integer vertex : subGraphVertices) {
                         if (membershipGraph.inDegreeOf(vertex) == 0) {
                             rootNodesOfSubGraphs.add(vertex);
-                            flag.set(true);
+                            flag = true;
                         }
-                    });
+                    }
                     
                     //Handle the graph having no node with inDegree 0
-                    if (!flag.get()) {
+                    if (!flag) {
                         for (Integer v : subGraphVertices) {
                             if (membershipGraph.inDegreeOf(v) == 1) {
                                 rootNodesOfSubGraphs.add(v);
