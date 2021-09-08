@@ -18,15 +18,12 @@ public class Main {
         //new BaselineParser(datasetPath, numberOfClasses).run();
         System.out.println("Baseline Algorithm A - Encoded Strings");
         new BaselineParserEncoded(datasetPath, numberOfClasses).run();
-        
-        System.out.println("\n\n\n\n Optimal Algorithm - Bloom Filters - BFS - Membership Graph");
-        new MembershipGraphBasedParser(datasetPath, numberOfClasses).run();
-    
     
         System.out.println("\n\n\n\nBaseline Algorithm B - Bloom Filters");
         new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
-    
         
+        System.out.println("\n\n\n\n Optimal Algorithm - Bloom Filters - BFS - Membership Graph");
+        new MembershipGraphBasedParser(datasetPath, numberOfClasses).run();
         
         //new MembershipGraph(true);
         //new SmartTriplesFilterator(datasetPath).extractSubClassOfTriples();
