@@ -239,7 +239,7 @@ public class SmartTriplesFilterator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    
+        
         System.out.println("Filtering Instances");
         try {
             Files.lines(Path.of(rdfFile))
@@ -257,9 +257,9 @@ public class SmartTriplesFilterator {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    
+        
         System.out.println("instancesToKeep " + instancesToKeep.size());
-    
+        
         System.out.println("Writing to File");
         try {
             Files.lines(Path.of(rdfFile))
@@ -279,8 +279,29 @@ public class SmartTriplesFilterator {
         
     }
     
+    private void countInstances() {
+        System.out.println("Counting Instances");
+        HashSet<Node> instancesToKeep = new HashSet<>();
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            instancesToKeep.add(nodes[0]);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Number of Instances: " + instancesToKeep.size());
+    }
+    
     public void run() {
-        ontologyTreeBasedFilter();
+        countInstances();
+        //ontologyTreeBasedFilter();
         //firstPass();
         //membershipGraphConstruction();
         //filteringInstances();
