@@ -14,7 +14,10 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -262,17 +265,22 @@ public class SmartTriplesFilterator {
         
         System.out.println("Writing to File");
         try {
+            FileWriter fileWriter = new FileWriter(new File(Constants.FILTERED_DATASET), true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
             Files.lines(Path.of(rdfFile))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instancesToKeep.contains(nodes[0])) {
-                                FilesUtil.writeToFileInAppendMode(line, Constants.FILTERED_DATASET);
+                                //FilesUtil.writeToFileInAppendMode(line, Constants.FILTERED_DATASET);
+                                printWriter.println(line);
                             }
+                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
+            printWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -300,8 +308,8 @@ public class SmartTriplesFilterator {
     }
     
     public void run() {
-        countInstances();
-        //ontologyTreeBasedFilter();
+        //countInstances();
+        ontologyTreeBasedFilter();
         //firstPass();
         //membershipGraphConstruction();
         //filteringInstances();
