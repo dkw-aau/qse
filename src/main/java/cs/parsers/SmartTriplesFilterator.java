@@ -7,18 +7,17 @@ import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.solr.common.util.Hash;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SmartTriplesFilterator {
@@ -29,6 +28,9 @@ public class SmartTriplesFilterator {
     HashMap<Node, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, List<Integer>> instanceToClass;
+    
+    HashMap<Node, HashSet<Node>> instanceToClassHashset = new HashMap<>();
+    
     HashSet<Node> properties;
     NodeEncoder encoder;
     DefaultDirectedGraph<Integer, DefaultEdge> membershipGraph;
@@ -73,6 +75,19 @@ public class SmartTriplesFilterator {
                                 List<Integer> list = new ArrayList<>();
                                 list.add(encoder.encode(nodes[2]));
                                 instanceToClass.put(nodes[0], list);
+                                
+                                
+                                HashSet<Node> hs = new HashSet<>();
+                                hs.add(nodes[2]);
+                                instanceToClassHashset.put(nodes[0], hs);
+                            }
+                            
+                            if (instanceToClassHashset.containsKey(nodes[0])) {
+                                instanceToClassHashset.get(nodes[0]).add(nodes[2]);
+                            } else {
+                                HashSet<Node> hs = new HashSet<>();
+                                hs.add(nodes[2]);
+                                instanceToClassHashset.put(nodes[0], hs);
                             }
                             
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
@@ -81,6 +96,38 @@ public class SmartTriplesFilterator {
                                 BloomFilter<String> bf = new FilterBuilder(100_000, 0.000001).buildBloomFilter();
                                 bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void firstPassString() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
+                            
+                            // Track classes per instance
+                            if (instanceToClassHashset.containsKey(nodes[0])) {
+                                instanceToClassHashset.get(nodes[0]).add(nodes[2]);
+                            } else {
+                                HashSet<Node> hs = new HashSet<>();
+                                hs.add(nodes[2]);
+                                instanceToClassHashset.put(nodes[0], hs);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -174,9 +221,68 @@ public class SmartTriplesFilterator {
         System.out.println("Time Elapsed extractSubClassOfTriples: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    public void ontologyTreeBasedFilter() {
+        
+        HashSet<Node> subClassesHashSet = new HashSet<>();
+        HashSet<Node> instancesToKeep = new HashSet<>();
+        try {
+            Files.lines(Path.of(Constants.TEMP_DATASET_FILE))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            //System.out.println(nodes[0]);
+                            subClassesHashSet.add(nodes[0]);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    
+        System.out.println("Filtering Instances");
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (subClassesHashSet.contains(nodes[2])) {
+                                instancesToKeep.add(nodes[0]);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+        System.out.println("instancesToKeep " + instancesToKeep.size());
+    
+        System.out.println("Writing to File");
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (instancesToKeep.contains(nodes[0])) {
+                                FilesUtil.writeToFileInAppendMode(line, Constants.FILTERED_DATASET);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
+    
     public void run() {
-        firstPass();
-        membershipGraphConstruction();
-        filteringInstances();
+        ontologyTreeBasedFilter();
+        //firstPass();
+        //membershipGraphConstruction();
+        //filteringInstances();
     }
 }

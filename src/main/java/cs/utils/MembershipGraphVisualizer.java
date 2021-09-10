@@ -24,6 +24,16 @@ public class MembershipGraphVisualizer {
         });
     }
     
+    public void createStringNodesGraph(DefaultDirectedGraph<String, DefaultEdge> directedGraph) {
+        Neo4jGraph neo = new Neo4jGraph();
+        directedGraph.iterables().vertices().forEach(neo::addNode);
+        directedGraph.iterables().edges().forEach(edge -> {
+            String source = directedGraph.getEdgeTarget(edge);
+            String target = directedGraph.getEdgeSource(edge);
+            neo.connectNodes(source, target);
+        });
+    }
+    
     
     public void createEncodedIRIsNodesGraph(DefaultDirectedGraph<Integer, DefaultEdge> directedGraph, NodeEncoder encoder) {
         Neo4jGraph neo = new Neo4jGraph();
