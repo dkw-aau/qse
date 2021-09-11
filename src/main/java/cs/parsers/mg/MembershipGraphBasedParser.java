@@ -1,5 +1,7 @@
-package cs.parsers;
+package cs.parsers.mg;
 
+import cs.parsers.SHACLER;
+import cs.parsers.mg.MembershipGraph;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.NodeEncoder;
@@ -73,7 +75,7 @@ public class MembershipGraphBasedParser {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).add(nodes[0].getLabel());
                             } else {
-                                BloomFilter<String> bf = new FilterBuilder(100_000, 0.000001).buildBloomFilter();
+                                BloomFilter<String> bf = new FilterBuilder(100_00, 0.000001).buildBloomFilter();
                                 bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
@@ -93,9 +95,9 @@ public class MembershipGraphBasedParser {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.mg = new MembershipGraph(encoder, ctiBf);
+        this.mg = new MembershipGraph(encoder, ctiBf, classInstanceCount);
         mg.createMembershipSets(instanceToClass);
-        mg.createMembershipGraph(classInstanceCount);
+        mg.createMembershipGraph();
         mg.membershipGraphOutlierNormalization(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();

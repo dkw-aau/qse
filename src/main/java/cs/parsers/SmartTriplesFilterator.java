@@ -1,5 +1,6 @@
 package cs.parsers;
 
+import cs.parsers.mg.MembershipGraph;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -7,7 +8,6 @@ import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.solr.common.util.Hash;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.semanticweb.yars.nx.Node;
@@ -148,9 +148,9 @@ public class SmartTriplesFilterator {
     private void membershipGraphConstruction() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.mg = new MembershipGraph(encoder, ctiBf);
+        this.mg = new MembershipGraph(encoder, ctiBf, classInstanceCount);
         mg.createMembershipSets(instanceToClass);
-        mg.createMembershipGraph(classInstanceCount);
+        mg.createMembershipGraph();
         this.membershipGraph = mg.getMembershipGraph();
         this.membershipGraphRootNode = mg.getMembershipGraphRootNode();
         watch.stop();
@@ -163,7 +163,7 @@ public class SmartTriplesFilterator {
         System.out.println("Started secondPassToFilterInstancesOnly");
         HashMap<List<Integer>, Integer> membersCount = new HashMap<>();
         HashSet<List<Integer>> membersHashSet = new HashSet<>();
-        for (List<List<Integer>> lists : this.mg.membershipSets.values()) {
+        for (List<List<Integer>> lists : this.mg.getMembershipSets().values()) {
             lists.forEach(val -> {
                 membersHashSet.add(val);
                 membersCount.put(val, 0);

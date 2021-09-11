@@ -1,4 +1,4 @@
-package cs.parsers;
+package cs.parsers.mg;
 
 import com.google.common.collect.Lists;
 import cs.utils.*;
@@ -13,7 +13,6 @@ import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class MembershipGraph {
@@ -22,11 +21,13 @@ public class MembershipGraph {
     Map<Integer, List<List<Integer>>> membershipSets;
     Integer membershipGraphRootNode;
     HashMap<Integer, BloomFilter<String>> ctiBf;
+    HashMap<String, Integer> classInstanceCount;
     
-    public MembershipGraph(NodeEncoder e, HashMap<Integer, BloomFilter<String>> ctiBf) {
+    public MembershipGraph(NodeEncoder e, HashMap<Integer, BloomFilter<String>> ctiBf, HashMap<String, Integer> classInstanceCount) {
         this.membershipGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
         this.encoder = e;
         this.ctiBf = ctiBf;
+        this.classInstanceCount = classInstanceCount;
     }
     
     public MembershipGraph(boolean devMode) {
@@ -46,7 +47,7 @@ public class MembershipGraph {
                 }, LinkedHashMap::new));
     }
     
-    public void createMembershipGraph(HashMap<String, Integer> classInstanceCount) {
+    public void createMembershipGraph() {
         //AtomicBoolean flag = new AtomicBoolean(false);
         ArrayList<Integer> rootNodesOfSubGraphs = new ArrayList<>();
         try {
@@ -60,7 +61,7 @@ public class MembershipGraph {
                     mSets.forEach(set -> {
                         HashMap<Integer, Integer> memberFrequency = new HashMap<>();
                         set.forEach(element -> {
-                            memberFrequency.put(element, classInstanceCount.get(encoder.decode(element).getLabel()));
+                            memberFrequency.put(element, this.classInstanceCount.get(encoder.decode(element).getLabel()));
                             if (!membershipGraph.containsVertex(element)) membershipGraph.addVertex(element);
                         });
                         Integer[] sortedElementsOfMemberSet = getKeysOfMapSortedByValues(memberFrequency).keySet().toArray(new Integer[0]);
@@ -132,24 +133,51 @@ public class MembershipGraph {
         List<Integer> directChildrenOfNode = getDirectChildrenOfNode(focusNode);
         int numberOfGroups = (directChildrenOfNode.size() / threshold) + 1;
         
+        List<MetaNodeChild> metaNodeChildList = new ArrayList<>();
+        
+        directChildrenOfNode.forEach(node -> {
+            metaNodeChildList.add(new MetaNodeChild(node, classInstanceCount.get(encoder.decode(node).getLabel()), getNumberOfChildrenOfNode(node)));
+        });
+        metaNodeChildList.sort(Comparator.comparing(MetaNodeChild::getNode).thenComparing(MetaNodeChild::getNoc).thenComparing(MetaNodeChild::getFrequency));
+        
+        
+        Queue<MetaNodeChild> metaNodeChildQueue = new LinkedList<>(metaNodeChildList);
+        
+        //Round Robin Policy
+        HashMap<Integer, List<Integer>> metaNodeBalancedChildren = new HashMap<>();
+        
+        for (int i = 0; i < numberOfGroups; i++) {
+            metaNodeBalancedChildren.put(i, new ArrayList<>());
+        }
+        
+        while (!metaNodeChildQueue.isEmpty()) {
+            metaNodeBalancedChildren.forEach((metaNodeIndex, metaNodeChild) -> {
+                if (!metaNodeChildQueue.isEmpty()) {
+                    metaNodeBalancedChildren.get(metaNodeIndex).add(Objects.requireNonNull(metaNodeChildQueue.poll()).getNode());
+                }
+                
+            });
+        }
+        
+        //directChildrenOfNode.sort(Collections.reverseOrder());
+        
         //PARTITIONING THE CHILDREN
-        directChildrenOfNode.sort(Collections.reverseOrder());
         List<List<Integer>> groups = Lists.partition(directChildrenOfNode, numberOfGroups);
         
         //CREATING GROUP NODES + Performing Union of Bloom Filters.
-        List<Group> groupInstances = new ArrayList<>();
+        List<MetaNode> metaNodeInstances = new ArrayList<>();
         for (int i = 0, groupsSize = groups.size(); i < groupsSize; i++) {
-            groupInstances.add(new Group(i, groups.get(i), focusNode, encoder, ctiBf));
+            metaNodeInstances.add(new MetaNode(i, groups.get(i), focusNode, encoder, ctiBf));
         }
         //CORE: Using group nodes to create and remove edges
-        groupInstances.forEach(group -> {
-            this.membershipGraph.addVertex(group.getGroupNodeId());
-            group.getNodes().forEach(n -> {
+        metaNodeInstances.forEach(metaNode -> {
+            this.membershipGraph.addVertex(metaNode.getMetaNodeId());
+            metaNode.getNodes().forEach(n -> {
                 this.membershipGraph.removeEdge(focusNode, n);
-                this.membershipGraph.addEdge(group.getGroupNodeId(), n);
+                this.membershipGraph.addEdge(metaNode.getMetaNodeId(), n);
             });
-            this.membershipGraph.addEdge(focusNode, group.getGroupNodeId());
-            this.ctiBf.put(group.groupNodeId, group.getGroupBloomFilter());
+            this.membershipGraph.addEdge(focusNode, metaNode.getMetaNodeId());
+            this.ctiBf.put(metaNode.metaNodeId, metaNode.getGroupBloomFilter());
         });
     }
     
@@ -159,6 +187,14 @@ public class MembershipGraph {
             directChildren.add(this.membershipGraph.getEdgeTarget(edge));
         });
         return directChildren;
+    }
+    
+    private Integer getNumberOfChildrenOfNode(Integer node) {
+        List<Integer> directChildren = new ArrayList<>();
+        this.membershipGraph.outgoingEdgesOf(node).forEach(edge -> {
+            directChildren.add(this.membershipGraph.getEdgeTarget(edge));
+        });
+        return directChildren.size();
     }
     
     private Integer getGraphSizeViaBFS(Integer startNode) {
@@ -253,15 +289,15 @@ public class MembershipGraph {
         this.encoder = new NodeEncoder(table.size(), table, reverseTable);
     }
     
-    public void setMembershipGraphRootNode(Integer membershipGraphRootNode) {
-        this.membershipGraphRootNode = membershipGraphRootNode;
-    }
     
+    //Getters
     public Integer getMembershipGraphRootNode() {
         return membershipGraphRootNode;
     }
     
     public HashMap<Integer, BloomFilter<String>> getCtiBf() {return ctiBf;}
+    
+    public Map<Integer, List<List<Integer>>> getMembershipSets() {return membershipSets;}
     
     public DefaultDirectedGraph<Integer, DefaultEdge> getMembershipGraph() {
         return membershipGraph;
@@ -282,5 +318,11 @@ public class MembershipGraph {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
         return sortedMap;
+    }
+    
+    // Setters
+    
+    public void setMembershipGraphRootNode(Integer membershipGraphRootNode) {
+        this.membershipGraphRootNode = membershipGraphRootNode;
     }
 }
