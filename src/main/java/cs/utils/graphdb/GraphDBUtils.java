@@ -1,14 +1,15 @@
 package cs.utils.graphdb;
 
+import cs.utils.Constants;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesWriter;
+import org.jgrapht.Graph;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +43,26 @@ public class GraphDBUtils {
                 repositoryConnection.rollback();
         }
         return result;
+    }
+    
+    
+    public void runConstructQuery(String query, String address) {
+        try {
+            GraphQuery queryResult = repositoryConnection.prepareGraphQuery(query);
+            GraphQueryResult resultantTriples = queryResult.evaluate();
+            
+            FileWriter fileWriter = new FileWriter(address, true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            resultantTriples.forEach(statement -> {
+                printWriter.println("<" + statement.getSubject() + "> <" + statement.getPredicate() + "> <" + statement.getObject() + "> .");
+            });
+            
+            printWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (repositoryConnection.isActive())
+                repositoryConnection.rollback();
+        }
     }
     
     

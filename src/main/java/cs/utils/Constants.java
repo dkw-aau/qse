@@ -11,9 +11,9 @@ public class Constants {
     public static String MG_ENCODED_TABLE_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "mg_encoded_table.csv";
     public static String MG_ENCODED_R_TABLE_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "mg_encoded_table_reverse.csv";
     public static String FILTERED_DATASET = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "filtered.nt";
-    public static String SUBCLASSOF_DATASET = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "subclassOf.csv";
+    public static String SUBCLASSOF_DATASET = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "subclassOf.nt";
     
-    public static String TEMP_DATASET_FILE = ConfigManager.getProperty("output_file_path") + "/" + "subClassesOfThing.nt";
+    public static String TEMP_DATASET_FILE = ConfigManager.getProperty("output_file_path") + "/" + "yago-subclass-stats.csv";
     //
     
 }
