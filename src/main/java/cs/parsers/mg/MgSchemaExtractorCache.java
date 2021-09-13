@@ -1,10 +1,7 @@
 package cs.parsers.mg;
 
 import cs.parsers.SHACLER;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.LRUCache;
-import cs.utils.NodeEncoder;
+import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
@@ -57,6 +54,7 @@ public class MgSchemaExtractorCache {
     }
     
     private void firstPass() {
+        Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -97,6 +95,7 @@ public class MgSchemaExtractorCache {
     }
     
     private void membershipGraphConstruction() {
+        Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
         this.mg = new MembershipGraph(encoder, ctiBf, classInstanceCount);
@@ -114,9 +113,9 @@ public class MgSchemaExtractorCache {
     }
     
     private void secondPass() {
+        Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
-        
         LRUCache subItcCache = new LRUCache(1000000);
         LRUCache objItcCache = new LRUCache(1000000);
         try {
@@ -274,8 +273,8 @@ public class MgSchemaExtractorCache {
         firstPass();
         membershipGraphConstruction();
         secondPass();
-        //populateShapes();
-        //shacler.writeModelToFile();
+        populateShapes();
+        shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
