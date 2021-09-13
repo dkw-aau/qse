@@ -1,13 +1,16 @@
 package cs.parsers.mg;
 
 import cs.parsers.SHACLER;
-import cs.parsers.mg.MembershipGraph;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
+import cs.utils.LRUCache;
 import cs.utils.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -21,8 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class MembershipGraphBasedParser {
+public class MgSchemaExtractorCache {
     String rdfFile;
     SHACLER shacler = new SHACLER();
     
@@ -39,7 +43,7 @@ public class MembershipGraphBasedParser {
     HashMap<Integer, BloomFilter<String>> ctiBf;
     MembershipGraph mg;
     
-    public MembershipGraphBasedParser(String filePath, int expSizeOfClasses) {
+    public MgSchemaExtractorCache(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -98,7 +102,7 @@ public class MembershipGraphBasedParser {
         this.mg = new MembershipGraph(encoder, ctiBf, classInstanceCount);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph();
-        mg.membershipGraphOutlierNormalization(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
+        mg.membershipGraphCompression(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
@@ -112,103 +116,123 @@ public class MembershipGraphBasedParser {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        //int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
-        //ArrayList<Long> innerWatchTime = new ArrayList<>(nol);
-        //ArrayList<Long> innerInnerWatchTime = new ArrayList<>(nol);
-        //ArrayList<Double> coverage = new ArrayList<>(nol);
         
+        LRUCache subItcCache = new LRUCache(1000000);
+        LRUCache objItcCache = new LRUCache(1000000);
         try {
-            //AtomicInteger counter = new AtomicInteger();
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
-                    .forEach(line -> {                              // - A terminal operation
-                        //counter.getAndIncrement();
-                        //System.out.println(counter);
+            AtomicInteger cacheHitCounter = new AtomicInteger();
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
                         try {
-                            //String result = "";
-                            StopWatch innerWatch = new StopWatch();
-                            innerWatch.start();
-                            //int visitedNodesCounter = 0;
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            int node = this.membershipGraphRootNode;
-                            HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
-                            LinkedList<Integer> queue = new LinkedList<Integer>();
-                            queue.add(node);
-                            visited.add(node);
-                            
-                            //StopWatch innerInnerWatch = new StopWatch();
-                            //innerInnerWatch.start();
-                            while (queue.size() != 0) {
-                                node = queue.poll();
-                                for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
-                                    Integer neigh = membershipGraph.getEdgeTarget(edge);
-                                    if (!visited.contains(neigh)) {
-                                        boolean flag = false;
-                                        if (ctiBf.get(neigh).contains(nodes[0].getLabel())) {
-                                            instanceTypes.add(encoder.decode(neigh));
-                                            flag = true;
-                                        }
-                                        if (ctiBf.get(neigh).contains(nodes[2].getLabel())) {
-                                            objTypes.add(encoder.decode(neigh).getLabel());
-                                            flag = true;
-                                        }
-                                        if (flag) {
-                                            queue.add(neigh);
-                                        }
-                                        visited.add(neigh);
-                                        //visitedNodesCounter++;
-                                    }
-                                }
-                            }
-                            //innerInnerWatch.stop();
-                            //innerInnerWatchTime.add(innerInnerWatch.getTime());
-                            //result += innerInnerWatch.getTime() + ",";
-                            
-                            
-                            instanceTypes.forEach(c -> {
-                                if (objTypes.isEmpty()) {
-                                    objTypes.add(getType(nodes[2].toString()));
-                                }
+                            if (nodes[2].getLabel().indexOf(':') > 0) { // to make sure the object contains a valid IRI
+                                ValueFactory factory = SimpleValueFactory.getInstance();
+                                IRI object = factory.createIRI(nodes[2].getLabel());
                                 
-                                if (classToPropWithObjTypes.containsKey(c)) {
-                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-                                    
-                                    if (propToObjTypes.containsKey(nodes[1]))
-                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                    else {
-                                        propToObjTypes.put(nodes[1], objTypes);
+                                if (object.isLiteral()) {
+                                    //check the subject entry in the cache
+                                    if (subItcCache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
+                                        cacheHitCounter.getAndIncrement();
+                                    } else {
+                                        traverseMembershipGraph(subItcCache, objItcCache, nodes, instanceTypes, objTypes);
                                     }
-                                    classToPropWithObjTypes.put(c, propToObjTypes);
-                                    
                                 } else {
-                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
-                                    propToObjTypes.put(nodes[1], objTypes);
-                                    instanceTypes.forEach(type -> {
-                                        classToPropWithObjTypes.put(type, propToObjTypes);
-                                    });
+                                    //check the subject and the object entry in the cache
+                                    if (subItcCache.containsKey(nodes[0]) && objItcCache.containsKey(nodes[2])) {
+                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
+                                        objItcCache.get(nodes[2]).forEach(val -> {objTypes.add(val.getLabel());});
+                                        cacheHitCounter.getAndIncrement();
+                                    } else {
+                                        traverseMembershipGraph(subItcCache, objItcCache, nodes, instanceTypes, objTypes);
+                                    }
                                 }
-                            });
+                                instanceTypes.forEach(c -> {
+                                    if (objTypes.isEmpty()) {
+                                        objTypes.add(getType(nodes[2].toString()));
+                                    }
+                                    if (classToPropWithObjTypes.containsKey(c)) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+                                        
+                                        if (propToObjTypes.containsKey(nodes[1]))
+                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                        else {
+                                            propToObjTypes.put(nodes[1], objTypes);
+                                        }
+                                        classToPropWithObjTypes.put(c, propToObjTypes);
+                                        
+                                    } else {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                        instanceTypes.forEach(type -> {
+                                            classToPropWithObjTypes.put(type, propToObjTypes);
+                                        });
+                                    }
+                                });
+                                properties.add(nodes[1]);
+                            }
                             
-                            properties.add(nodes[1]);
-                            //innerWatch.stop();
-                            //innerWatchTime.add(innerWatch.getTime());
-                            //coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
-                            //result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
-                            //FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_new_" + "stats.csv");
+                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
             
-            
+            System.out.println("Cache Hit Value" + cacheHitCounter);
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void traverseMembershipGraph(LRUCache subItcCache, LRUCache objItcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
+        int node = this.membershipGraphRootNode;
+        HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
+                Integer neigh = membershipGraph.getEdgeTarget(edge);
+                if (!visited.contains(neigh)) {
+                    boolean flag = false;
+                    if (ctiBf.get(neigh).contains(nodes[0].getLabel())) {
+                        instanceTypes.add(encoder.decode(neigh));
+                        
+                        if (subItcCache.containsKey(nodes[0])) {
+                            subItcCache.get(nodes[0]).add(encoder.decode(neigh));
+                        } else {
+                            subItcCache.put(nodes[0], new ArrayList<>() {{
+                                add(encoder.decode(neigh));
+                            }});
+                        }
+                        flag = true;
+                    }
+                    if (ctiBf.get(neigh).contains(nodes[2].getLabel())) {
+                        objTypes.add(encoder.decode(neigh).getLabel());
+                        
+                        if (objItcCache.containsKey(nodes[2])) {
+                            objItcCache.get(nodes[2]).add(encoder.decode(neigh));
+                        } else {
+                            objItcCache.put(nodes[2], new ArrayList<>() {{
+                                add(encoder.decode(neigh));
+                            }});
+                        }
+                        flag = true;
+                    }
+                    if (flag) {
+                        queue.add(neigh);
+                    }
+                    visited.add(neigh);
+                }
+            }
+        }
     }
     
     private void populateShapes() {
@@ -250,8 +274,8 @@ public class MembershipGraphBasedParser {
         firstPass();
         membershipGraphConstruction();
         secondPass();
-        populateShapes();
-        shacler.writeModelToFile();
+        //populateShapes();
+        //shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }

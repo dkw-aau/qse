@@ -1,6 +1,5 @@
 package cs.parsers.mg;
 
-import com.google.common.collect.Lists;
 import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
@@ -36,7 +35,7 @@ public class MembershipGraph {
         this.membershipGraph.vertexSet().forEach(v -> {
             ctiBf.put(v, new FilterBuilder(10, 0.01).buildBloomFilter());
         });
-        this.membershipGraphOutlierNormalization(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
+        this.membershipGraphCompression(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
     }
     
     public void createMembershipSets(HashMap<Node, List<Integer>> instanceToClass) {
@@ -115,20 +114,20 @@ public class MembershipGraph {
         }
     }
     
-    public void membershipGraphOutlierNormalization(Integer threshold) {
+    public void membershipGraphCompression(Integer threshold) {
         int node = this.membershipGraphRootNode;
         System.out.println("Membership Graph Vertices Before Normalization: " + this.membershipGraph.vertexSet().size());
         //int node = 8902; // ROOT NODE OF MEMBERSHIP GRAPH; int focusedSubGraphSize = getGraphSizeViaBFS(focusNode);
         getFocusNodesViaBFS(node, threshold).forEach(focusNode -> {
             //System.out.println(focusNode + " : " + encoder.decode(focusNode).getLabel());
-            normalization(threshold, focusNode);
+            performCompression(threshold, focusNode);
         });
         System.out.println("Membership Graph Vertices After Normalization: " + this.membershipGraph.vertexSet().size());
         //VISUALIZING
         //new MembershipGraphVisualizer().createBfsTraversedEncodedShortenIRIsNodesGraph(this.membershipGraph, encoder, node);
     }
     
-    private void normalization(int threshold, int focusNode) {
+    private void performCompression(int threshold, int focusNode) {
         //RETRIEVING DIRECT CHILDREN OF FOCUS NODE
         List<Integer> directChildrenOfNode = getDirectChildrenOfNode(focusNode);
         int numberOfGroups = (directChildrenOfNode.size() / threshold) + 1;
@@ -140,12 +139,10 @@ public class MembershipGraph {
         });
         metaNodeChildList.sort(Comparator.comparing(MetaNodeChild::getNode).thenComparing(MetaNodeChild::getNoc).thenComparing(MetaNodeChild::getFrequency));
         
-        
         Queue<MetaNodeChild> metaNodeChildQueue = new LinkedList<>(metaNodeChildList);
         
-        //Round Robin Policy
+        //Round Robin Policy, distributing the load
         HashMap<Integer, List<Integer>> metaNodeBalancedChildren = new HashMap<>();
-        
         for (int i = 0; i < numberOfGroups; i++) {
             metaNodeBalancedChildren.put(i, new ArrayList<>());
         }
@@ -155,21 +152,15 @@ public class MembershipGraph {
                 if (!metaNodeChildQueue.isEmpty()) {
                     metaNodeBalancedChildren.get(metaNodeIndex).add(Objects.requireNonNull(metaNodeChildQueue.poll()).getNode());
                 }
-                
             });
         }
         
-        //directChildrenOfNode.sort(Collections.reverseOrder());
-        
-        //PARTITIONING THE CHILDREN
-        List<List<Integer>> groups = Lists.partition(directChildrenOfNode, numberOfGroups);
-        
-        //CREATING GROUP NODES + Performing Union of Bloom Filters.
         List<MetaNode> metaNodeInstances = new ArrayList<>();
-        for (int i = 0, groupsSize = groups.size(); i < groupsSize; i++) {
-            metaNodeInstances.add(new MetaNode(i, groups.get(i), focusNode, encoder, ctiBf));
+        for (int i = 0, groupsSize = metaNodeBalancedChildren.size(); i < groupsSize; i++) {
+            metaNodeInstances.add(new MetaNode(i, metaNodeBalancedChildren.get(i), focusNode, encoder, ctiBf));
         }
-        //CORE: Using group nodes to create and remove edges
+        
+        //Using group nodes to create and remove edges
         metaNodeInstances.forEach(metaNode -> {
             this.membershipGraph.addVertex(metaNode.getMetaNodeId());
             metaNode.getNodes().forEach(n -> {
