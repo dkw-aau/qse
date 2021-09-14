@@ -4,9 +4,11 @@ import cs.parsers.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.NodeEncoder;
+import cs.utils.Utils;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -74,7 +76,7 @@ public class MgSchemaExtractor {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).add(nodes[0].getLabel());
                             } else {
-                                BloomFilter<String> bf = new FilterBuilder(100_00, 0.000001).buildBloomFilter();
+                                BloomFilter<String> bf = new FilterBuilder(Integer.parseInt(ConfigManager.getProperty("bloomFilterCount")), 0.000001).buildBloomFilter();
                                 bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
@@ -109,69 +111,35 @@ public class MgSchemaExtractor {
     }
     
     private void secondPass() {
+        System.out.println("2nd Pass Started");
+        Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
-        //int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
-        //ArrayList<Long> innerWatchTime = new ArrayList<>(nol);
-        //ArrayList<Long> innerInnerWatchTime = new ArrayList<>(nol);
-        //ArrayList<Double> coverage = new ArrayList<>(nol);
-        
         try {
-            //AtomicInteger counter = new AtomicInteger();
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
-                    .forEach(line -> {                              // - A terminal operation
-                        //counter.getAndIncrement();
-                        //System.out.println(counter);
+            
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
                         try {
-                            //String result = "";
-                            //StopWatch innerWatch = new StopWatch();
-                            //innerWatch.start();
-                            //int visitedNodesCounter = 0;
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            int node = this.membershipGraphRootNode;
-                            HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
-                            LinkedList<Integer> queue = new LinkedList<Integer>();
-                            queue.add(node);
-                            visited.add(node);
-                            
-                            //StopWatch innerInnerWatch = new StopWatch();
-                            //innerInnerWatch.start();
-                            while (queue.size() != 0) {
-                                node = queue.poll();
-                                for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
-                                    Integer neigh = membershipGraph.getEdgeTarget(edge);
-                                    if (!visited.contains(neigh)) {
-                                        boolean flag = false;
-                                        if (ctiBf.get(neigh).contains(nodes[0].getLabel())) {
-                                            instanceTypes.add(encoder.decode(neigh));
-                                            flag = true;
-                                        }
-                                        if (ctiBf.get(neigh).contains(nodes[2].getLabel())) {
-                                            objTypes.add(encoder.decode(neigh).getLabel());
-                                            flag = true;
-                                        }
-                                        if (flag) {
-                                            queue.add(neigh);
-                                        }
-                                        visited.add(neigh);
-                                        //visitedNodesCounter++;
-                                    }
+                            if (Utils.isValidIRI(nodes[2].getLabel())) {
+                                IRI object = Utils.toIri(nodes[2].getLabel());
+                                
+                                if (object.isLiteral()) {
+                                    traverseMgForSubject(nodes[0], instanceTypes);
+                                } else {
+                                    traverseMgForSubject(nodes[0], instanceTypes);
+                                    traverseMgForObject(nodes[2], objTypes);
                                 }
                             }
-                            //innerInnerWatch.stop();
-                            //innerInnerWatchTime.add(innerInnerWatch.getTime());
-                            //result += innerInnerWatch.getTime() + ",";
-                            
                             
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
                                     objTypes.add(getType(nodes[2].toString()));
                                 }
-                                
                                 if (classToPropWithObjTypes.containsKey(c)) {
                                     HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
                                     
@@ -190,13 +158,7 @@ public class MgSchemaExtractor {
                                     });
                                 }
                             });
-                            
                             properties.add(nodes[1]);
-                            //innerWatch.stop();
-                            //innerWatchTime.add(innerWatch.getTime());
-                            //coverage.add(((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size()));
-                            //result += innerWatch.getTime() + "," + ((double) visitedNodesCounter / (double) membershipGraph.vertexSet().size());
-                            //FilesUtil.writeToFileInAppendMode(result, ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_new_" + "stats.csv");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -208,6 +170,56 @@ public class MgSchemaExtractor {
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void traverseMgForObject(Node objectNode, HashSet<String> objTypes) {
+        int node = this.membershipGraphRootNode;
+        HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
+                Integer neigh = membershipGraph.getEdgeTarget(edge);
+                if (!visited.contains(neigh)) {
+                    boolean flag = false;
+                    if (ctiBf.get(neigh).contains(objectNode.getLabel())) {
+                        objTypes.add(encoder.decode(neigh).getLabel());
+                        flag = true;
+                    }
+                    if (flag) {
+                        queue.add(neigh);
+                    }
+                    visited.add(neigh);
+                }
+            }
+        }
+    }
+    
+    private void traverseMgForSubject(Node subjectNode, List<Node> instanceTypes) {
+        int node = this.membershipGraphRootNode;
+        HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
+                Integer neigh = membershipGraph.getEdgeTarget(edge);
+                if (!visited.contains(neigh)) {
+                    boolean flag = false;
+                    if (ctiBf.get(neigh).contains(subjectNode.getLabel())) {
+                        instanceTypes.add(encoder.decode(neigh));
+                        flag = true;
+                    }
+                    if (flag) {
+                        queue.add(neigh);
+                    }
+                    visited.add(neigh);
+                }
+            }
+        }
     }
     
     private void populateShapes() {

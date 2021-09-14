@@ -1,4 +1,5 @@
 package cs.parsers;
+
 import org.apache.commons.io.FilenameUtils;
 import cs.Main;
 import cs.utils.ConfigManager;
@@ -104,7 +105,7 @@ public class SHACLER {
     
     public void writeModelToFile() {
         Path path = Paths.get(Main.datasetPath);
-        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "-SHACL.ttl";
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + ConfigManager.getProperty("dataset_name") + "-SHACL.ttl";
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
         try {
             FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
