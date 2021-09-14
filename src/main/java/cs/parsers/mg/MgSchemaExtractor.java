@@ -125,8 +125,8 @@ public class MgSchemaExtractor {
                         //System.out.println(counter);
                         try {
                             //String result = "";
-                            StopWatch innerWatch = new StopWatch();
-                            innerWatch.start();
+                            //StopWatch innerWatch = new StopWatch();
+                            //innerWatch.start();
                             //int visitedNodesCounter = 0;
                             Node[] nodes = NxParser.parseNodes(line);
                             List<Node> instanceTypes = new ArrayList<>();
