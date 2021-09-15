@@ -1,13 +1,11 @@
 package cs;
 
-import cs.parsers.BaselineParser;
-import cs.parsers.BaselineParserEncoded;
-import cs.parsers.BaselineParserWithBloomFilters;
-import cs.parsers.SmartTriplesFilterator;
-import cs.parsers.mg.MembershipGraph;
+import cs.parsers.*;
+import cs.parsers.mg.MgSchemaExtractor;
 import cs.parsers.mg.MgSchemaExtractorCache;
-import cs.trees.OntologyTreeExtractor;
 import cs.utils.ConfigManager;
+import cs.utils.Utils;
+
 
 public class Main {
     public static String configPath;
@@ -18,23 +16,43 @@ public class Main {
         configPath = args[0];
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
-    
-        System.out.println("MgSchemaExtractorCache");
-        new MgSchemaExtractorCache(datasetPath, numberOfClasses).run();
-        
-/*        System.out.println("BaselineParser");
-        new BaselineParser(datasetPath, numberOfClasses).run();
-        System.out.println("Baseline Algorithm A - Encoded Strings");
-        new BaselineParserEncoded(datasetPath, numberOfClasses).run();
-
-        System.out.println("\n\n\n\nBaseline Algorithm B - Bloom Filters");
-        new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
-
-  
-        new MembershipGraph(true);
-        new SmartTriplesFilterator(datasetPath).extractSubClassOfTriples();
-         //If you want to extract Triples mapping to membership sets
-        new SmartTriplesFilterator(datasetPath, numberOfClasses).run();
-        new OntologyTreeExtractor().doTheJob();*/
+        benchmark();
     }
+    
+    
+    private static void benchmark() {
+        System.out.println("Benchmark Initiated");
+        Utils.getCurrentTimeStamp();
+        try {
+            if (isOn("BlSchemaExtractor")) {
+                System.out.println("BlSchemaExtractor - Encoded Strings");
+                new BaselineParserEncoded(datasetPath, numberOfClasses).run();
+            }
+            
+            if (isOn("BfSchemaExtractor")) {
+                System.out.println("BfSchemaExtractor - Bloom Filters");
+                new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
+            }
+            
+            if (isOn("BfSchemaExtractorCache")) {
+                System.out.println("BfSchemaExtractorCache - Bloom Filters With Cache");
+                new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();
+            }
+            
+            if (isOn("MgSchemaExtractor")) {
+                System.out.println("MgSchemaExtractor");
+                new MgSchemaExtractor(datasetPath, numberOfClasses).run();
+            }
+            
+            if (isOn("MgSchemaExtractorCache")) {
+                System.out.println("MgSchemaExtractorCache");
+                new MgSchemaExtractorCache(datasetPath, numberOfClasses).run();
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private static boolean isOn(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
 }

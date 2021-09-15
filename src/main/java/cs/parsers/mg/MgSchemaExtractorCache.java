@@ -54,7 +54,6 @@ public class MgSchemaExtractorCache {
     }
     
     private void firstPass() {
-        Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -77,16 +76,15 @@ public class MgSchemaExtractorCache {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).add(nodes[0].getLabel());
                             } else {
-                                BloomFilter<String> bf = new FilterBuilder(100_00, 0.000001).buildBloomFilter();
+                                BloomFilter<String> bf = new FilterBuilder(Integer.parseInt(ConfigManager.getProperty("bloomFilterCount")), 0.000001).buildBloomFilter();
                                 bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
+                        
                     });
-            
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -113,13 +111,12 @@ public class MgSchemaExtractorCache {
     }
     
     private void secondPass() {
+        System.out.println("2nd Pass Started");
         Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
-        LRUCache subItcCache = new LRUCache(1000000);
-        LRUCache objItcCache = new LRUCache(1000000);
+        LRUCache cache = new LRUCache(1000000);
         try {
-            AtomicInteger cacheHitCounter = new AtomicInteger();
             Files.lines(Path.of(rdfFile))
                     .filter(line -> !line.contains(Constants.RDF_TYPE))
                     .forEach(line -> {
@@ -128,60 +125,59 @@ public class MgSchemaExtractorCache {
                             List<Node> instanceTypes = new ArrayList<>();
                             HashSet<String> objTypes = new HashSet<String>();
                             
-                            if (nodes[2].getLabel().indexOf(':') > 0) { // to make sure the object contains a valid IRI
-                                ValueFactory factory = SimpleValueFactory.getInstance();
-                                IRI object = factory.createIRI(nodes[2].getLabel());
-                                
+                            if (Utils.isValidIRI(nodes[2].getLabel())) {
+                                IRI object = Utils.toIri(nodes[2].getLabel());
                                 if (object.isLiteral()) {
-                                    //check the subject entry in the cache
-                                    if (subItcCache.containsKey(nodes[0])) {
-                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
-                                        cacheHitCounter.getAndIncrement();
+                                    if (cache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(cache.get(nodes[0]));
                                     } else {
-                                        traverseMembershipGraph(subItcCache, objItcCache, nodes, instanceTypes, objTypes);
+                                        traverseMgForSubject(cache, nodes[0], instanceTypes);
                                     }
                                 } else {
-                                    //check the subject and the object entry in the cache
-                                    if (subItcCache.containsKey(nodes[0]) && objItcCache.containsKey(nodes[2])) {
-                                        instanceTypes.addAll(subItcCache.get(nodes[0]));
-                                        objItcCache.get(nodes[2]).forEach(val -> {objTypes.add(val.getLabel());});
-                                        cacheHitCounter.getAndIncrement();
+                                    //check if cache contains subject's type?
+                                    if (cache.containsKey(nodes[0])) {
+                                        instanceTypes.addAll(cache.get(nodes[0]));
                                     } else {
-                                        traverseMembershipGraph(subItcCache, objItcCache, nodes, instanceTypes, objTypes);
+                                        traverseMgForSubject(cache, nodes[0], instanceTypes);
+                                    }
+                                    
+                                    //check if cache contains object's type?
+                                    if (cache.containsKey(nodes[2])) {
+                                        cache.get(nodes[2]).forEach(val -> {objTypes.add(val.getLabel());});
+                                    } else {
+                                        traverseMgForObject(cache, nodes[2], objTypes);
                                     }
                                 }
-                                instanceTypes.forEach(c -> {
-                                    if (objTypes.isEmpty()) {
-                                        objTypes.add(getType(nodes[2].toString()));
-                                    }
-                                    if (classToPropWithObjTypes.containsKey(c)) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-                                        
-                                        if (propToObjTypes.containsKey(nodes[1]))
-                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                        else {
-                                            propToObjTypes.put(nodes[1], objTypes);
-                                        }
-                                        classToPropWithObjTypes.put(c, propToObjTypes);
-                                        
-                                    } else {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
-                                        propToObjTypes.put(nodes[1], objTypes);
-                                        instanceTypes.forEach(type -> {
-                                            classToPropWithObjTypes.put(type, propToObjTypes);
-                                        });
-                                    }
-                                });
-                                properties.add(nodes[1]);
                             }
-                            
+    
+                            instanceTypes.forEach(c -> {
+                                if (objTypes.isEmpty()) {
+                                    objTypes.add(getType(nodes[2].toString()));
+                                }
+                                if (classToPropWithObjTypes.containsKey(c)) {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
+            
+                                    if (propToObjTypes.containsKey(nodes[1]))
+                                        propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                    else {
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                    }
+                                    classToPropWithObjTypes.put(c, propToObjTypes);
+            
+                                } else {
+                                    HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                    propToObjTypes.put(nodes[1], objTypes);
+                                    instanceTypes.forEach(type -> {
+                                        classToPropWithObjTypes.put(type, propToObjTypes);
+                                    });
+                                }
+                            });
+                            properties.add(nodes[1]);
                             
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-            
-            System.out.println("Cache Hit Value" + cacheHitCounter);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -189,7 +185,7 @@ public class MgSchemaExtractorCache {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void traverseMembershipGraph(LRUCache subItcCache, LRUCache objItcCache, Node[] nodes, List<Node> instanceTypes, HashSet<String> objTypes) {
+    private void traverseMgForSubject(LRUCache cache, Node subjectNode, List<Node> instanceTypes) {
         int node = this.membershipGraphRootNode;
         HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
         LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -201,25 +197,13 @@ public class MgSchemaExtractorCache {
                 Integer neigh = membershipGraph.getEdgeTarget(edge);
                 if (!visited.contains(neigh)) {
                     boolean flag = false;
-                    if (ctiBf.get(neigh).contains(nodes[0].getLabel())) {
+                    if (ctiBf.get(neigh).contains(subjectNode.getLabel())) {
                         instanceTypes.add(encoder.decode(neigh));
                         
-                        if (subItcCache.containsKey(nodes[0])) {
-                            subItcCache.get(nodes[0]).add(encoder.decode(neigh));
+                        if (cache.containsKey(subjectNode)) {
+                            cache.get(subjectNode).add(encoder.decode(neigh));
                         } else {
-                            subItcCache.put(nodes[0], new ArrayList<>() {{
-                                add(encoder.decode(neigh));
-                            }});
-                        }
-                        flag = true;
-                    }
-                    if (ctiBf.get(neigh).contains(nodes[2].getLabel())) {
-                        objTypes.add(encoder.decode(neigh).getLabel());
-                        
-                        if (objItcCache.containsKey(nodes[2])) {
-                            objItcCache.get(nodes[2]).add(encoder.decode(neigh));
-                        } else {
-                            objItcCache.put(nodes[2], new ArrayList<>() {{
+                            cache.put(subjectNode, new ArrayList<>() {{
                                 add(encoder.decode(neigh));
                             }});
                         }
@@ -233,6 +217,41 @@ public class MgSchemaExtractorCache {
             }
         }
     }
+    
+    
+    private void traverseMgForObject(LRUCache cache, Node objectNode, HashSet<String> objTypes) {
+        int node = this.membershipGraphRootNode;
+        HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        queue.add(node);
+        visited.add(node);
+        while (queue.size() != 0) {
+            node = queue.poll();
+            for (DefaultEdge edge : membershipGraph.outgoingEdgesOf(node)) {
+                Integer neigh = membershipGraph.getEdgeTarget(edge);
+                if (!visited.contains(neigh)) {
+                    boolean flag = false;
+                    if (ctiBf.get(neigh).contains(objectNode.getLabel())) {
+                        objTypes.add(encoder.decode(neigh).getLabel());
+                        
+                        if (cache.containsKey(objectNode)) {
+                            cache.get(objectNode).add(encoder.decode(neigh));
+                        } else {
+                            cache.put(objectNode, new ArrayList<>() {{
+                                add(encoder.decode(neigh));
+                            }});
+                        }
+                        flag = true;
+                    }
+                    if (flag) {
+                        queue.add(neigh);
+                    }
+                    visited.add(neigh);
+                }
+            }
+        }
+    }
+    
     
     private void populateShapes() {
         StopWatch watch = new StopWatch();
@@ -272,6 +291,7 @@ public class MgSchemaExtractorCache {
     private void runParser() throws IOException {
         firstPass();
         membershipGraphConstruction();
+        this.instanceToClass.clear();
         secondPass();
         populateShapes();
         shacler.writeModelToFile();
