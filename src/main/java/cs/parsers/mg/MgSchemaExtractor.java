@@ -250,6 +250,7 @@ public class MgSchemaExtractor {
     
     private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
+        System.out.println("Size - Parser HashMap<Integer, BloomFilter<String>> ctiBf: " + sizeOf.deepSizeOf(ctiBf));
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(encoder.getTable()));
         System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
@@ -259,10 +260,11 @@ public class MgSchemaExtractor {
     
     private void runParser() throws IOException {
         firstPass();
-        membershipGraphConstruction();
-        secondPass();
-        populateShapes();
-        shacler.writeModelToFile();
+        measureMemoryUsage();
+//        membershipGraphConstruction();
+//        secondPass();
+//        populateShapes();
+//        shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
