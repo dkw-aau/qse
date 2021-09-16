@@ -18,14 +18,10 @@ public class Main {
     public static int numberOfClasses;
     
     public static void main(String[] args) throws Exception {
-        //configPath = args[0];
-        //datasetPath = ConfigManager.getProperty("dataset_path");
-        //numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
-        //benchmark();
-        
-        for(int i = 0; i< Integer.parseInt(args[2]); i++){
-            BloomFilter<String> bf = new FilterBuilder(Integer.parseInt(args[0]), Double.parseDouble(args[1])).buildBloomFilter();
-        }
+        configPath = args[0];
+        datasetPath = ConfigManager.getProperty("dataset_path");
+        numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
+        benchmark();
     }
     
     private static void benchmark() {
@@ -63,4 +59,10 @@ public class Main {
     }
     
     private static boolean isOn(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
+    
+ /*   private static void test() {
+        for (int i = 0; i < Integer.parseInt(args[2]); i++) {
+            BloomFilter<String> bf = new FilterBuilder(Integer.parseInt(args[0]), Double.parseDouble(args[1])).buildBloomFilter();
+        }
+    }*/
 }
