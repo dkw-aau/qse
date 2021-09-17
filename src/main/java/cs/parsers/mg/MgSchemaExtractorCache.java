@@ -5,6 +5,8 @@ import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
+import org.cache2k.Cache;
+import org.cache2k.Cache2kBuilder;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -53,7 +55,7 @@ public class MgSchemaExtractorCache {
         this.ctiBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
-    private void firstPass() {
+    private void preFirstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -63,6 +65,28 @@ public class MgSchemaExtractorCache {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void firstPass() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            //classInstanceCount.put(nodes[2].getLabel(), (classInstanceCount.getOrDefault(nodes[2].getLabel(), 0)) + 1);
                             
                             // Track classes per instance
                             if (instanceToClass.containsKey(nodes[0])) {
@@ -76,7 +100,7 @@ public class MgSchemaExtractorCache {
                             if (ctiBf.containsKey(encoder.encode(nodes[2]))) {
                                 ctiBf.get(encoder.encode(nodes[2])).add(nodes[0].getLabel());
                             } else {
-                                BloomFilter<String> bf = new FilterBuilder(Integer.parseInt(ConfigManager.getProperty("bloomFilterCount")), 0.000001).buildBloomFilter();
+                                BloomFilter<String> bf = new FilterBuilder(classInstanceCount.get(nodes[2].getLabel()), 0.00001).buildBloomFilter();
                                 bf.add(nodes[0].getLabel());
                                 ctiBf.put(encoder.encode(nodes[2]), bf);
                             }
@@ -115,7 +139,13 @@ public class MgSchemaExtractorCache {
         Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
-        LRUCache cache = new LRUCache(1000000);
+        //LRUCache cache = new LRUCache(1000000);
+    
+        Cache<Node, List<Node>> cache = new Cache2kBuilder<Node, List<Node>>() {}
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .entryCapacity(1000000)
+                .build();
+    
         try {
             Files.lines(Path.of(rdfFile))
                     .filter(line -> !line.contains(Constants.RDF_TYPE))
@@ -149,21 +179,21 @@ public class MgSchemaExtractorCache {
                                     }
                                 }
                             }
-    
+                            
                             instanceTypes.forEach(c -> {
                                 if (objTypes.isEmpty()) {
                                     objTypes.add(getType(nodes[2].toString()));
                                 }
                                 if (classToPropWithObjTypes.containsKey(c)) {
                                     HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(c);
-            
+                                    
                                     if (propToObjTypes.containsKey(nodes[1]))
                                         propToObjTypes.get(nodes[1]).addAll(objTypes);
                                     else {
                                         propToObjTypes.put(nodes[1], objTypes);
                                     }
                                     classToPropWithObjTypes.put(c, propToObjTypes);
-            
+                                    
                                 } else {
                                     HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                     propToObjTypes.put(nodes[1], objTypes);
@@ -185,7 +215,7 @@ public class MgSchemaExtractorCache {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void traverseMgForSubject(LRUCache cache, Node subjectNode, List<Node> instanceTypes) {
+    private void traverseMgForSubject( Cache<Node, List<Node>>  cache, Node subjectNode, List<Node> instanceTypes) {
         int node = this.membershipGraphRootNode;
         HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
         LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -219,7 +249,7 @@ public class MgSchemaExtractorCache {
     }
     
     
-    private void traverseMgForObject(LRUCache cache, Node objectNode, HashSet<String> objTypes) {
+    private void traverseMgForObject( Cache<Node, List<Node>>  cache, Node objectNode, HashSet<String> objTypes) {
         int node = this.membershipGraphRootNode;
         HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
         LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -289,6 +319,7 @@ public class MgSchemaExtractorCache {
     }
     
     private void runParser() throws IOException {
+        preFirstPass();
         firstPass();
         membershipGraphConstruction();
         this.instanceToClass.clear();
