@@ -74,7 +74,7 @@ public class MgSchemaExtractorCache {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Time Elapsed preFirstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void firstPass() {
