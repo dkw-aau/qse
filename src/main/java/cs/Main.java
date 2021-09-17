@@ -1,15 +1,12 @@
 package cs;
 
-import com.google.common.hash.Funnels;
 import cs.parsers.*;
+import cs.parsers.bl.BaselineParserEncoded;
+import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.MgSchemaExtractor;
 import cs.parsers.mg.MgSchemaExtractorCache;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
-import orestes.bloomfilter.BloomFilter;
-import orestes.bloomfilter.FilterBuilder;
-
-import java.nio.charset.StandardCharsets;
 
 
 public class Main {
@@ -31,6 +28,11 @@ public class Main {
             if (isOn("BlSchemaExtractor")) {
                 System.out.println("BlSchemaExtractor - Encoded Strings");
                 new BaselineParserEncoded(datasetPath, numberOfClasses).run();
+            }
+    
+            if (isOn("WikiDataSchemaExtractor")) {
+                System.out.println("WikiDataSchemaExtractor - Encoded Strings");
+                new WikiDataBaselineParserEncoded(datasetPath, numberOfClasses).run();
             }
             
             if (isOn("BfSchemaExtractor")) {

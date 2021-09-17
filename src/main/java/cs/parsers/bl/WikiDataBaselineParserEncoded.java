@@ -1,5 +1,6 @@
-package cs.parsers;
+package cs.parsers.bl;
 
+import cs.parsers.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.Encoder;
@@ -19,7 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BaselineParserEncoded {
+public class WikiDataBaselineParserEncoded {
     String rdfFile;
     SHACLER shacler = new SHACLER();
     
@@ -31,7 +32,7 @@ public class BaselineParserEncoded {
     HashSet<Node> properties;
     Encoder encoder;
     
-    public BaselineParserEncoded(String filePath, int expSizeOfClasses) {
+    public WikiDataBaselineParserEncoded(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -48,8 +49,8 @@ public class BaselineParserEncoded {
         watch.start();
         try {
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> line.contains(Constants.RDF_TYPE))
-                    .forEach(line -> {                              // - A terminal operation
+                    .filter(line -> line.contains(Constants.INSTANCE_OF))
+                    .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
@@ -76,9 +77,9 @@ public class BaselineParserEncoded {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
-                    .forEach(line -> {                              // - A terminal operation
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> !line.contains(Constants.INSTANCE_OF))
+                    .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
@@ -189,6 +190,6 @@ public class BaselineParserEncoded {
     
     public void run() {
         runParser();
-        measureMemoryUsage();
+        //measureMemoryUsage();
     }
 }
