@@ -311,6 +311,7 @@ public class MgSchemaExtractorCache {
     
     private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
+        System.out.println("Size - Parser HashMap<Integer, BloomFilter<String>> ctiBf: " + sizeOf.deepSizeOf(ctiBf));
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(encoder.getTable()));
         System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
@@ -333,6 +334,6 @@ public class MgSchemaExtractorCache {
     
     public void run() throws IOException {
         runParser();
-        //measureMemoryUsage();
+        measureMemoryUsage();
     }
 }

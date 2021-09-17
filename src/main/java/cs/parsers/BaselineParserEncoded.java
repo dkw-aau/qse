@@ -57,7 +57,7 @@ public class BaselineParserEncoded {
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
                             } else {
-                                List<Integer> list = new ArrayList<>();
+                                List<Integer> list = new ArrayList<>(); // initialize 5, 10, 15
                                 list.add(encoder.encode(nodes[2].getLabel()));
                                 instanceToClass.put(nodes[0], list);
                             }
@@ -189,6 +189,6 @@ public class BaselineParserEncoded {
     
     public void run() {
         runParser();
-        //measureMemoryUsage();
+        measureMemoryUsage();
     }
 }
