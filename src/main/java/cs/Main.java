@@ -6,6 +6,7 @@ import cs.parsers.bl.BaselineParserEncoded;
 import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.MgSchemaExtractor;
 import cs.parsers.mg.MgSchemaExtractorCache;
+import cs.parsers.mg.MgSchemaExtractorCacheRbm;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
 
@@ -53,7 +54,7 @@ public class Main {
             
             if (isOn("MgSchemaExtractorCache")) {
                 System.out.println("MgSchemaExtractorCache");
-                new MgSchemaExtractorCache(datasetPath, numberOfClasses).run();
+                new MgSchemaExtractorCacheRbm(datasetPath, numberOfClasses).run();
             }
             
         } catch (Exception e) {
@@ -63,7 +64,7 @@ public class Main {
     
     private static boolean isOn(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
     
-    private static void custom(){
+    private static void custom() {
         /*
         ArrayList<RoaringBitmap> roaringBitmapArrayList = new ArrayList<>();
         for (int i = 0; i < Integer.parseInt(args[0]); i++) {

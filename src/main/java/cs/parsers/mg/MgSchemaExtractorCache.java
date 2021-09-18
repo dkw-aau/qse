@@ -325,8 +325,8 @@ public class MgSchemaExtractorCache {
         membershipGraphConstruction();
         this.instanceToClass.clear();
         secondPass();
-        populateShapes();
-        shacler.writeModelToFile();
+        //populateShapes();
+        //shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
@@ -334,6 +334,6 @@ public class MgSchemaExtractorCache {
     
     public void run() throws IOException {
         runParser();
-        measureMemoryUsage();
+        //measureMemoryUsage();
     }
 }
