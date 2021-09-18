@@ -142,7 +142,7 @@ public class MgSchemaExtractorCache {
         //LRUCache cache = new LRUCache(1000000);
         
         Cache<Node, List<Node>> cache = new Cache2kBuilder<Node, List<Node>>() {}
-                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .expireAfterWrite(15, TimeUnit.MINUTES)
                 .entryCapacity(1000000)
                 .build();
         
