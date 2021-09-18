@@ -24,9 +24,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class MgSchemaExtractorCacheRbm {
+public class WikiDataMgSchemaExtractorCache {
     String rdfFile;
-    SHACLER shacler = new SHACLER();
+    //SHACLER shacler = new SHACLER();
     
     Integer expectedNumberOfClasses;
     Integer membershipGraphRootNode;
@@ -42,7 +42,7 @@ public class MgSchemaExtractorCacheRbm {
     HashMap<Integer, RoaringBitmap> ctiRbm;
     MembershipGraphRbm mg;
     
-    public MgSchemaExtractorCacheRbm(String filePath, int expSizeOfClasses) {
+    public WikiDataMgSchemaExtractorCache(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -62,7 +62,7 @@ public class MgSchemaExtractorCacheRbm {
         watch.start();
         try {
             Files.lines(Path.of(rdfFile))
-                    .filter(line -> line.contains(Constants.RDF_TYPE))
+                    .filter(line -> line.contains(Constants.INSTANCE_OF))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -129,7 +129,7 @@ public class MgSchemaExtractorCacheRbm {
         
         try {
             Files.lines(Path.of(rdfFile))
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .filter(line -> !line.contains(Constants.INSTANCE_OF))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -261,17 +261,6 @@ public class MgSchemaExtractorCacheRbm {
         }
     }
     
-    private void populateShapes() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        classToPropWithObjTypes.forEach((c, p) -> {
-            shacler.setParams(c, p);
-            shacler.constructShape();
-        });
-        watch.stop();
-        System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
-    }
-    
     private String getType(String value) {
         String theType = "<http://www.w3.org/2001/XMLSchema#string>"; //default type is XSD:string
         
@@ -303,8 +292,7 @@ public class MgSchemaExtractorCacheRbm {
         membershipGraphConstruction();
         this.instanceToClass.clear();
         secondPass();
-        populateShapes();
-        shacler.writeModelToFile();
+        //shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }

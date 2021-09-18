@@ -190,6 +190,6 @@ public class BaselineParserEncoded {
     
     public void run() {
         runParser();
-        measureMemoryUsage();
+        //measureMemoryUsage();
     }
 }

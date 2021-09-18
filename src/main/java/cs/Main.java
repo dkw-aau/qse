@@ -7,6 +7,7 @@ import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.MgSchemaExtractor;
 import cs.parsers.mg.MgSchemaExtractorCache;
 import cs.parsers.mg.MgSchemaExtractorCacheRbm;
+import cs.parsers.mg.WikiDataMgSchemaExtractorCache;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
 
@@ -55,6 +56,11 @@ public class Main {
             if (isOn("MgSchemaExtractorCache")) {
                 System.out.println("MgSchemaExtractorCache");
                 new MgSchemaExtractorCacheRbm(datasetPath, numberOfClasses).run();
+            }
+    
+            if (isOn("WikiDataMgSchemaExtractor")) {
+                System.out.println("WikiDataMgSchemaExtractor");
+                new WikiDataMgSchemaExtractorCache(datasetPath, numberOfClasses).run();
             }
             
         } catch (Exception e) {

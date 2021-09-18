@@ -140,12 +140,12 @@ public class MgSchemaExtractorCache {
         StopWatch watch = new StopWatch();
         watch.start();
         //LRUCache cache = new LRUCache(1000000);
-    
+        
         Cache<Node, List<Node>> cache = new Cache2kBuilder<Node, List<Node>>() {}
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .entryCapacity(1000000)
                 .build();
-    
+        
         try {
             Files.lines(Path.of(rdfFile))
                     .filter(line -> !line.contains(Constants.RDF_TYPE))
@@ -215,7 +215,7 @@ public class MgSchemaExtractorCache {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void traverseMgForSubject( Cache<Node, List<Node>>  cache, Node subjectNode, List<Node> instanceTypes) {
+    private void traverseMgForSubject(Cache<Node, List<Node>> cache, Node subjectNode, List<Node> instanceTypes) {
         int node = this.membershipGraphRootNode;
         HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
         LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -248,8 +248,7 @@ public class MgSchemaExtractorCache {
         }
     }
     
-    
-    private void traverseMgForObject( Cache<Node, List<Node>>  cache, Node objectNode, HashSet<String> objTypes) {
+    private void traverseMgForObject(Cache<Node, List<Node>> cache, Node objectNode, HashSet<String> objTypes) {
         int node = this.membershipGraphRootNode;
         HashSet<Integer> visited = new HashSet<>(expectedNumberOfClasses);
         LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -281,7 +280,6 @@ public class MgSchemaExtractorCache {
             }
         }
     }
-    
     
     private void populateShapes() {
         StopWatch watch = new StopWatch();
@@ -325,8 +323,8 @@ public class MgSchemaExtractorCache {
         membershipGraphConstruction();
         this.instanceToClass.clear();
         secondPass();
-        //populateShapes();
-        //shacler.writeModelToFile();
+        populateShapes();
+        shacler.writeModelToFile();
         //System.out.println("OUT DEGREE OF HNG ROOT NODE: " + membershipGraph.outDegreeOf(membershipGraphRootNode));
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
     }
