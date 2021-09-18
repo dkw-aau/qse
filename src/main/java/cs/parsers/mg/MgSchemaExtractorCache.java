@@ -282,6 +282,8 @@ public class MgSchemaExtractorCache {
     }
     
     private void populateShapes() {
+        Utils.getCurrentTimeStamp();
+        System.out.println("Populate Shapes Method Invoked:");
         StopWatch watch = new StopWatch();
         watch.start();
         classToPropWithObjTypes.forEach((c, p) -> {

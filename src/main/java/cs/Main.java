@@ -55,7 +55,7 @@ public class Main {
             
             if (isOn("MgSchemaExtractorCache")) {
                 System.out.println("MgSchemaExtractorCache");
-                new MgSchemaExtractorCacheRbm(datasetPath, numberOfClasses).run();
+                new MgSchemaExtractorCache(datasetPath, numberOfClasses).run();
             }
     
             if (isOn("WikiDataMgSchemaExtractor")) {
