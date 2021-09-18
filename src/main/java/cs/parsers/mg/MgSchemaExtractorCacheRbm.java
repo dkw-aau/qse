@@ -120,10 +120,9 @@ public class MgSchemaExtractorCacheRbm {
         Utils.getCurrentTimeStamp();
         StopWatch watch = new StopWatch();
         watch.start();
-        //LRUCache cache = new LRUCache(1000000);
         
         Cache<Node, List<Node>> cache = new Cache2kBuilder<Node, List<Node>>() {}
-                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .expireAfterWrite(15, TimeUnit.MINUTES)
                 .entryCapacity(1000000)
                 .build();
         
@@ -184,7 +183,6 @@ public class MgSchemaExtractorCacheRbm {
                                 }
                             });
                             properties.add(nodes[1]);
-                            
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
