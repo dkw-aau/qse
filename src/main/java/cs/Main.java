@@ -9,6 +9,8 @@ import cs.utils.ConfigManager;
 import cs.utils.Utils;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
+import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.longlong.Roaring64NavigableMap;
 
 import java.util.ArrayList;
 
@@ -23,10 +25,18 @@ public class Main {
         //datasetPath = ConfigManager.getProperty("dataset_path");
         //numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         //benchmark();
-        ArrayList<BloomFilter> bloomFilterArrayList = new ArrayList<>();
+        
+        ArrayList<RoaringBitmap> roaringBitmapArrayList = new ArrayList<>();
+        for (int i = 0; i < Integer.parseInt(args[0]); i++) {
+            int[] intArray = new int[Integer.parseInt(args[1])]; // allocating memory
+            roaringBitmapArrayList.add(RoaringBitmap.bitmapOf(intArray));
+        }
+        
+        
+        /*ArrayList<BloomFilter> bloomFilterArrayList = new ArrayList<>();
         for (int i = 0; i < Integer.parseInt(args[2]); i++) {
             bloomFilterArrayList.add(new FilterBuilder(Integer.parseInt(args[0]), Double.parseDouble(args[1])).buildBloomFilter());
-        }
+        }*/
     }
     
     private static void benchmark() {

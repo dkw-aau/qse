@@ -113,6 +113,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.1'
 
+    // https://mvnrepository.com/artifact/org.roaringbitmap/RoaringBitmap
+    implementation group: 'org.roaringbitmap', name: 'RoaringBitmap', version: '0.9.17'
+
 
     //implementation files('address/file.jar')
 }
