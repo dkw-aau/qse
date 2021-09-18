@@ -4,10 +4,7 @@ import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
 import cs.parsers.bl.BaselineParserEncoded;
 import cs.parsers.bl.WikiDataBaselineParserEncoded;
-import cs.parsers.mg.MgSchemaExtractor;
-import cs.parsers.mg.MgSchemaExtractorCache;
-import cs.parsers.mg.MgSchemaExtractorCacheRbm;
-import cs.parsers.mg.WikiDataMgSchemaExtractorCache;
+import cs.parsers.mg.*;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
 
@@ -60,7 +57,7 @@ public class Main {
     
             if (isOn("WikiDataMgSchemaExtractor")) {
                 System.out.println("WikiDataMgSchemaExtractor");
-                new WikiDataMgSchemaExtractorCache(datasetPath, numberOfClasses).run();
+                new WikiDataMgSeCacheBf(datasetPath, numberOfClasses).run();
             }
             
         } catch (Exception e) {
