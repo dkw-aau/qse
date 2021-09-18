@@ -1,18 +1,13 @@
 package cs;
 
-import cs.parsers.*;
+import cs.parsers.BaselineParserWithBloomFilterCache;
+import cs.parsers.BaselineParserWithBloomFilters;
 import cs.parsers.bl.BaselineParserEncoded;
 import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.MgSchemaExtractor;
 import cs.parsers.mg.MgSchemaExtractorCache;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
-import orestes.bloomfilter.BloomFilter;
-import orestes.bloomfilter.FilterBuilder;
-import org.roaringbitmap.RoaringBitmap;
-import org.roaringbitmap.longlong.Roaring64NavigableMap;
-
-import java.util.ArrayList;
 
 
 public class Main {
@@ -21,22 +16,10 @@ public class Main {
     public static int numberOfClasses;
     
     public static void main(String[] args) throws Exception {
-        //configPath = args[0];
-        //datasetPath = ConfigManager.getProperty("dataset_path");
-        //numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
-        //benchmark();
-        
-        ArrayList<RoaringBitmap> roaringBitmapArrayList = new ArrayList<>();
-        for (int i = 0; i < Integer.parseInt(args[0]); i++) {
-            int[] intArray = new int[Integer.parseInt(args[1])]; // allocating memory
-            roaringBitmapArrayList.add(RoaringBitmap.bitmapOf(intArray));
-        }
-        
-        
-        /*ArrayList<BloomFilter> bloomFilterArrayList = new ArrayList<>();
-        for (int i = 0; i < Integer.parseInt(args[2]); i++) {
-            bloomFilterArrayList.add(new FilterBuilder(Integer.parseInt(args[0]), Double.parseDouble(args[1])).buildBloomFilter());
-        }*/
+        configPath = args[0];
+        datasetPath = ConfigManager.getProperty("dataset_path");
+        numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
+        benchmark();
     }
     
     private static void benchmark() {
@@ -79,4 +62,19 @@ public class Main {
     }
     
     private static boolean isOn(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
+    
+    private static void custom(){
+        /*
+        ArrayList<RoaringBitmap> roaringBitmapArrayList = new ArrayList<>();
+        for (int i = 0; i < Integer.parseInt(args[0]); i++) {
+            int[] intArray = new int[Integer.parseInt(args[1])]; // allocating memory
+            roaringBitmapArrayList.add(RoaringBitmap.bitmapOf(intArray));
+        }
+        
+        
+        ArrayList<BloomFilter> bloomFilterArrayList = new ArrayList<>();
+        for (int i = 0; i < Integer.parseInt(args[2]); i++) {
+            bloomFilterArrayList.add(new FilterBuilder(Integer.parseInt(args[0]), Double.parseDouble(args[1])).buildBloomFilter());
+        }*/
+    }
 }
