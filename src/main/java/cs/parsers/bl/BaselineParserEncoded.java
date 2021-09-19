@@ -175,8 +175,8 @@ public class BaselineParserEncoded {
         firstPass();
         secondPass();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        populateShapes();
-        shacler.writeModelToFile();
+        //populateShapes();
+        //shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
