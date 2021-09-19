@@ -142,7 +142,7 @@ public class WikiDataMgSeCacheBf {
         //LRUCache cache = new LRUCache(1000000);
         
         Cache<Node, List<Node>> cache = new Cache2kBuilder<Node, List<Node>>() {}
-                .expireAfterWrite(15, TimeUnit.MINUTES)
+                .expireAfterWrite(2, TimeUnit.HOURS)
                 .entryCapacity(1000000)
                 .build();
         
