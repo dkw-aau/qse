@@ -28,6 +28,7 @@ public class BaselineParserEncoded {
     HashMap<String, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
+    HashMap<String, HashMap<Node, HashSet<String>>> classToPropInstances;
     HashMap<Node, List<Integer>> instanceToClass;
     HashSet<Node> properties;
     Encoder encoder;
@@ -38,6 +39,7 @@ public class BaselineParserEncoded {
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classToPropInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
@@ -77,13 +79,30 @@ public class BaselineParserEncoded {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))        // - Exclude RDF type triples
-                    .forEach(line -> {                              // - A terminal operation
+            Files.lines(Path.of(rdfFile))
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
+                                    HashMap<Node, HashSet<String>> propInstancesHashSet = null;
+                                    if (this.classToPropInstances.containsKey(encoder.decode(c))) {
+                                        propInstancesHashSet = this.classToPropInstances.get(encoder.decode(c));
+                                    } else {
+                                        propInstancesHashSet = new HashMap<>(); //TODO: Assign memory size
+                                    }
+                                    
+                                    if (propInstancesHashSet.containsKey(nodes[1])) {
+                                        propInstancesHashSet.get(nodes[1]).add(nodes[0].getLabel());
+                                    } else {
+                                        propInstancesHashSet.put(nodes[1], new HashSet<>() {{
+                                            add(nodes[0].getLabel());
+                                        }});
+                                    }
+                                    
+                                    this.classToPropInstances.put(encoder.decode(c), propInstancesHashSet);
+                                    
                                     if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
                                         HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
                                         HashSet<String> objTypes = new HashSet<String>();
@@ -177,6 +196,21 @@ public class BaselineParserEncoded {
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         //populateShapes();
         //shacler.writeModelToFile();
+        System.out.println(" --- ");
+        
+        this.classToPropInstances.forEach((k, v) -> {
+            v.forEach((p, i) -> {
+                System.out.println(k + " : " + p + " : " + i.size());
+            });
+        });
+        
+      /*  classToPropWithCount.forEach((k, v) -> {
+            System.out.println("\n\n");
+            System.out.println(k);
+            v.forEach((p, c) -> {
+                System.out.println(k + " : " + p + " : " + c);
+            });
+        });*/
     }
     
     private void measureMemoryUsage() {

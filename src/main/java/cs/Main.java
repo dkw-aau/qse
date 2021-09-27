@@ -3,6 +3,7 @@ package cs;
 import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
 import cs.parsers.bl.BaselineParserEncoded;
+import cs.parsers.bl.BaselineParserExtended;
 import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.*;
 import cs.utils.ConfigManager;
