@@ -1,10 +1,7 @@
 package cs.parsers.bl;
 
 import cs.parsers.SHACLER;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.Encoder;
-import cs.utils.NodeEncoder;
+import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -28,8 +25,8 @@ public class BaselineParserEncoded {
     HashMap<String, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
-    HashMap<String, HashMap<Node, HashSet<String>>> classToPropInstances;
     HashMap<Node, List<Integer>> instanceToClass;
+    HashMap<Node, HashSet<Tuple2<String, String>>> instanceToCassPropPair;
     HashSet<Node> properties;
     Encoder encoder;
     
@@ -39,9 +36,9 @@ public class BaselineParserEncoded {
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.classToPropInstances = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
+        this.instanceToCassPropPair = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new Encoder();
     }
@@ -86,22 +83,14 @@ public class BaselineParserEncoded {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    HashMap<Node, HashSet<String>> propInstancesHashSet = null;
-                                    if (this.classToPropInstances.containsKey(encoder.decode(c))) {
-                                        propInstancesHashSet = this.classToPropInstances.get(encoder.decode(c));
-                                    } else {
-                                        propInstancesHashSet = new HashMap<>(); //TODO: Assign memory size
-                                    }
                                     
-                                    if (propInstancesHashSet.containsKey(nodes[1])) {
-                                        propInstancesHashSet.get(nodes[1]).add(nodes[0].getLabel());
+                                    if (this.instanceToCassPropPair.containsKey(nodes[0])) {
+                                        this.instanceToCassPropPair.get(nodes[0]).add(new Tuple2<>(encoder.decode(c), nodes[1].getLabel()));
                                     } else {
-                                        propInstancesHashSet.put(nodes[1], new HashSet<>() {{
-                                            add(nodes[0].getLabel());
+                                        this.instanceToCassPropPair.put(nodes[0], new HashSet<>() {{
+                                            add(new Tuple2<>(encoder.decode(c), nodes[1].getLabel()));
                                         }});
                                     }
-                                    
-                                    this.classToPropInstances.put(encoder.decode(c), propInstancesHashSet);
                                     
                                     if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
                                         HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
@@ -197,12 +186,12 @@ public class BaselineParserEncoded {
         //populateShapes();
         //shacler.writeModelToFile();
         System.out.println(" --- ");
-        
-        this.classToPropInstances.forEach((k, v) -> {
+        System.out.println(instanceToCassPropPair.toString());
+     /*   this.classToPropInstances.forEach((k, v) -> {
             v.forEach((p, i) -> {
                 System.out.println(k + " : " + p + " : " + i.size());
             });
-        });
+        });*/
         
       /*  classToPropWithCount.forEach((k, v) -> {
             System.out.println("\n\n");
