@@ -4,9 +4,7 @@ import cs.parsers.SHACLER;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.Pair;
-import org.apache.solr.common.util.Hash;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.query.algebra.In;
 import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -154,7 +152,6 @@ public class Parser {
     }
     
     public void tester() {
-        
         for (Map.Entry<Node, HashSet<Integer>> entry : instanceToClass.entrySet()) {
             HashSet<Integer> nodeProps = new HashSet<>();//properties of this node
             HashSet<Integer> nodeClasses = new HashSet<>();//classes of this node
@@ -213,9 +210,12 @@ public class Parser {
         secondPass();
         tester();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        //populateShapes();
+        populateShapes();
         //shacler.writeModelToFile();
-        System.out.println(shapeSupport);
+        //System.out.println(shapeSupport);
+        shapeSupport.forEach((pair, v) -> {
+            System.out.println(encoder.decode(pair.getFirst()) + " : " + encoder.decode(pair.getSecond()) + " : " + v);
+        });
     }
     
     private void measureMemoryUsage() {
