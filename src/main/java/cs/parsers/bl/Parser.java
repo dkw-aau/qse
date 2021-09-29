@@ -27,7 +27,7 @@ public class Parser {
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, HashSet<Integer>> instanceToClass;
     HashMap<Pair<Integer, Integer>, Integer> shapeSupport = new HashMap<>();
-    HashSet<Node> properties;
+    HashSet<Integer> properties;
     Encoder encoder;
     Set<Integer> classes;
     
@@ -63,7 +63,7 @@ public class Parser {
                                     instanceToClass.put(nodes[0], list);
                                 }
                             } else {
-                                properties.add(nodes[1]);
+                                properties.add(encoder.encode(nodes[1].getLabel()));
                                 instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
                             }
                         } catch (ParseException e) {
@@ -142,7 +142,6 @@ public class Parser {
                                     }
                                 });
                             }
-                            properties.add(nodes[1]);
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -211,8 +210,8 @@ public class Parser {
     
     private void runParser() {
         firstPass();
-        //secondPass();
-        //tester();
+        secondPass();
+        tester();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         //populateShapes();
         //shacler.writeModelToFile();
