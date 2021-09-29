@@ -64,15 +64,12 @@ public class Parser {
                                 }
                             } else {
                                 properties.add(nodes[1]);
+                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-            
-            properties.forEach(property -> {
-                encoder.encode(property.getLabel());
-            });
             classes = this.encoder.getTable().keySet();
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,8 +91,7 @@ public class Parser {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
                                     if (classes.contains(c)) {
                                         //Fixme: adding the property of the instance.
-                                        instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
-                                        
+                                        //instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
                                         if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
                                             HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
                                             HashSet<String> objTypes = new HashSet<String>();
@@ -215,8 +211,8 @@ public class Parser {
     
     private void runParser() {
         firstPass();
-        secondPass();
-        tester();
+        //secondPass();
+        //tester();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         //populateShapes();
         //shacler.writeModelToFile();
