@@ -31,4 +31,8 @@ public class Encoder {
     public HashMap<Integer, String> getTable() {
         return table;
     }
+    
+    public HashMap<String, Integer> getRevTable() {
+        return reverseTable;
+    }
 }

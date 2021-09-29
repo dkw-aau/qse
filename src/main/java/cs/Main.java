@@ -4,6 +4,7 @@ import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
 import cs.parsers.bl.BaselineParserEncoded;
 import cs.parsers.bl.BaselineParserExtended;
+import cs.parsers.bl.Parser;
 import cs.parsers.bl.WikiDataBaselineParserEncoded;
 import cs.parsers.mg.*;
 import cs.utils.ConfigManager;
@@ -28,7 +29,7 @@ public class Main {
         try {
             if (isOn("BlSchemaExtractor")) {
                 System.out.println("BlSchemaExtractor - Encoded Strings");
-                new BaselineParserEncoded(datasetPath, numberOfClasses).run();
+                new Parser(datasetPath, numberOfClasses).run();
             }
             
             if (isOn("WikiDataSchemaExtractor")) {
