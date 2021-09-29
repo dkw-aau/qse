@@ -24,10 +24,10 @@ public class Parser {
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, HashSet<Integer>> instanceToClass;
-    HashMap<Pair<Integer, Integer>, Integer> shapeSupport = new HashMap<>();
+    HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
     HashSet<Integer> properties;
     Encoder encoder;
-    Set<Integer> classes;
+    HashSet<Integer> classes;
     
     public Parser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -39,6 +39,8 @@ public class Parser {
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new Encoder();
+        this.classes = new HashSet<>();
+        this.shapeSupport = new HashMap<>();
     }
     
     private void firstPass() {
@@ -51,6 +53,7 @@ public class Parser {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (nodes[1].toString().equals(Constants.RDF_TYPE)) {
+                                classes.add(encoder.encode(nodes[2].getLabel()));
                                 classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
                                 // Track classes per instance
                                 if (instanceToClass.containsKey(nodes[0])) {
@@ -68,7 +71,6 @@ public class Parser {
                             e.printStackTrace();
                         }
                     });
-            classes = this.encoder.getTable().keySet();
         } catch (Exception e) {
             e.printStackTrace();
         }
