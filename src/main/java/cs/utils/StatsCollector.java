@@ -50,13 +50,21 @@ public class StatsCollector {
     
     
     private String buildQuery(String classVal, String propVal, String objTypeVal) {
-        String query;
-        if (objTypeVal.equals("<http://www.w3.org/2001/XMLSchema#string>")) {
+        String query = "";
+        if (objTypeVal.equals("<http://www.w3.org/2001/XMLSchema#string>") || objTypeVal.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")) {
             query =
                     "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {" +
                             "?s a <" + classVal + ">." +
                             "?s <" + propVal + "> ?obj ." +
                             "FILTER(isLiteral(?obj))" +
+                            "}" +
+                            "";
+        } else if (objTypeVal.contains("<")) {
+            query =
+                    "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {" +
+                            "?s a <" + classVal + ">." +
+                            "?s <" + propVal + "> ?obj ." +
+                            "?obj a " + objTypeVal + " ;" +
                             "}" +
                             "";
         } else {

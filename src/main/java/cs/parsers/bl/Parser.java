@@ -170,7 +170,7 @@ public class Parser {
     }
     
     public void computeSupport() {
-        this.shapeTripletSupport = new HashMap<>((int) ((classes.size() * properties.size() * classes.size()) / 0.75 + 1));
+        this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
             for (Integer c : instanceToClass.get(instance)) {
                 for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
@@ -253,7 +253,7 @@ public class Parser {
     }
     
     public void run() {
-        runParser();
+        //runParser();
         new StatsCollector().doTheJob();
         //measureMemoryUsage();
     }
