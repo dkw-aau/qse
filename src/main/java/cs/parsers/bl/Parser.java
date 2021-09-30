@@ -2,6 +2,8 @@ package cs.parsers.bl;
 
 import cs.parsers.SHACLER;
 import cs.utils.*;
+import orestes.bloomfilter.BloomFilter;
+import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.Pair;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -20,41 +22,39 @@ public class Parser {
     SHACLER shacler = new SHACLER();
     
     Integer expectedNumberOfClasses;
-    HashMap<String, Integer> classInstanceCount;
+    HashMap<Integer, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
-    //HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, HashSet<Integer>> instanceToClass;
-    HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
+    //HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
+    //HashMap<Pair<Integer, Integer>, Integer> shapeConfidence;
+    
     HashSet<Integer> properties;
     Encoder encoder;
     HashSet<Integer> classes;
+    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape; // for each instance we keep track of which property shapes they are assigned to one id is for the property id the other is for the object class id
+    HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     
     public Parser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        //this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new Encoder();
         this.classes = new HashSet<>();
-        this.shapeSupport = new HashMap<>();
     }
     
     private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
-                    //.filter(line -> line.contains(Constants.RDF_TYPE))
-                    .forEach(line -> {                              // - A terminal operation
+            Files.lines(Path.of(rdfFile))
+                    .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (nodes[1].toString().equals(Constants.RDF_TYPE)) {
-                                classes.add(encoder.encode(nodes[2].getLabel()));
-                                classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
                                 // Track classes per instance
                                 if (instanceToClass.containsKey(nodes[0])) {
                                     instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
@@ -63,9 +63,13 @@ public class Parser {
                                     list.add(encoder.encode(nodes[2].getLabel()));
                                     instanceToClass.put(nodes[0], list);
                                 }
+                                
+                                classes.add(encoder.encode(nodes[2].getLabel()));
+                                classInstanceCount.put(encoder.encode(nodes[2].getLabel()), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
+                                
                             } else {
                                 properties.add(encoder.encode(nodes[1].getLabel()));
-                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
+                                //instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -81,6 +85,7 @@ public class Parser {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
+        this.instance2propertyShape = new HashMap<>((int) ((classes.size() * properties.size()) / 0.75 + 1));
         try {
             Files.lines(Path.of(rdfFile))
                     .filter(line -> !line.contains(Constants.RDF_TYPE))
@@ -89,57 +94,60 @@ public class Parser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    if (classes.contains(c)) {
-                                        if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
-                                            HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
-                                            HashSet<String> objTypes = new HashSet<String>();
-                                            if (instanceToClass.containsKey(nodes[2])) // object is an instance of some class e.g., :Paris is an instance of :City.
-                                                instanceToClass.get(nodes[2]).forEach(node -> {
-                                                    if (classes.contains(node))
-                                                        objTypes.add(encoder.decode(node));
-                                                });
-                                            else {
-                                                objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
-                                            }
-                                            if (propToObjTypes.containsKey(nodes[1]))
-                                                propToObjTypes.get(nodes[1]).addAll(objTypes);
-                                            else {
-                                                propToObjTypes.put(nodes[1], objTypes);
-                                            }
-                                            classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
-                                            
-                                           /*
-                                           HashMap<Node, Integer> propToCount = classToPropWithCount.get(encoder.decode(c));
-                                           if (propToCount.containsKey(nodes[1])) {
-                                                propToCount.replace(nodes[1], propToCount.get(nodes[1]) + 1);
-                                            } else {
-                                                propToCount.put(nodes[1], 1);
-                                            }*/
-                                            //classToPropWithCount.put(encoder.decode(c), propToCount);
-                                            
-                                        } else {
-                                            HashSet<String> objTypes = new HashSet<String>();
-                                            if (instanceToClass.containsKey(nodes[2]))  // object is an instance of some class e.g., :Paris is an instance of :City.
-                                                instanceToClass.get(nodes[2]).forEach(node -> {
-                                                    if (classes.contains(node))
-                                                        objTypes.add(encoder.decode(node));
-                                                });
-                                            else {
-                                                objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
-                                            }
-                                            HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
-                                            propToObjTypes.put(nodes[1], objTypes);
-                                            
-                                            //Add Count of Props
-                                            //HashMap<Node, Integer> propToCount = new HashMap<>();
-                                            //propToCount.put(nodes[1], 1);
-                                            instanceToClass.get(nodes[0]).forEach(node -> {
-                                                if (classes.contains(node)) {
-                                                    classToPropWithObjTypes.put(encoder.decode(node), propToObjTypes);
-                                                    //classToPropWithCount.put(encoder.decode(node), propToCount);
-                                                }
-                                            });
+                                    
+                                    HashSet<String> objTypes = new HashSet<>();
+                                    HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
+                                    Node instance = nodes[0];
+                                    
+                                    // object is an instance of some class e.g., :Paris is an instance of :City.
+                                    if (instanceToClass.containsKey(nodes[2])) {
+                                        for (Integer node : instanceToClass.get(nodes[2])) {
+                                            objTypes.add(encoder.decode(node));
+                                            prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
                                         }
+                                        if (instance2propertyShape.containsKey(instance)) {
+                                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+                                            prop2objTypeTupleSet.addAll(prop2objTypeTuples);
+                                            instance2propertyShape.put(instance, prop2objTypeTupleSet);
+                                        } else {
+                                            instance2propertyShape.put(instance, prop2objTypeTuples);
+                                        }
+                                    }
+                                    // Object is literal
+                                    else {
+                                        String objType = getType(nodes[2].toString());
+                                        objTypes.add(objType);
+                                        prop2objTypeTuples = new HashSet<>() {{
+                                            add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objType)));
+                                        }};
+                                        if (instance2propertyShape.containsKey(instance)) {
+                                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+                                            prop2objTypeTupleSet.addAll(prop2objTypeTuples);
+                                            instance2propertyShape.put(instance, prop2objTypeTupleSet);
+                                        } else {
+                                            instance2propertyShape.put(instance, prop2objTypeTuples);
+                                        }
+                                    }
+                                    
+                                    
+                                    if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
+                                        if (propToObjTypes.containsKey(nodes[1]))
+                                            propToObjTypes.get(nodes[1]).addAll(objTypes);
+                                        else {
+                                            propToObjTypes.put(nodes[1], objTypes);
+                                        }
+                                        classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
+                                        
+                                    } else {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+                                        propToObjTypes.put(nodes[1], objTypes);
+                                        
+                                        instanceToClass.get(nodes[0]).forEach(node -> {
+                                            if (classes.contains(node)) {
+                                                classToPropWithObjTypes.put(encoder.decode(node), propToObjTypes);
+                                            }
+                                        });
                                     }
                                 });
                             }
@@ -154,31 +162,26 @@ public class Parser {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    public void tester() {
-        for (Map.Entry<Node, HashSet<Integer>> entry : instanceToClass.entrySet()) {
-            HashSet<Integer> nodeProps = new HashSet<>();//properties of this node
-            HashSet<Integer> nodeClasses = new HashSet<>();//classes of this node
-            Node node = entry.getKey();
-            HashSet<Integer> classOrProperty = entry.getValue();
-            for (Integer cop : classOrProperty) {
-                if (properties.contains(cop)) {
-                    nodeProps.add(cop);
-                }
-                if (classes.contains(cop)) {
-                    nodeClasses.add(cop);
+    public void computeSupport() {
+        this.shapeTripletSupport = new HashMap<>((int) ((classes.size() * properties.size() * classes.size()) / 0.75 + 1));
+        this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
+            for (Integer c : instanceToClass.get(instance)) {
+                for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
+                    if (this.shapeTripletSupport.containsKey(tuple3)) {
+                        Integer val = this.shapeTripletSupport.get(tuple3) + 1;
+                        this.shapeTripletSupport.put(tuple3, val);
+                    } else {
+                        this.shapeTripletSupport.put(tuple3, 1);
+                    }
                 }
             }
-            nodeClasses.forEach(c -> {
-                nodeProps.forEach(p -> {
-                    if (shapeSupport.containsKey(new Pair<Integer, Integer>(c, p))) {
-                        shapeSupport.put(new Pair<Integer, Integer>(c, p), shapeSupport.get(new Pair<Integer, Integer>(c, p)) + 1);
-                    } else {
-                        shapeSupport.put(new Pair<Integer, Integer>(c, p), 1);
-                    }
-                });
-            });
-            
-        }
+        });
+        
+        this.shapeTripletSupport.forEach((tupl3, count) -> {
+            String log = encoder.decode(tupl3._1) + " , " + encoder.decode(tupl3._2) + " , " + encoder.decode(tupl3._3)  + " : " + count;
+            System.out.println(log);
+        });
     }
     
     private void populateShapes() {
@@ -210,13 +213,11 @@ public class Parser {
     private void runParser() {
         firstPass();
         secondPass();
-        tester();
+        computeSupport();
+        //computeShapeSupport();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        populateShapes();
-        shacler.writeModelToFile();
-        shapeSupport.forEach((pair, v) -> {
-            System.out.println(encoder.decode(pair.getFirst()) + " : " + encoder.decode(pair.getSecond()) + " : " + v);
-        });
+        //populateShapes();
+        //shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
