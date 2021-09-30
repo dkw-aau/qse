@@ -28,17 +28,17 @@ public class Parser {
     Integer expectedNumberOfClasses;
     HashMap<Integer, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
-
+    
     HashMap<Node, HashSet<Integer>> instanceToClass;
     Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape; // for each instance we keep track of which property shapes they are assigned to one id is for the property id the other is for the object class id
-
+    
     //HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
     //HashMap<Pair<Integer, Integer>, Integer> shapeConfidence;
     
     HashSet<Integer> properties;
     Encoder encoder;
     HashSet<Integer> classes;
-   
+    
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     
     public Parser(String filePath, int expSizeOfClasses) {
@@ -70,9 +70,15 @@ public class Parser {
                                     list.add(encoder.encode(nodes[2].getLabel()));
                                     instanceToClass.put(nodes[0], list);
                                 }
-                                
+                                if (classInstanceCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                                    Integer val = classInstanceCount.get(encoder.encode(nodes[2].getLabel()));
+                                    classInstanceCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
+                                    
+                                } else {
+                                    classInstanceCount.put(encoder.encode(nodes[2].getLabel()), 1);
+                                }
                                 classes.add(encoder.encode(nodes[2].getLabel()));
-                                classInstanceCount.put(encoder.encode(nodes[2].getLabel()), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
+                                //classInstanceCount.put(encoder.encode(nodes[2].getLabel()), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
                                 
                             } else {
                                 properties.add(encoder.encode(nodes[1].getLabel()));
@@ -185,11 +191,11 @@ public class Parser {
             }
         });
         System.out.println("Writing to File ...");
-    
+        
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
-    
+            
             for (Map.Entry<Tuple3<Integer, Integer, Integer>, Integer> entry : this.shapeTripletSupport.entrySet()) {
                 Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
                 Integer count = entry.getValue();
@@ -198,14 +204,14 @@ public class Parser {
                 //System.out.println(log);
                 printWriter.println(log);
             }
-    
+            
             
             printWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         
-       
+        
     }
     
     private void populateShapes() {
