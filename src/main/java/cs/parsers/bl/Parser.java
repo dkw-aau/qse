@@ -253,7 +253,7 @@ public class Parser {
     }
     
     public void run() {
-        //runParser();
+        runParser();
         new StatsCollector().doTheJob();
         //measureMemoryUsage();
     }
