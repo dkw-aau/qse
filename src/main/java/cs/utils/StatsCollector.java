@@ -20,9 +20,7 @@ public class StatsCollector {
     }
     
     public void doTheJob() {
-        
         List<String[]> vertices = FilesUtil.readCsvAllDataOnceWithPipeSeparator(Constants.TEMP_DATASET_FILE);
-        
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE_2), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);

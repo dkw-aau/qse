@@ -193,7 +193,8 @@ public class Parser {
             for (Map.Entry<Tuple3<Integer, Integer, Integer>, Integer> entry : this.shapeTripletSupport.entrySet()) {
                 Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
                 Integer count = entry.getValue();
-                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" + encoder.decode(tupl3._3) + "|" + count;
+                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
+                        encoder.decode(tupl3._3) + "|" + count + "|" + classInstanceCount.get(tupl3._1);
                 //System.out.println(log);
                 printWriter.println(log);
             }
@@ -254,7 +255,7 @@ public class Parser {
     
     public void run() {
         runParser();
-        new StatsCollector().doTheJob();
+        //new StatsCollector().doTheJob();
         //measureMemoryUsage();
     }
 }
