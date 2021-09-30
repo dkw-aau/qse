@@ -12,6 +12,10 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -24,14 +28,17 @@ public class Parser {
     Integer expectedNumberOfClasses;
     HashMap<Integer, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+
     HashMap<Node, HashSet<Integer>> instanceToClass;
+    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape; // for each instance we keep track of which property shapes they are assigned to one id is for the property id the other is for the object class id
+
     //HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
     //HashMap<Pair<Integer, Integer>, Integer> shapeConfidence;
     
     HashSet<Integer> properties;
     Encoder encoder;
     HashSet<Integer> classes;
-    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape; // for each instance we keep track of which property shapes they are assigned to one id is for the property id the other is for the object class id
+   
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     
     public Parser(String filePath, int expSizeOfClasses) {
@@ -177,11 +184,27 @@ public class Parser {
                 }
             }
         });
+        System.out.println("Writing to File ...");
+    
+        try {
+            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+    
+            for (Map.Entry<Tuple3<Integer, Integer, Integer>, Integer> entry : this.shapeTripletSupport.entrySet()) {
+                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
+                Integer count = entry.getValue();
+                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" + encoder.decode(tupl3._3) + "|" + count;
+                //System.out.println(log);
+                printWriter.println(log);
+            }
+    
+            
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         
-        this.shapeTripletSupport.forEach((tupl3, count) -> {
-            String log = encoder.decode(tupl3._1) + " , " + encoder.decode(tupl3._2) + " , " + encoder.decode(tupl3._3)  + " : " + count;
-            System.out.println(log);
-        });
+       
     }
     
     private void populateShapes() {

@@ -26,7 +26,6 @@ public class BaselineParserEncoded {
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, List<Integer>> instanceToClass;
-    HashMap<Node, HashSet<Tuple2<String, String>>> instanceToCassPropPair;
     HashSet<Node> properties;
     Encoder encoder;
     
@@ -38,7 +37,6 @@ public class BaselineParserEncoded {
         this.classToPropWithCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
-        this.instanceToCassPropPair = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new Encoder();
     }
@@ -83,15 +81,6 @@ public class BaselineParserEncoded {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    
-                                    if (this.instanceToCassPropPair.containsKey(nodes[0])) {
-                                        this.instanceToCassPropPair.get(nodes[0]).add(new Tuple2<>(encoder.decode(c), nodes[1].getLabel()));
-                                    } else {
-                                        this.instanceToCassPropPair.put(nodes[0], new HashSet<>() {{
-                                            add(new Tuple2<>(encoder.decode(c), nodes[1].getLabel()));
-                                        }});
-                                    }
-                                    
                                     if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
                                         HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
                                         HashSet<String> objTypes = new HashSet<String>();
@@ -185,21 +174,6 @@ public class BaselineParserEncoded {
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
         //populateShapes();
         //shacler.writeModelToFile();
-        System.out.println(" --- ");
-        System.out.println(instanceToCassPropPair.toString());
-     /*   this.classToPropInstances.forEach((k, v) -> {
-            v.forEach((p, i) -> {
-                System.out.println(k + " : " + p + " : " + i.size());
-            });
-        });*/
-        
-      /*  classToPropWithCount.forEach((k, v) -> {
-            System.out.println("\n\n");
-            System.out.println(k);
-            v.forEach((p, c) -> {
-                System.out.println(k + " : " + p + " : " + c);
-            });
-        });*/
     }
     
     private void measureMemoryUsage() {
