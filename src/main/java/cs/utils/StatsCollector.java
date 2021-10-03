@@ -33,7 +33,8 @@ public class StatsCollector {
                 for (BindingSet result : graphDBUtils.runSelectQuery(query)) {
                     count = result.getValue("val").stringValue();
                 }
-                String line = v[0] + "|" + v[1] + "|" + v[2] + "|" + v[3] + "|" + "\"" + query + "\"" + "|" + count;
+                //class, prop, obj, support, classInstanceCount, query, count by SPARQL Endpoint
+                String line = v[0] + "|" + v[1] + "|" + v[2] + "|" + v[3] + "|" + v[4] + "|" + "\"" + query + "\"" + "|" + count;
                 printWriter.println(line);
             }
             printWriter.close();
@@ -46,28 +47,35 @@ public class StatsCollector {
         
     }
     
+    public void justTestOneQuery() {
+        String query = "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {?s a <http://dbpedia.org/ontology/SoccerClub>.?s <http://www.w3.org/2002/07/owl#differentFrom> ?obj .?obj a <http://dbpedia.org/ontology/SoccerClub> ;}";
+        String count = "";
+        for (BindingSet result : graphDBUtils.runSelectQuery(query)) {
+            count = result.getValue("val").stringValue();
+        }
+        System.out.println("A: " + count);
+        query = "PREFIX onto: <http://www.ontotext.com/> SELECT ( COUNT( DISTINCT ?s) AS ?val) FROM onto:explicit WHERE {?s a <http://dbpedia.org/ontology/SoccerClub>.?s <http://www.w3.org/2002/07/owl#differentFrom> ?obj .?obj a <http://dbpedia.org/ontology/SoccerClub> ;}";
+        count = "";
+        for (BindingSet result : graphDBUtils.runSelectQuery(query)) {
+            count = result.getValue("val").stringValue();
+        }
+        System.out.println("B: " + count);
+    }
+    
     
     private String buildQuery(String classVal, String propVal, String objTypeVal) {
         String query = "";
-        if (objTypeVal.equals("<http://www.w3.org/2001/XMLSchema#string>") || objTypeVal.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")) {
-            query =
-                    "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {" +
-                            "?s a <" + classVal + ">." +
-                            "?s <" + propVal + "> ?obj ." +
-                            "FILTER(isLiteral(?obj))" +
-                            "}" +
-                            "";
-        } else if (objTypeVal.contains("<")) {
-            query =
-                    "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {" +
-                            "?s a <" + classVal + ">." +
-                            "?s <" + propVal + "> ?obj ." +
-                            "?obj a " + objTypeVal + " ;" +
-                            "}" +
-                            "";
+        if (objTypeVal.contains("<")) {
+            query = "PREFIX onto: <http://www.ontotext.com/>" +
+                    "SELECT ( COUNT( DISTINCT ?s) AS ?val) FROM onto:explicit WHERE {" +
+                    "?s a   <" + classVal + "> . " +
+                    "?s <" + propVal + "> ?obj . " +
+                    "FILTER(dataType(?obj) = <" + objTypeVal + "> ) " +
+                    "}";
         } else {
             query =
-                    "SELECT ( COUNT( DISTINCT ?s) AS ?val) WHERE {" +
+                    "PREFIX onto: <http://www.ontotext.com/>" +
+                            "SELECT ( COUNT( DISTINCT ?s) AS ?val) FROM onto:explicit WHERE {" +
                             "?s a <" + classVal + ">." +
                             "?s <" + propVal + "> ?obj ." +
                             "?obj a <" + objTypeVal + "> ;" +

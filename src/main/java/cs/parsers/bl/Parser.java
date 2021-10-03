@@ -2,12 +2,14 @@ package cs.parsers.bl;
 
 import cs.parsers.SHACLER;
 import cs.utils.*;
-import orestes.bloomfilter.BloomFilter;
-import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.math3.util.Pair;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.ehcache.sizeof.SizeOf;
+import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
@@ -18,7 +20,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Parser {
@@ -40,6 +44,7 @@ public class Parser {
     HashSet<Integer> classes;
     
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
+    HashMap<String, HashSet<String>> tempMap = new HashMap<>();
     
     public Parser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -73,27 +78,36 @@ public class Parser {
                                 if (classInstanceCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
                                     Integer val = classInstanceCount.get(encoder.encode(nodes[2].getLabel()));
                                     classInstanceCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
-                                    
                                 } else {
                                     classInstanceCount.put(encoder.encode(nodes[2].getLabel()), 1);
                                 }
                                 classes.add(encoder.encode(nodes[2].getLabel()));
-                                //classInstanceCount.put(encoder.encode(nodes[2].getLabel()), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
-                                
                             } else {
                                 properties.add(encoder.encode(nodes[1].getLabel()));
-                                //instanceToClass.get(nodes[0]).add(encoder.encode(nodes[1].getLabel()));
+                               /* String type = extractObjectType(nodes);
+                                if (tempMap.containsKey(nodes[1].toString())) {
+                                    HashSet<String> x = tempMap.get(nodes[1].toString());
+                                    x.add(type);
+                                    tempMap.put(nodes[1].toString(), x);
+                                } else {
+                                    tempMap.put(nodes[1].toString(), new HashSet<>() {{add(type);}});
+                                }*/
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
+            System.out.println();
+            tempMap.forEach((k, v) -> {
+                System.out.println(k + " : -> " + v.toString() + " : " + v.size());
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
+    
     
     private void secondPass() {
         StopWatch watch = new StopWatch();
@@ -112,26 +126,26 @@ public class Parser {
                                     HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
                                     Node instance = nodes[0];
                                     
-                                    // object is an instance of some class e.g., :Paris is an instance of :City.
-                                    if (instanceToClass.containsKey(nodes[2])) {
-                                        for (Integer node : instanceToClass.get(nodes[2])) {
-                                            objTypes.add(encoder.decode(node));
-                                            prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
+                                    String objectType = extractObjectType(nodes[2].toString());
+                                    if (objectType.equals("IRI")) {
+                                        // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
+                                        if (instanceToClass.containsKey(nodes[2])) {
+                                            for (Integer node : instanceToClass.get(nodes[2])) {
+                                                objTypes.add(encoder.decode(node));
+                                                prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
+                                            }
+                                            if (instance2propertyShape.containsKey(instance)) {
+                                                HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+                                                prop2objTypeTupleSet.addAll(prop2objTypeTuples);
+                                                instance2propertyShape.put(instance, prop2objTypeTupleSet);
+                                            } else {
+                                                instance2propertyShape.put(instance, prop2objTypeTuples);
+                                            }
                                         }
-                                        if (instance2propertyShape.containsKey(instance)) {
-                                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
-                                            prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-                                            instance2propertyShape.put(instance, prop2objTypeTupleSet);
-                                        } else {
-                                            instance2propertyShape.put(instance, prop2objTypeTuples);
-                                        }
-                                    }
-                                    // Object is literal
-                                    else {
-                                        String objType = getType(nodes[2].toString());
-                                        objTypes.add(objType);
+                                    } else { // Object is literal
+                                        objTypes.add(objectType);
                                         prop2objTypeTuples = new HashSet<>() {{
-                                            add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objType)));
+                                            add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
                                         }};
                                         if (instance2propertyShape.containsKey(instance)) {
                                             HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
@@ -141,7 +155,6 @@ public class Parser {
                                             instance2propertyShape.put(instance, prop2objTypeTuples);
                                         }
                                     }
-                                    
                                     
                                     if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
                                         HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
@@ -175,6 +188,24 @@ public class Parser {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    private String extractObjectType(String node) {
+        Literal theLiteral = new Literal(node, true);
+        String type = null;
+        if (theLiteral.getDatatype() != null) {   // is literal type
+            type = theLiteral.getDatatype().toString();
+        } else if (theLiteral.getLanguageTag() != null) {  // is rdf:lang type
+            type = "<" + RDF.LANGSTRING + ">"; //theLiteral.getLanguageTag(); will return the language tag
+        } else {
+            if (Utils.isValidIRI(node)) {
+                if (SimpleValueFactory.getInstance().createIRI(node).isIRI())
+                    type = "IRI";
+            } else {
+                type = "<" + XSD.STRING + ">";
+            }
+        }
+        return type;
+    }
+    
     public void computeSupport() {
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
@@ -191,7 +222,6 @@ public class Parser {
             }
         });
         System.out.println("Writing to File ...");
-        
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
@@ -201,17 +231,12 @@ public class Parser {
                 Integer count = entry.getValue();
                 String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
                         encoder.decode(tupl3._3) + "|" + count + "|" + classInstanceCount.get(tupl3._1);
-                //System.out.println(log);
                 printWriter.println(log);
             }
-            
-            
             printWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
-        
     }
     
     private void populateShapes() {
@@ -225,9 +250,8 @@ public class Parser {
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private String getType(String value) {
-        String theType = "<http://www.w3.org/2001/XMLSchema#string>"; //default type is XSD:string
-        
+    /*    private String getType(Node value) {
+        String theType = XSD.STRING.stringValue(); //default type is XSD:string
         if (value.contains("\"^^")) {
             //value.split("\\^\\^")[0] is the literal value, and value.split("\\^\\^")[1]  the type of the value ;
             if (value.split("\\^\\^").length > 1) {
@@ -239,15 +263,14 @@ public class Parser {
         }
         return theType;
     }
-    
+    */
     private void runParser() {
         firstPass();
         secondPass();
         computeSupport();
-        //computeShapeSupport();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
-        //populateShapes();
-        //shacler.writeModelToFile();
+        populateShapes();
+        shacler.writeModelToFile();
     }
     
     private void measureMemoryUsage() {
@@ -261,7 +284,7 @@ public class Parser {
     
     public void run() {
         runParser();
-        //new StatsCollector().doTheJob();
+        new StatsCollector().doTheJob();
         //measureMemoryUsage();
     }
 }

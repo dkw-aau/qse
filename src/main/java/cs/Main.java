@@ -24,7 +24,7 @@ public class Main {
     }
     
     private static void benchmark() {
-        System.out.println("Benchmark Initiated");
+        System.out.println("Benchmark Initiated for " + ConfigManager.getProperty("dataset_path"));
         Utils.getCurrentTimeStamp();
         try {
             if (isOn("BlSchemaExtractor")) {
