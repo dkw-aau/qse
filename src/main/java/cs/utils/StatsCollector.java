@@ -34,7 +34,7 @@ public class StatsCollector {
                     count = result.getValue("val").stringValue();
                 }
                 //class, prop, obj, support, classInstanceCount, query, count by SPARQL Endpoint
-                String line = v[0] + "|" + v[1] + "|" + v[2] + "|" + v[3] + "|" + v[4] + "|" + "\"" + query + "\"" + "|" + count;
+                String line = v[0] + "|" + v[1] + "|" + v[2] + "|" + v[3] + "|" + v[4] + "|" + count + "|" + "\"" + query + "\"";
                 printWriter.println(line);
             }
             printWriter.close();
@@ -70,7 +70,7 @@ public class StatsCollector {
                     "SELECT ( COUNT( DISTINCT ?s) AS ?val) FROM onto:explicit WHERE {" +
                     "?s a   <" + classVal + "> . " +
                     "?s <" + propVal + "> ?obj . " +
-                    "FILTER(dataType(?obj) = <" + objTypeVal + "> ) " +
+                    "FILTER(dataType(?obj) = " + objTypeVal + " ) " +
                     "}";
         } else {
             query =

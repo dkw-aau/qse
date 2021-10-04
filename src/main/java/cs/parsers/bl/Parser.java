@@ -84,7 +84,7 @@ public class Parser {
                                 classes.add(encoder.encode(nodes[2].getLabel()));
                             } else {
                                 properties.add(encoder.encode(nodes[1].getLabel()));
-                               /* String type = extractObjectType(nodes);
+                               /* String type = extractObjectType(nodes[1].toString());
                                 if (tempMap.containsKey(nodes[1].toString())) {
                                     HashSet<String> x = tempMap.get(nodes[1].toString());
                                     x.add(type);
@@ -97,10 +97,10 @@ public class Parser {
                             e.printStackTrace();
                         }
                     });
-            System.out.println();
+           /* System.out.println();
             tempMap.forEach((k, v) -> {
                 System.out.println(k + " : -> " + v.toString() + " : " + v.size());
-            });
+            });*/
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -121,19 +121,31 @@ public class Parser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    
                                     HashSet<String> objTypes = new HashSet<>();
                                     HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
                                     Node instance = nodes[0];
-                                    
                                     String objectType = extractObjectType(nodes[2].toString());
+                                    
+                                    // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
                                     if (objectType.equals("IRI")) {
-                                        // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
                                         if (instanceToClass.containsKey(nodes[2])) {
                                             for (Integer node : instanceToClass.get(nodes[2])) {
                                                 objTypes.add(encoder.decode(node));
                                                 prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
                                             }
+                                            if (instance2propertyShape.containsKey(instance)) {
+                                                HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+                                                prop2objTypeTupleSet.addAll(prop2objTypeTuples);
+                                                instance2propertyShape.put(instance, prop2objTypeTupleSet);
+                                            } else {
+                                                instance2propertyShape.put(instance, prop2objTypeTuples);
+                                            }
+                                            
+                                        } else { // Object is literal
+                                            objTypes.add(objectType);
+                                            prop2objTypeTuples = new HashSet<>() {{
+                                                add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
+                                            }};
                                             if (instance2propertyShape.containsKey(instance)) {
                                                 HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
                                                 prop2objTypeTupleSet.addAll(prop2objTypeTuples);
@@ -164,7 +176,6 @@ public class Parser {
                                             propToObjTypes.put(nodes[1], objTypes);
                                         }
                                         classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
-                                        
                                     } else {
                                         HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                         propToObjTypes.put(nodes[1], objTypes);
