@@ -45,6 +45,18 @@ public class GraphDBUtils {
         return result;
     }
     
+    public Boolean runAskQuery(String query) {
+        Boolean result = null;
+        try {
+            BooleanQuery queryResult = repositoryConnection.prepareBooleanQuery(query);
+            result = queryResult.evaluate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (repositoryConnection.isActive())
+                repositoryConnection.rollback();
+        }
+        return result;
+    }
     
     public void runConstructQuery(String query, String address) {
         try {
