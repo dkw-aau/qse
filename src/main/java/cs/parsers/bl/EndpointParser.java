@@ -5,6 +5,7 @@ import cs.utils.*;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.Literal;
+import org.jetbrains.annotations.NotNull;
 import org.semanticweb.yars.nx.Node;
 
 import java.io.File;
@@ -37,7 +38,8 @@ public class EndpointParser {
     private void getNumberOfInstancesOfEachClass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        graphDBUtils.runSelectQuery(FilesUtil.readQuery("query2")).forEach(result -> { //Query will return a table having two columns class: IRI of the class, classCount: number of instances of class
+        //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
+        graphDBUtils.runSelectQuery(FilesUtil.readQuery("query2")).forEach(result -> {
             String c = result.getValue("class").stringValue();
             int classCount = 0;
             if (result.getBinding("classCount").getValue().isLiteral()) {
@@ -47,7 +49,7 @@ public class EndpointParser {
             classInstanceCount.put(encoder.encode(c), classCount);
         });
         watch.stop();
-        System.out.println("Time Elapsed collectClassInstanceCountInfo: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void getDistinctClasses() {
@@ -58,51 +60,50 @@ public class EndpointParser {
         StopWatch watch = new StopWatch();
         watch.start();
         for (Integer classIri : this.classes) {
-            String query = FilesUtil.readQuery("query4").replace(":Class", " <" + encoder.decode(classIri) + "> ");
-            HashSet<String> props = new HashSet<>();
-            graphDBUtils.runSelectQuery(query).forEach(result -> {  //Query will return a table having one column prop: IRI of the properties of a given class
-                String propIri = result.getValue("prop").stringValue();
-                props.add(propIri);
-            });
+            String queryToGetProperties = FilesUtil.readQuery("query4").replace(":Class", " <" + encoder.decode(classIri) + "> ");
+            HashSet<String> props = getPropertiesOfClass(queryToGetProperties);
             
             HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
             for (String property : props) {
                 HashSet<String> objectTypes = new HashSet<>();
-                query = (FilesUtil.readQuery("query5")
+                String queryToVerifyLiteralObjectType = (FilesUtil.readQuery("query5")
                         .replace(":Class", " <" + encoder.decode(classIri) + "> "))
                         .replace(":Prop", " <" + property + "> ");
                 
-                if (graphDBUtils.runAskQuery(query)) { // Literal Type Object
-                    //Query to get Literal Type
-                    query = (FilesUtil.readQuery("query6")
+                //Literal Type Object
+                if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
+                    String queryToGetDataTypeOfLiteralObject = (FilesUtil.readQuery("query6")
                             .replace(":Class", " <" + encoder.decode(classIri) + "> "))
                             .replace(":Prop", " <" + property + "> ");
                     
-                    graphDBUtils.runSelectQuery(query).forEach(row -> {
+                    graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
                         
-                        String supportQuery = (FilesUtil.readQuery("query8")
+                        String queryToComputeSupportForLiteralTypeObjects = (FilesUtil.readQuery("query8")
                                 .replace(":Class", " <" + encoder.decode(classIri) + "> "))
                                 .replace(":Prop", " <" + property + "> ")
                                 .replace(":ObjectType", " <" + objectType + "> ");
                         
-                        computeSupport(classIri, property, objectType, supportQuery);
+                        computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
                     });
-                } else {  //query to get non-literal data type
-                    query = (FilesUtil.readQuery("query7")
+                }
+                //Non-Literal Type Object
+                else {
+                    String queryToGetDataTypeOfNonLiteralObjects = (FilesUtil.readQuery("query7")
                             .replace(":Class", " <" + encoder.decode(classIri) + "> "))
                             .replace(":Prop", " <" + property + "> ");
-                    graphDBUtils.runSelectQuery(query).forEach(row -> {
+                    
+                    graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
                         
-                        String supportQuery = (FilesUtil.readQuery("query9")
+                        String queryToComputeSupportForNonLiteralTypeObjects = (FilesUtil.readQuery("query9")
                                 .replace(":Class", " <" + encoder.decode(classIri) + "> "))
                                 .replace(":Prop", " <" + property + "> ")
                                 .replace(":ObjectType", " <" + objectType + "> ");
                         
-                        computeSupport(classIri, property, objectType, supportQuery);
+                        computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
                     });
                 }
                 propToObjTypes.put(Utils.IriToNode(property), objectTypes);
@@ -110,7 +111,18 @@ public class EndpointParser {
             classToPropWithObjTypes.put(encoder.decode(classIri), propToObjTypes);
         }
         watch.stop();
-        System.out.println("Time Elapsed collectPropertiesWithObjectTypesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Time Elapsed getShapesInfoAndComputeSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    @NotNull
+    private HashSet<String> getPropertiesOfClass(String query) {
+        HashSet<String> props = new HashSet<>();
+        //This query will return a table having one column named prop: IRI of the properties of a given class
+        graphDBUtils.runSelectQuery(query).forEach(result -> {
+            String propIri = result.getValue("prop").stringValue();
+            props.add(propIri);
+        });
+        return props;
     }
     
     private void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
