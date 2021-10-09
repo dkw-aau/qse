@@ -3,8 +3,6 @@ package cs.parsers.bl;
 import cs.parsers.SHACLER;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -32,19 +30,11 @@ public class Parser {
     Integer expectedNumberOfClasses;
     HashMap<Integer, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
-    
     HashMap<Node, HashSet<Integer>> instanceToClass;
-    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape; // for each instance we keep track of which property shapes they are assigned to one id is for the property id the other is for the object class id
-    
-    //HashMap<Pair<Integer, Integer>, Integer> shapeSupport;
-    //HashMap<Pair<Integer, Integer>, Integer> shapeConfidence;
-    
-    HashSet<Integer> properties;
+    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape;
     Encoder encoder;
-    HashSet<Integer> classes;
     
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
-    HashMap<String, HashSet<String>> tempMap = new HashMap<>();
     
     public Parser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -53,9 +43,7 @@ public class Parser {
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
-        this.properties = new HashSet<>((int) (1000 * 1.33));
         this.encoder = new Encoder();
-        this.classes = new HashSet<>();
     }
     
     private void firstPass() {
@@ -81,26 +69,11 @@ public class Parser {
                                 } else {
                                     classInstanceCount.put(encoder.encode(nodes[2].getLabel()), 1);
                                 }
-                                classes.add(encoder.encode(nodes[2].getLabel()));
-                            } else {
-                                properties.add(encoder.encode(nodes[1].getLabel()));
-                               /* String type = extractObjectType(nodes[1].toString());
-                                if (tempMap.containsKey(nodes[1].toString())) {
-                                    HashSet<String> x = tempMap.get(nodes[1].toString());
-                                    x.add(type);
-                                    tempMap.put(nodes[1].toString(), x);
-                                } else {
-                                    tempMap.put(nodes[1].toString(), new HashSet<>() {{add(type);}});
-                                }*/
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     });
-           /* System.out.println();
-            tempMap.forEach((k, v) -> {
-                System.out.println(k + " : -> " + v.toString() + " : " + v.size());
-            });*/
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,81 +85,53 @@ public class Parser {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.instance2propertyShape = new HashMap<>((int) ((classes.size() * properties.size()) / 0.75 + 1));
+        this.instance2propertyShape = new HashMap<>((int) ((classInstanceCount.size() / 0.75 + 1)));
         try {
             Files.lines(Path.of(rdfFile))
                     .filter(line -> !line.contains(Constants.RDF_TYPE))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).forEach(c -> {
-                                    HashSet<String> objTypes = new HashSet<>();
-                                    HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
-                                    Node instance = nodes[0];
-                                    String objectType = extractObjectType(nodes[2].toString());
-                                    
-                                    // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
-                                    if (objectType.equals("IRI")) {
-                                        if (instanceToClass.containsKey(nodes[2])) {
-                                            for (Integer node : instanceToClass.get(nodes[2])) {
-                                                objTypes.add(encoder.decode(node));
-                                                prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
-                                            }
-                                            if (instance2propertyShape.containsKey(instance)) {
-                                                HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
-                                                prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-                                                instance2propertyShape.put(instance, prop2objTypeTupleSet);
-                                            } else {
-                                                instance2propertyShape.put(instance, prop2objTypeTuples);
-                                            }
-                                            
-                                        } else { // Object is literal
-                                            objTypes.add(objectType);
-                                            prop2objTypeTuples = new HashSet<>() {{
-                                                add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
-                                            }};
-                                            if (instance2propertyShape.containsKey(instance)) {
-                                                HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
-                                                prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-                                                instance2propertyShape.put(instance, prop2objTypeTupleSet);
-                                            } else {
-                                                instance2propertyShape.put(instance, prop2objTypeTuples);
-                                            }
-                                        }
-                                    } else { // Object is literal
-                                        objTypes.add(objectType);
-                                        prop2objTypeTuples = new HashSet<>() {{
-                                            add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
-                                        }};
-                                        if (instance2propertyShape.containsKey(instance)) {
-                                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
-                                            prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-                                            instance2propertyShape.put(instance, prop2objTypeTupleSet);
-                                        } else {
-                                            instance2propertyShape.put(instance, prop2objTypeTuples);
-                                        }
+                            HashSet<String> objTypes = new HashSet<>();
+                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
+                            Node instance = nodes[0];
+                            String objectType = extractObjectType(nodes[2].toString());
+                            
+                            if (objectType.equals("IRI")) { // // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
+                                if (instanceToClass.containsKey(nodes[2])) {
+                                    for (Integer node : instanceToClass.get(nodes[2])) {
+                                        objTypes.add(encoder.decode(node));
+                                        prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
                                     }
-                                    
-                                    if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
+                                    addIntoInstance2PropertyShapeMap(prop2objTypeTuples, instance);
+                                }
+                            } else { // Object is literal
+                                objTypes.add(objectType);
+                                prop2objTypeTuples = new HashSet<>() {{
+                                    add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
+                                }};
+                                addIntoInstance2PropertyShapeMap(prop2objTypeTuples, instance);
+                            }
+                            HashSet<Integer> entityClasses = instanceToClass.get(nodes[0]);
+                            if (entityClasses != null) {
+                                for (Integer entityClass : entityClasses) {
+                                    if (classToPropWithObjTypes.containsKey(encoder.decode(entityClass))) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(entityClass));
                                         if (propToObjTypes.containsKey(nodes[1]))
                                             propToObjTypes.get(nodes[1]).addAll(objTypes);
                                         else {
                                             propToObjTypes.put(nodes[1], objTypes);
                                         }
-                                        classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
+                                        classToPropWithObjTypes.put(encoder.decode(entityClass), propToObjTypes);
                                     } else {
                                         HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
                                         propToObjTypes.put(nodes[1], objTypes);
-                                        
-                                        instanceToClass.get(nodes[0]).forEach(node -> {
-                                            if (classes.contains(node)) {
-                                                classToPropWithObjTypes.put(encoder.decode(node), propToObjTypes);
-                                            }
-                                        });
+                                        classToPropWithObjTypes.put(encoder.decode(entityClass), propToObjTypes);
+                                        /*instanceToClass.get(nodes[0]).forEach(node -> {
+                                            classToPropWithObjTypes.put(encoder.decode(node), propToObjTypes);
+                                        });*/
                                     }
-                                });
+                                }
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -197,6 +142,13 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void addIntoInstance2PropertyShapeMap(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node instance) {
+        instance2propertyShape.putIfAbsent(instance, prop2objTypeTuples);
+        HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+        prop2objTypeTupleSet.addAll(prop2objTypeTuples);
+        instance2propertyShape.put(instance, prop2objTypeTupleSet);
     }
     
     private String extractObjectType(String node) {
@@ -220,14 +172,17 @@ public class Parser {
     public void computeSupport() {
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
-            for (Integer c : instanceToClass.get(instance)) {
-                for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
-                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
-                    if (this.shapeTripletSupport.containsKey(tuple3)) {
-                        Integer val = this.shapeTripletSupport.get(tuple3) + 1;
-                        this.shapeTripletSupport.put(tuple3, val);
-                    } else {
-                        this.shapeTripletSupport.put(tuple3, 1);
+            HashSet<Integer> instanceClasses = instanceToClass.get(instance);
+            if (instanceClasses != null) {
+                for (Integer c : instanceToClass.get(instance)) {
+                    for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
+                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
+                        if (this.shapeTripletSupport.containsKey(tuple3)) {
+                            Integer val = this.shapeTripletSupport.get(tuple3) + 1;
+                            this.shapeTripletSupport.put(tuple3, val);
+                        } else {
+                            this.shapeTripletSupport.put(tuple3, 1);
+                        }
                     }
                 }
             }
@@ -279,7 +234,7 @@ public class Parser {
         firstPass();
         secondPass();
         computeSupport();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size() + "\n\t" + "No. of distinct Properties: " + properties.size());
+        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size());
         populateShapes();
         shacler.writeModelToFile();
     }
@@ -289,13 +244,12 @@ public class Parser {
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
         System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(encoder.getTable()));
         System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
-        System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
     }
     
     public void run() {
         runParser();
-        new StatsCollector().doTheJob();
+        //new StatsCollector().doTheJob();
         //measureMemoryUsage();
     }
 }
