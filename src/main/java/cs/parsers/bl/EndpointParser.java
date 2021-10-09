@@ -31,8 +31,8 @@ public class EndpointParser {
         int expectedNumberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.encoder = new Encoder();
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.encoder = new Encoder();
     }
     
     public void run() {
