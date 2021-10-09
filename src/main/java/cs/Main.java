@@ -2,10 +2,7 @@ package cs;
 
 import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
-import cs.parsers.bl.BaselineParserEncoded;
-import cs.parsers.bl.BaselineParserExtended;
-import cs.parsers.bl.Parser;
-import cs.parsers.bl.WikiDataBaselineParserEncoded;
+import cs.parsers.bl.*;
 import cs.parsers.mg.*;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
@@ -28,13 +25,18 @@ public class Main {
         Utils.getCurrentTimeStamp();
         try {
             if (isOn("BlSchemaExtractor")) {
-                System.out.println("BlSchemaExtractor - Encoded Strings");
+                System.out.println("BlSchemaExtractor");
                 new Parser(datasetPath, numberOfClasses).run();
+            }
+    
+            if (isOn("EndpointSchemaExtractor")) {
+                System.out.println("EndpointSchemaExtractor - Using SPARQL Queries");
+                new EndpointParser().readQueries();
             }
             
             if (isOn("WikiDataSchemaExtractor")) {
                 System.out.println("WikiDataSchemaExtractor - Encoded Strings");
-                new WikiDataBaselineParserEncoded(datasetPath, numberOfClasses).run();
+                new WikiParser(datasetPath, numberOfClasses).run();
             }
             
             if (isOn("BfSchemaExtractor")) {
