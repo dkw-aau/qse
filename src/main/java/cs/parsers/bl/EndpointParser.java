@@ -83,9 +83,7 @@ public class EndpointParser {
                 
                 //Literal Type Object
                 if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
-                    String queryFile = "query6";
-                    String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, queryFile);
-                    
+                    String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, "query6");
                     graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
@@ -95,9 +93,7 @@ public class EndpointParser {
                 }
                 //Non-Literal Type Object
                 else {
-                    String queryFile = "query7";
-                    String queryToGetDataTypeOfNonLiteralObjects = buildQuery(classIri, property, queryFile);
-                    
+                    String queryToGetDataTypeOfNonLiteralObjects = buildQuery(classIri, property, "query7");
                     graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
