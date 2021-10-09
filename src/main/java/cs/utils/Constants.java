@@ -14,7 +14,7 @@ public class Constants {
     public static String FILTERED_DATASET = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "filtered.nt";
     public static String SUBCLASSOF_DATASET = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "subclassOf.nt";
     
-    public static String TEMP_DATASET_FILE = ConfigManager.getProperty("output_file_path") + "/" + "shape-props-stats.csv";
+    public static String TEMP_DATASET_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "-shape-props-stats.csv";
     public static String TEMP_DATASET_FILE_2 = ConfigManager.getProperty("output_file_path") + "/" + "shape-props-extended-stats.csv";
     public static String TEMP_DATASET_FILE_3 = ConfigManager.getProperty("output_file_path") + "/" + "shape-props-with-class-count-stats.csv";
     //
