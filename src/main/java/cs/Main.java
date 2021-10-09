@@ -31,11 +31,11 @@ public class Main {
     
             if (isOn("EndpointSchemaExtractor")) {
                 System.out.println("EndpointSchemaExtractor - Using SPARQL Queries");
-                new EndpointParser().readQueries();
+                new EndpointParser().run();
             }
             
             if (isOn("WikiDataSchemaExtractor")) {
-                System.out.println("WikiDataSchemaExtractor - Encoded Strings");
+                System.out.println("WikiParser");
                 new WikiParser(datasetPath, numberOfClasses).run();
             }
             
