@@ -6,6 +6,8 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class FilesUtil {
@@ -56,6 +58,17 @@ public class FilesUtil {
     public static boolean deleteFile(String fileAddress) {
         File file = new File(fileAddress);
         return file.delete();
+    }
+    
+    public static String readQuery(String query) {
+        String q = null;
+        try {
+            String queriesDirectory = ConfigManager.getProperty("resources_path") + "/queries/";
+            q = new String(Files.readAllBytes(Paths.get(queriesDirectory + query + ".txt")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return q;
     }
     
 }
