@@ -59,31 +59,30 @@ public class SHACLER {
                 .add(SHACL.CLOSED, false);
         
         if (propToType != null) {
-            propToType.forEach((prop, propTypes) -> {
+            propToType.forEach((prop, propObjectTypes) -> {
                 IRI property = factory.createIRI(prop.getLabel());
                 IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
                 b.subject(nodeShape)
                         .add(SHACL.PROPERTY, propShape);
                 b.subject(propShape)
+                        .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                         .add(SHACL.PATH, property)
                         .add(SHACL.MIN_COUNT, 1);
                 //.add(SHACL.MAX_COUNT, 1);
                 
-                propTypes.forEach(type -> {
-                    if (type != null) {
-                        if (type.contains(XSD.NAMESPACE) || type.contains(RDF.LANGSTRING.toString())) {
+                propObjectTypes.forEach(objectType -> {
+                    if (objectType != null) {
+                        if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
                             b.subject(propShape)
-                                    .add(SHACL.DATATYPE, type);
+                                    .add(SHACL.DATATYPE, objectType);
                         } else {
-                            type = type.replace("<", "").replace(">", "");
-                            b.subject(propShape)
-                                    .add(SHACL.CLASS, type)
-                                    .add(SHACL.NODE_KIND, SHACL.IRI);
+                            //objectType = objectType.replace("<", "").replace(">", "");
+                            b.subject(propShape).add(SHACL.CLASS, objectType);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                         }
                     } else {
                         // in case the type is null, we set it default as string
-                        b.subject(propShape)
-                                .add(SHACL.DATATYPE, XSD.STRING);
+                        b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
                     }
                 });
             });
