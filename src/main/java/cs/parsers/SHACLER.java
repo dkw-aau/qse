@@ -73,11 +73,13 @@ public class SHACLER {
                 propObjectTypes.forEach(objectType -> {
                     if (objectType != null) {
                         if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
-                            b.subject(propShape)
-                                    .add(SHACL.DATATYPE, objectType);
+                            if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
                         } else {
                             //objectType = objectType.replace("<", "").replace(">", "");
-                            b.subject(propShape).add(SHACL.CLASS, objectType);
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                         }
                     } else {
