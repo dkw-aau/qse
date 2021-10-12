@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class SHACLER {
     String classIRI;
@@ -35,6 +36,7 @@ public class SHACLER {
     ModelBuilder builder = null;
     Encoder encoder;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    String logfileAddress = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
     
     public SHACLER() {
         this.builder = new ModelBuilder();
@@ -65,7 +67,16 @@ public class SHACLER {
         this.model.addAll(constructShapeWithoutPruning(classToPropWithObjTypes));
         System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        System.out.println(currentShapesModelStats);
+        //System.out.println(currentShapesModelStats);
+        StringBuilder header = new StringBuilder("DATASET|confidence|support|");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + "|" + 1.0 + "|" + 1.0 + "|");
+        for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
+            String v = entry.getValue();
+            log = new StringBuilder(log.append(v) + "|");
+            header = new StringBuilder(header.append(entry.getKey()) + "|");
+        }
+        FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
+        FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         this.writeModelToFile("DEFAULT");
     }
     
@@ -76,7 +87,13 @@ public class SHACLER {
         this.model.addAll(constructShapesWithPruning(classToPropWithObjTypes, confidence, support));
         System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence + " - " + support);
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        System.out.println(currentShapesModelStats);
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + "|" + confidence + "|" + support + "|");
+        for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
+            String v = entry.getValue();
+            log = new StringBuilder(log.append(v) + "|");
+        }
+        FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
+        //System.out.println(currentShapesModelStats);
         this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
     
@@ -323,7 +340,7 @@ public class SHACLER {
     
     public void writeModelToFile() {
         Path path = Paths.get(Main.datasetPath);
-        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_"  + "SHACL.ttl";
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + "SHACL.ttl";
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
         try {
             FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
