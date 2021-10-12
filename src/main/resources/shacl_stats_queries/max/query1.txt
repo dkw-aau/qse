@@ -1,0 +1,9 @@
+# Max Number of Node Shape Property Constraint for a property shape
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (MAX(?count) AS ?max) WHERE {
+    SELECT ?s (COUNT(?p) AS ?count) where {
+        ?s a sh:NodeShape .
+        ?s sh:property ?p .
+    }
+    GROUP BY ?s
+}

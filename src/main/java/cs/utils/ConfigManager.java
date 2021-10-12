@@ -2,12 +2,13 @@ package cs.utils;
 
 import cs.Main;
 
+import javax.validation.constraints.NotNull;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 
 public class ConfigManager {
-    
+    @NotNull
     public static String getProperty(String property) {
         java.util.Properties prop = new java.util.Properties();
         try {

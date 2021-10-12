@@ -1,0 +1,7 @@
+#Total Number of S:CLASS constraints
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (COUNT(?shClassConstraint) AS ?count) where {
+    ?s a sh:NodeShape .
+     ?s sh:property ?p .
+    ?p sh:class ?shClassConstraint.
+}
