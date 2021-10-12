@@ -1,6 +1,6 @@
 package cs.parsers.mg;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.NodeEncoder;

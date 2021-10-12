@@ -1,6 +1,6 @@
 package cs.parsers.mg;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
@@ -8,8 +8,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -23,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WikiDataMgSeCacheBf {
     String rdfFile;

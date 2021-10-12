@@ -1,5 +1,6 @@
 package cs.parsers;
 
+import cs.qse.SHACLER;
 import cs.utils.Constants;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;

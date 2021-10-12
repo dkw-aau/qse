@@ -2,8 +2,10 @@ package cs;
 
 import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
-import cs.parsers.bl.*;
 import cs.parsers.mg.*;
+import cs.qse.EndpointParser;
+import cs.qse.Parser;
+import cs.qse.WikiParser;
 import cs.utils.ConfigManager;
 import cs.utils.Utils;
 

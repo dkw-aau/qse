@@ -1,10 +1,9 @@
 package cs.extras;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;

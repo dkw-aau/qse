@@ -1,6 +1,5 @@
-package cs.parsers.bl;
+package cs.qse;
 
-import cs.parsers.SHACLER;
 import cs.utils.*;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;

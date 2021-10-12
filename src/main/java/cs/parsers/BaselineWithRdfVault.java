@@ -1,9 +1,7 @@
 package cs.parsers;
 
-import com.github.rohansuri.art.AdaptiveRadixTree;
-import com.github.rohansuri.art.BinaryComparables;
 import cs.extras.RDFVault;
-import org.apache.commons.collections4.CollectionUtils;
+import cs.qse.SHACLER;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;

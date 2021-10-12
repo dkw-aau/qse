@@ -2,15 +2,12 @@ package cs.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
-import cs.utils.LRUCache;
 import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarBuilder;
-import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.lang3.time.StopWatch;
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
-import org.cache2k.addon.UniversalResiliencePolicy;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Node;

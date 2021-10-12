@@ -1,6 +1,5 @@
-package cs.parsers.bl;
+package cs.qse;
 
-import cs.parsers.SHACLER;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -23,10 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class WikiParser {
+public class Parser {
     String rdfFile;
-    SHACLER shacler = new SHACLER();
-    
     Integer expectedNumberOfClasses;
     HashMap<Integer, Integer> classInstanceCount;
     HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
@@ -36,7 +33,7 @@ public class WikiParser {
     
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     
-    public WikiParser(String filePath, int expSizeOfClasses) {
+    public Parser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -54,7 +51,7 @@ public class WikiParser {
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(Constants.INSTANCE_OF)) {
+                            if (nodes[1].toString().equals(Constants.RDF_TYPE)) {
                                 // Track classes per instance
                                 if (instanceToClass.containsKey(nodes[0])) {
                                     instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
@@ -88,7 +85,7 @@ public class WikiParser {
         this.instance2propertyShape = new HashMap<>((int) ((classInstanceCount.size() / 0.75 + 1)));
         try {
             Files.lines(Path.of(rdfFile))
-                    .filter(line -> !line.contains(Constants.INSTANCE_OF))
+                    .filter(line -> !line.contains(Constants.RDF_TYPE))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -170,9 +167,6 @@ public class WikiParser {
     }
     
     public void computeSupport() {
-        System.out.println("Invoked: ComputeSupport Method :: ");
-        StopWatch watch = new StopWatch();
-        watch.start();
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
             HashSet<Integer> instanceClasses = instanceToClass.get(instance);
@@ -206,19 +200,17 @@ public class WikiParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        watch.stop();
-        System.out.println("Time Elapsed computingSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    
     }
     
     private void populateShapes() {
-        System.out.println("Invoked: populateShapes Method :: ");
         StopWatch watch = new StopWatch();
         watch.start();
+        SHACLER shacler = new SHACLER();
         classToPropWithObjTypes.forEach((c, p) -> {
             shacler.setParams(c, p);
             shacler.constructShape();
         });
+        shacler.writeModelToFile();
         watch.stop();
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
@@ -229,7 +221,7 @@ public class WikiParser {
         computeSupport();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size());
         populateShapes();
-        shacler.writeModelToFile();
+        
     }
     
     private void measureMemoryUsage() {

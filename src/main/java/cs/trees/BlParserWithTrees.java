@@ -2,7 +2,7 @@ package cs.trees;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.lang3.time.StopWatch;

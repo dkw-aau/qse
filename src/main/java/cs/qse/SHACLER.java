@@ -1,4 +1,4 @@
-package cs.parsers;
+package cs.qse;
 
 import org.apache.commons.io.FilenameUtils;
 import cs.Main;

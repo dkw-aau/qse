@@ -1,6 +1,6 @@
 package cs.parsers.bl;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;

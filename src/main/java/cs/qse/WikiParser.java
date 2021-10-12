@@ -1,6 +1,5 @@
-package cs.parsers.bl;
+package cs.qse;
 
-import cs.parsers.SHACLER;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -23,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class Parser {
+public class WikiParser {
     String rdfFile;
     SHACLER shacler = new SHACLER();
     
@@ -36,7 +35,7 @@ public class Parser {
     
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     
-    public Parser(String filePath, int expSizeOfClasses) {
+    public WikiParser(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
         this.expectedNumberOfClasses = expSizeOfClasses;
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
@@ -54,7 +53,7 @@ public class Parser {
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(Constants.RDF_TYPE)) {
+                            if (nodes[1].toString().equals(Constants.INSTANCE_OF)) {
                                 // Track classes per instance
                                 if (instanceToClass.containsKey(nodes[0])) {
                                     instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
@@ -88,7 +87,7 @@ public class Parser {
         this.instance2propertyShape = new HashMap<>((int) ((classInstanceCount.size() / 0.75 + 1)));
         try {
             Files.lines(Path.of(rdfFile))
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .filter(line -> !line.contains(Constants.INSTANCE_OF))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -170,6 +169,9 @@ public class Parser {
     }
     
     public void computeSupport() {
+        System.out.println("Invoked: ComputeSupport Method :: ");
+        StopWatch watch = new StopWatch();
+        watch.start();
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
         this.instance2propertyShape.forEach((instance, propertyShapeSet) -> {
             HashSet<Integer> instanceClasses = instanceToClass.get(instance);
@@ -203,9 +205,13 @@ public class Parser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        watch.stop();
+        System.out.println("Time Elapsed computingSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    
     }
     
     private void populateShapes() {
+        System.out.println("Invoked: populateShapes Method :: ");
         StopWatch watch = new StopWatch();
         watch.start();
         classToPropWithObjTypes.forEach((c, p) -> {
@@ -216,20 +222,6 @@ public class Parser {
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    /*    private String getType(Node value) {
-        String theType = XSD.STRING.stringValue(); //default type is XSD:string
-        if (value.contains("\"^^")) {
-            //value.split("\\^\\^")[0] is the literal value, and value.split("\\^\\^")[1]  the type of the value ;
-            if (value.split("\\^\\^").length > 1) {
-                theType = value.split("\\^\\^")[1];
-            }
-        } else if (value.contains("\"@")) {
-            //value.split("\"@")[0] is the literal value and value.split("\"@")[1] is the language tag
-            theType = RDF.LANGSTRING.toString();  //rdf:langString
-        }
-        return theType;
-    }
-    */
     private void runParser() {
         firstPass();
         secondPass();

@@ -1,6 +1,7 @@
 package cs.parsers;
 
 
+import cs.qse.SHACLER;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;

@@ -1,10 +1,9 @@
 package cs.parsers.bl;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.Encoder;
-import cs.utils.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;

@@ -1,8 +1,7 @@
 package cs.parsers.bl;
 
-import cs.parsers.SHACLER;
+import cs.qse.SHACLER;
 import cs.parsers.mg.MembershipGraph;
-import cs.parsers.mg.MembershipGraphRbm;
 import cs.utils.*;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
