@@ -1,6 +1,7 @@
 package cs.qse;
 
 import cs.utils.*;
+import cs.utils.encoders.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -18,26 +19,28 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class Parser {
     String rdfFile;
     Integer expectedNumberOfClasses;
+    Encoder encoder;
+    String instanceOfProperty;
     HashMap<Integer, Integer> classInstanceCount;
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
+    
     HashMap<Node, HashSet<Integer>> instanceToClass;
-    Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape;
-    Encoder encoder;
+    HashMap<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape;
+    
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     
-    public Parser(String filePath, int expSizeOfClasses) {
+    public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String instanceOfProperty) {
         this.rdfFile = filePath;
-        this.expectedNumberOfClasses = expSizeOfClasses;
-        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1)); //0.75 is the load factor
+        this.expectedNumberOfClasses = expNoOfClasses;
+        this.instanceOfProperty = instanceOfProperty;
+        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
-        this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
+        this.instanceToClass = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
     }
     
@@ -49,7 +52,7 @@ public class Parser {
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(Constants.RDF_TYPE)) {
+                            if (nodes[1].toString().equals(instanceOfProperty)) {
                                 // Track classes per instance
                                 if (instanceToClass.containsKey(nodes[0])) {
                                     instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
@@ -82,7 +85,7 @@ public class Parser {
         this.instance2propertyShape = new HashMap<>((int) ((classInstanceCount.size() / 0.75 + 1)));
         try {
             Files.lines(Path.of(rdfFile))
-                    .filter(line -> !line.contains(Constants.RDF_TYPE))
+                    .filter(line -> !line.contains(instanceOfProperty))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -193,7 +196,7 @@ public class Parser {
         SHACLER shacler = new SHACLER(encoder, shapeTripletSupport);
         shacler.constructDefaultShapes(classToPropWithObjTypes);
         
-        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 100, 500, 1000));
+        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 50, 100, 500, 1000));
         HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
         confSuppMap.put(0.25, supportRange);
         confSuppMap.put(0.50, supportRange);

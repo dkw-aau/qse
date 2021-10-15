@@ -2,7 +2,7 @@ package cs.parsers.mg;
 
 
 import cs.utils.*;
-import orestes.bloomfilter.BloomFilter;
+import cs.utils.encoders.NodeEncoder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;

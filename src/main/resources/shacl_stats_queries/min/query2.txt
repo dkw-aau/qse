@@ -9,5 +9,4 @@ SELECT (MIN(?count) AS ?min) WHERE {
         ?p sh:class ?shClassConstraint.
     }
     GROUP BY ?s ?p
-    ORDER BY DESC(?count)
 }

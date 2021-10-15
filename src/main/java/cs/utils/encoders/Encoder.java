@@ -1,8 +1,8 @@
-package cs.utils;
+package cs.utils.encoders;
 
 import java.util.HashMap;
 
-public class Encoder {
+public class Encoder  {
     int counter;
     HashMap<Integer, String> table;
     HashMap<String, Integer> reverseTable;
@@ -24,12 +24,13 @@ public class Encoder {
         }
     }
     
-    public String decode(int val) {
-        return this.table.get(val);
-    }
     
     public HashMap<Integer, String> getTable() {
         return table;
+    }
+    
+    public String decode(int val) {
+        return this.table.get(val);
     }
     
     public HashMap<String, Integer> getRevTable() {

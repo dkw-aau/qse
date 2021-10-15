@@ -6,5 +6,4 @@ SELECT (AVG(?propCount) AS ?avg) WHERE {
         ?p sh:class ?shClassConstraint.
     }
     GROUP BY ?s ?p
-    ORDER BY DESC(?propCount)
 }

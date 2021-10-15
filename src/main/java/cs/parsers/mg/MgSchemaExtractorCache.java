@@ -2,6 +2,7 @@ package cs.parsers.mg;
 
 import cs.qse.SHACLER;
 import cs.utils.*;
+import cs.utils.encoders.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;

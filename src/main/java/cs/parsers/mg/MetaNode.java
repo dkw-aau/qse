@@ -1,6 +1,6 @@
 package cs.parsers.mg;
 
-import cs.utils.NodeEncoder;
+import cs.utils.encoders.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import org.roaringbitmap.RoaringBitmap;
 import org.semanticweb.yars.nx.Node;

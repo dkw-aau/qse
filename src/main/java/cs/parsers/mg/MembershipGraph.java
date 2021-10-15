@@ -1,6 +1,7 @@
 package cs.parsers.mg;
 
 import cs.utils.*;
+import cs.utils.encoders.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;

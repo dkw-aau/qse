@@ -8,5 +8,4 @@ SELECT (MAX(?count) AS ?max) WHERE {
         ?p sh:class ?shClassConstraint.
     }
     GROUP BY ?s ?p
-    ORDER BY DESC(?count)
 }

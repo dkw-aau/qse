@@ -2,11 +2,13 @@ package cs;
 
 import cs.parsers.BaselineParserWithBloomFilterCache;
 import cs.parsers.BaselineParserWithBloomFilters;
-import cs.parsers.mg.*;
+import cs.parsers.mg.MgSchemaExtractor;
+import cs.parsers.mg.MgSchemaExtractorCache;
+import cs.parsers.mg.WikiDataMgSeCacheBf;
 import cs.qse.EndpointParser;
 import cs.qse.Parser;
-import cs.qse.WikiParser;
 import cs.utils.ConfigManager;
+import cs.utils.Constants;
 import cs.utils.Utils;
 
 
@@ -14,11 +16,13 @@ public class Main {
     public static String configPath;
     public static String datasetPath;
     public static int numberOfClasses;
+    public static int numberOfInstances;
     
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         datasetPath = ConfigManager.getProperty("dataset_path");
-        numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
+        numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes")); // expected or estimated numberOfClasses
+        numberOfInstances = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines")); // expected or estimated numberOfInstances
         benchmark();
     }
     
@@ -27,8 +31,8 @@ public class Main {
         Utils.getCurrentTimeStamp();
         try {
             if (isOn("BlSchemaExtractor")) {
-                System.out.println("BlSchemaExtractor");
-                new Parser(datasetPath, numberOfClasses).run();
+                System.out.println("Parser");
+                new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE).run();
             }
     
             if (isOn("EndpointSchemaExtractor")) {
@@ -38,7 +42,8 @@ public class Main {
             
             if (isOn("WikiDataSchemaExtractor")) {
                 System.out.println("WikiParser");
-                new WikiParser(datasetPath, numberOfClasses).run();
+                new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF).run();
+                //new WikiParser(datasetPath, numberOfClasses).run();
             }
             
             if (isOn("BfSchemaExtractor")) {

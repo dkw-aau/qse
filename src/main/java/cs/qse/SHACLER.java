@@ -1,8 +1,10 @@
 package cs.qse;
 
 import cs.utils.*;
+import cs.utils.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import cs.Main;
+import org.apache.solr.common.util.Hash;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
@@ -68,12 +70,12 @@ public class SHACLER {
         System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
         //System.out.println(currentShapesModelStats);
-        StringBuilder header = new StringBuilder("DATASET|confidence|support|");
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + "|" + 1.0 + "|" + 1.0 + "|");
+        StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
-            log = new StringBuilder(log.append(v) + "|");
-            header = new StringBuilder(header.append(entry.getKey()) + "|");
+            log = new StringBuilder(log.append(v) + ",");
+            header = new StringBuilder(header.append(entry.getKey()) + ",");
         }
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
@@ -85,15 +87,15 @@ public class SHACLER {
         this.builder = new ModelBuilder();
         this.model = builder.build();
         this.model.addAll(constructShapesWithPruning(classToPropWithObjTypes, confidence, support));
-        System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence + " - " + support);
+        System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence*100 + " - " + support);
+        
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + "|" + confidence + "|" + support + "|");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence*100 + "%, > " + support + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
-            log = new StringBuilder(log.append(v) + "|");
+            log = new StringBuilder(log.append(v) + ",");
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //System.out.println(currentShapesModelStats);
         this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
     
@@ -159,6 +161,7 @@ public class SHACLER {
                         if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                         IRI objectTypeIri = factory.createIRI(objectType);
                         b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
+                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                     } else {
                         //objectType = objectType.replace("<", "").replace(">", "");
                         IRI objectTypeIri = factory.createIRI(objectType);
@@ -206,26 +209,48 @@ public class SHACLER {
         db.init();
         try (RepositoryConnection conn = db.getConnection()) {
             conn.add(currentModel); // You need to load the model in the repo to query
-            
+    
+            HashMap<Integer, String> header = new HashMap<>();
+            header.put(1, "COUNT_NS");
+            header.put(2, "COUNT_NSP");
+            header.put(3, "COUNT_CC");
+            header.put(4, "COUNT_LC");
             //COUNT STATS
-            for (int i = 1; i <= 3; i++) {
+            for (int i = 1; i <= 4; i++) {
                 String type = "count";
                 TupleQuery query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 Value queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(type + "_query_" + i, literalCount.stringValue());
+                    shapesStats.put(header.get(i), literalCount.stringValue());
                 }
             }
+    
+            HashMap<Integer, String>  avgHeader = new HashMap<>();
+            avgHeader.put(1, "AVG_NSP");
+            avgHeader.put(2, "AVG_CC");
+            avgHeader.put(3, "AVG_LC");
+    
+    
+            HashMap<Integer, String>  minHeader = new HashMap<>();
+            minHeader.put(1, "MIN_NSP");
+            minHeader.put(2, "MIN_CC");
+            minHeader.put(3, "MIN_LC");
+    
+    
+            HashMap<Integer, String>  maxHeader = new HashMap<>();
+            maxHeader.put(1, "MAX_NSP");
+            maxHeader.put(2, "MAX_CC");
+            maxHeader.put(3, "MAX_LC");
             
             //AVERAGE STATS
-            for (int i = 1; i <= 2; i++) {
+            for (int i = 1; i <= 3; i++) {
                 String type = "avg";
                 TupleQuery query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 Value queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(type + "_query_" + i, literalCount.stringValue());
+                    shapesStats.put(avgHeader.get(i), literalCount.stringValue());
                 }
                 //MAX STATS
                 type = "max";
@@ -233,7 +258,7 @@ public class SHACLER {
                 queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(type + "_query_" + i, literalCount.stringValue());
+                    shapesStats.put(maxHeader.get(i), literalCount.stringValue());
                 }
                 //MIN STATS
                 type = "min";
@@ -241,7 +266,7 @@ public class SHACLER {
                 queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(type + "_query_" + i, literalCount.stringValue());
+                    shapesStats.put(minHeader.get(i), literalCount.stringValue());
                 }
             }
         } finally {

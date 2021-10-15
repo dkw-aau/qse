@@ -3,7 +3,7 @@ package cs.parsers.mg;
 import cs.qse.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.NodeEncoder;
+import cs.utils.encoders.NodeEncoder;
 import cs.utils.Utils;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;

@@ -1,4 +1,4 @@
-package cs.utils;
+package cs.utils.encoders;
 
 import java.util.HashMap;
 

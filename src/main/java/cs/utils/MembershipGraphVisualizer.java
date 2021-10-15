@@ -1,6 +1,7 @@
 package cs.utils;
 
 import cs.extras.Neo4jGraph;
+import cs.utils.encoders.NodeEncoder;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
