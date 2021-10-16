@@ -172,29 +172,12 @@ public class Parser {
         System.out.println("Done");
     }
     
-    private void writeSupportToFile() {
-        System.out.println("Writing to File ...");
-        try {
-            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
-            PrintWriter printWriter = new PrintWriter(fileWriter);
-            for (Map.Entry<Tuple3<Integer, Integer, Integer>, SC> entry : this.shapeTripletSupport.entrySet()) {
-                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
-                Integer count = entry.getValue().getSupport();
-                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
-                        encoder.decode(tupl3._3) + "|" + count + "|" + classInstanceCount.get(tupl3._1);
-                printWriter.println(log);
-            }
-            printWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     
     private void populateShapes() {
         StopWatch watch = new StopWatch();
         watch.start();
-        SHACLER shacler = new SHACLER(encoder, shapeTripletSupport);
-        shacler.constructDefaultShapes(classToPropWithObjTypes);
+        ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classInstanceCount);
+        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes);
         
         ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 50, 100, 500, 1000));
         HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
@@ -203,9 +186,9 @@ public class Parser {
         confSuppMap.put(0.75, supportRange);
         confSuppMap.put(0.90, supportRange);
         
-        confSuppMap.forEach((conf,supportParams)-> {
+        confSuppMap.forEach((conf, supportParams) -> {
             supportRange.forEach(supp -> {
-                shacler.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
             });
         });
         watch.stop();
