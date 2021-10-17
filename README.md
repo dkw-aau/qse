@@ -1,4 +1,4 @@
-## Anytime Algorithm to Generate  Validating Schemas for RDF Datasets
+## QSE: Quality Shapes Extraction
 
 ### Setup
 
