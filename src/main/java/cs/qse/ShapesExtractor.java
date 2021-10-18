@@ -141,9 +141,12 @@ public class ShapesExtractor {
             
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
-                if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
-                    b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                if(shapeTripletSupport.containsKey(tuple3)){
+                    if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                        b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
                 }
+               
                 String objectType = encoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
