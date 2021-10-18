@@ -87,6 +87,7 @@ public class EndpointParser {
                     graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
+                        //FIXME: It should run for all object types
                         String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
                         computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
                     });
@@ -97,6 +98,7 @@ public class EndpointParser {
                     graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects).forEach(row -> {
                         String objectType = row.getValue("objDataType").stringValue();
                         objectTypes.add(objectType);
+                        //FIXME: It should run for all object types
                         String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
                         computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
                     });
