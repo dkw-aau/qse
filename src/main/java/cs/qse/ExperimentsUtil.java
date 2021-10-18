@@ -24,12 +24,27 @@ public class ExperimentsUtil {
         return confSuppMap;
     }
     
+    
+    public static HashMap<Double, List<Integer>> getMinCardinalitySupportConfRange() {
+        //If I tell you min confidence 90% for min count 1 then you put in count 1 when the confidence is at least 90% . Without this rule min confidence for min count 1 is 100%
+        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 50, 100, 500, 1000));
+        HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
+        confSuppMap.put(0.75, supportRange);
+        confSuppMap.put(0.80, supportRange);
+        confSuppMap.put(0.85, supportRange);
+        confSuppMap.put(0.90, supportRange);
+        confSuppMap.put(0.95, supportRange);
+        confSuppMap.put(0.99, supportRange);
+        return confSuppMap;
+    }
+    
     public static HashMap<Integer, String> getCsvHeader() {
         HashMap<Integer, String> header = new HashMap<>();
         header.put(1, "COUNT_NS");
         header.put(2, "COUNT_NSP");
         header.put(3, "COUNT_CC");
         header.put(4, "COUNT_LC");
+        header.put(5, "COUNT_MCC");
         return header;
     }
     
@@ -39,6 +54,7 @@ public class ExperimentsUtil {
         avgHeader.put(1, "AVG_NSP");
         avgHeader.put(2, "AVG_CC");
         avgHeader.put(3, "AVG_LC");
+        avgHeader.put(4, "AVG_MCC");
         return avgHeader;
     }
     
@@ -47,6 +63,7 @@ public class ExperimentsUtil {
         minHeader.put(1, "MIN_NSP");
         minHeader.put(2, "MIN_CC");
         minHeader.put(3, "MIN_LC");
+        minHeader.put(4, "MIN_MCC");
         return minHeader;
     }
     
@@ -55,6 +72,7 @@ public class ExperimentsUtil {
         maxHeader.put(1, "MAX_NSP");
         maxHeader.put(2, "MAX_CC");
         maxHeader.put(3, "MAX_LC");
+        maxHeader.put(4, "MAX_MCC");
         return maxHeader;
     }
     
@@ -87,7 +105,7 @@ public class ExperimentsUtil {
             if (skipFirstRow)
                 lines.remove(0);
             lines.forEach(line -> {
-                String logA = line[indexMap.get("Confidence")] + "," + line[indexMap.get("Support")] + "," + line[indexMap.get("COUNT_CC")] + "," + "Non-Literal";
+                String logA = line[indexMap.get("Confidence")] + "," + line[indexMap.get("Support")] + "," + line[indexMap.get("COUNT_CC")] + "," + "NonLiteral";
                 String logB = line[indexMap.get("Confidence")] + "," + line[indexMap.get("Support")] + "," + line[indexMap.get("COUNT_LC")] + "," + "Literal";
                 FilesUtil.writeToFileInAppendMode(logA, targetFileAddress);
                 FilesUtil.writeToFileInAppendMode(logB, targetFileAddress);

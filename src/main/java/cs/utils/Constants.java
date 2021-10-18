@@ -21,4 +21,5 @@ public class Constants {
     //
     public static String EXPERIMENTS_RESULT = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
     public static String EXPERIMENTS_RESULT_CUSTOM = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_stacked.csv";
+    public static String EXPERIMENTS_RESULT_MIN_CARD = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_min_card.csv";
 }

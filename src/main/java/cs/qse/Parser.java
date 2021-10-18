@@ -12,10 +12,6 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -178,21 +174,28 @@ public class Parser {
         watch.start();
         ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classInstanceCount);
         shapesExtractor.constructDefaultShapes(classToPropWithObjTypes);
-        
-        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 50, 100, 500, 1000));
-        HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
-        confSuppMap.put(0.25, supportRange);
-        confSuppMap.put(0.50, supportRange);
-        confSuppMap.put(0.75, supportRange);
-        confSuppMap.put(0.90, supportRange);
-        
-        confSuppMap.forEach((conf, supportParams) -> {
+        ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
                 shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
             });
         });
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void minCardinalityExperiment() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classInstanceCount);
+        minCardinalityExperiment.constructDefaultShapes(classToPropWithObjTypes);
+        ExperimentsUtil.getMinCardinalitySupportConfRange().forEach((conf, supportRange) -> {
+            supportRange.forEach(supp -> {
+                minCardinalityExperiment.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+            });
+        });
+        watch.stop();
+        System.out.println("Time Elapsed minCardinalityExperiment: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void runParser() {
@@ -200,6 +203,7 @@ public class Parser {
         secondPass();
         computeShapeStatistics();
         populateShapes();
+        minCardinalityExperiment();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size());
     }
     
@@ -215,5 +219,8 @@ public class Parser {
         runParser();
         //new StatsCollector().doTheJob();
         //measureMemoryUsage();
+        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/lubm.csv",ConfigManager.getProperty("output_file_path") + "/lubm_stacked.csv", false );
+        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/yago.csv", ConfigManager.getProperty("output_file_path") + "/yago_stacked.csv", false);
+        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/dbpedia.csv", ConfigManager.getProperty("output_file_path") + "/dbpedia_stacked.csv", false);
     }
 }
