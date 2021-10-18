@@ -64,7 +64,7 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //this.writeModelToFile("DEFAULT");
+        this.writeModelToFile("DEFAULT");
     }
     
     public void constructPrunedShapes(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
@@ -81,7 +81,7 @@ public class ShapesExtractor {
             log = new StringBuilder(log.append(v) + ",");
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
     private Model constructShapeWithoutPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
         Model m = null;
