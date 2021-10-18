@@ -38,7 +38,7 @@ public class ShapesExtractor {
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
     ValueFactory factory = SimpleValueFactory.getInstance();
-    String logfileAddress = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
+    String logfileAddress = Constants.EXPERIMENTS_RESULT;
     
     public ShapesExtractor(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
@@ -198,11 +198,6 @@ public class ShapesExtractor {
         try (RepositoryConnection conn = db.getConnection()) {
             conn.add(currentModel); // You need to load the model in the repo to query
             
-            HashMap<Integer, String> header = new HashMap<>();
-            header.put(1, "COUNT_NS");
-            header.put(2, "COUNT_NSP");
-            header.put(3, "COUNT_CC");
-            header.put(4, "COUNT_LC");
             //COUNT STATS
             for (int i = 1; i <= 4; i++) {
                 String type = "count";
@@ -210,27 +205,9 @@ public class ShapesExtractor {
                 Value queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(header.get(i), literalCount.stringValue());
+                    shapesStats.put(ExperimentsUtil.getCsvHeader().get(i), literalCount.stringValue());
                 }
             }
-            
-            HashMap<Integer, String> avgHeader = new HashMap<>();
-            avgHeader.put(1, "AVG_NSP");
-            avgHeader.put(2, "AVG_CC");
-            avgHeader.put(3, "AVG_LC");
-            
-            
-            HashMap<Integer, String> minHeader = new HashMap<>();
-            minHeader.put(1, "MIN_NSP");
-            minHeader.put(2, "MIN_CC");
-            minHeader.put(3, "MIN_LC");
-            
-            
-            HashMap<Integer, String> maxHeader = new HashMap<>();
-            maxHeader.put(1, "MAX_NSP");
-            maxHeader.put(2, "MAX_CC");
-            maxHeader.put(3, "MAX_LC");
-            
             //AVERAGE STATS
             for (int i = 1; i <= 3; i++) {
                 String type = "avg";
@@ -238,7 +215,7 @@ public class ShapesExtractor {
                 Value queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(avgHeader.get(i), literalCount.stringValue());
+                    shapesStats.put(ExperimentsUtil.getAverageHeader().get(i), literalCount.stringValue());
                 }
                 //MAX STATS
                 type = "max";
@@ -246,7 +223,7 @@ public class ShapesExtractor {
                 queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(maxHeader.get(i), literalCount.stringValue());
+                    shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
                 }
                 //MIN STATS
                 type = "min";
@@ -254,7 +231,7 @@ public class ShapesExtractor {
                 queryOutput = executeQuery(query, type);
                 if (queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(minHeader.get(i), literalCount.stringValue());
+                    shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
                 }
             }
         } finally {
