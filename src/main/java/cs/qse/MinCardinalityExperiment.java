@@ -176,10 +176,12 @@ public class MinCardinalityExperiment {
             
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
-                
-                if (shapeTripletSupport.get(tuple3).getSupport() > support && shapeTripletSupport.get(tuple3).getConfidence() > confidence) {
-                    b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                if(shapeTripletSupport.containsKey(tuple3)){
+                    if (shapeTripletSupport.get(tuple3).getSupport() > support && shapeTripletSupport.get(tuple3).getConfidence() > confidence) {
+                        b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
                 }
+               
                 
                 String objectType = encoder.decode(encodedObjectType);
                 if (objectType != null) {
