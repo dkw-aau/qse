@@ -1,0 +1,1113 @@
+
+<shape:UniversityShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:hasAlumnusUniversityShapeProperty> .
+
+<sh:hasAlumnusUniversityShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#hasAlumnus>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Student>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Chair>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:OrganizationShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:subOrganizationOfOrganizationShapeProperty> .
+
+<sh:subOrganizationOfOrganizationShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#subOrganizationOf>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:EmployeeShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneEmployeeShapeProperty>, <sh:emailAddressEmployeeShapeProperty>,
+    <sh:worksForEmployeeShapeProperty>, <sh:doctoralDegreeFromEmployeeShapeProperty>,
+    <sh:mastersDegreeFromEmployeeShapeProperty>, <sh:undergraduateDegreeFromEmployeeShapeProperty>,
+    <sh:teacherOfEmployeeShapeProperty>, <sh:nameEmployeeShapeProperty>, <sh:memberOfEmployeeShapeProperty>,
+    <sh:degreeFromEmployeeShapeProperty>, <sh:researchInterestEmployeeShapeProperty> .
+
+<sh:telephoneEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestEmployeeShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:PersonShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephonePersonShapeProperty>, <sh:emailAddressPersonShapeProperty>,
+    <sh:takesCoursePersonShapeProperty>, <sh:namePersonShapeProperty>, <sh:memberOfPersonShapeProperty> .
+
+<sh:telephonePersonShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressPersonShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:takesCoursePersonShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:namePersonShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfPersonShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:FacultyShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneFacultyShapeProperty>, <sh:emailAddressFacultyShapeProperty>,
+    <sh:worksForFacultyShapeProperty>, <sh:doctoralDegreeFromFacultyShapeProperty>, <sh:mastersDegreeFromFacultyShapeProperty>,
+    <sh:undergraduateDegreeFromFacultyShapeProperty>, <sh:teacherOfFacultyShapeProperty>,
+    <sh:nameFacultyShapeProperty>, <sh:memberOfFacultyShapeProperty>, <sh:degreeFromFacultyShapeProperty>,
+    <sh:researchInterestFacultyShapeProperty> .
+
+<sh:telephoneFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestFacultyShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:ProfessorShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneProfessorShapeProperty>, <sh:emailAddressProfessorShapeProperty>,
+    <sh:worksForProfessorShapeProperty>, <sh:doctoralDegreeFromProfessorShapeProperty>,
+    <sh:mastersDegreeFromProfessorShapeProperty>, <sh:undergraduateDegreeFromProfessorShapeProperty>,
+    <sh:teacherOfProfessorShapeProperty>, <sh:nameProfessorShapeProperty>, <sh:memberOfProfessorShapeProperty>,
+    <sh:degreeFromProfessorShapeProperty>, <sh:researchInterestProfessorShapeProperty> .
+
+<sh:telephoneProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:AssistantProfessorShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneAssistantProfessorShapeProperty>,
+    <sh:emailAddressAssistantProfessorShapeProperty>, <sh:worksForAssistantProfessorShapeProperty>,
+    <sh:doctoralDegreeFromAssistantProfessorShapeProperty>, <sh:mastersDegreeFromAssistantProfessorShapeProperty>,
+    <sh:undergraduateDegreeFromAssistantProfessorShapeProperty>, <sh:teacherOfAssistantProfessorShapeProperty>,
+    <sh:nameAssistantProfessorShapeProperty>, <sh:memberOfAssistantProfessorShapeProperty>,
+    <sh:degreeFromAssistantProfessorShapeProperty>, <sh:researchInterestAssistantProfessorShapeProperty> .
+
+<sh:telephoneAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestAssistantProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:AssociateProfessorShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneAssociateProfessorShapeProperty>,
+    <sh:emailAddressAssociateProfessorShapeProperty>, <sh:worksForAssociateProfessorShapeProperty>,
+    <sh:doctoralDegreeFromAssociateProfessorShapeProperty>, <sh:mastersDegreeFromAssociateProfessorShapeProperty>,
+    <sh:undergraduateDegreeFromAssociateProfessorShapeProperty>, <sh:teacherOfAssociateProfessorShapeProperty>,
+    <sh:nameAssociateProfessorShapeProperty>, <sh:memberOfAssociateProfessorShapeProperty>,
+    <sh:degreeFromAssociateProfessorShapeProperty>, <sh:researchInterestAssociateProfessorShapeProperty> .
+
+<sh:telephoneAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestAssociateProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:StudentShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Student>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneStudentShapeProperty>, <sh:emailAddressStudentShapeProperty>,
+    <sh:takesCourseStudentShapeProperty>, <sh:nameStudentShapeProperty>, <sh:memberOfStudentShapeProperty> .
+
+<sh:telephoneStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:takesCourseStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:GraduateStudentShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneGraduateStudentShapeProperty>,
+    <sh:emailAddressGraduateStudentShapeProperty>, <sh:undergraduateDegreeFromGraduateStudentShapeProperty>,
+    <sh:takesCourseGraduateStudentShapeProperty>, <sh:advisorGraduateStudentShapeProperty>,
+    <sh:nameGraduateStudentShapeProperty>, <sh:memberOfGraduateStudentShapeProperty>,
+    <sh:degreeFromGraduateStudentShapeProperty> .
+
+<sh:telephoneGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:undergraduateDegreeFromGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:takesCourseGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:advisorGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromGraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:ResearchAssistantShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneResearchAssistantShapeProperty>,
+    <sh:emailAddressResearchAssistantShapeProperty>, <sh:undergraduateDegreeFromResearchAssistantShapeProperty>,
+    <sh:takesCourseResearchAssistantShapeProperty>, <sh:advisorResearchAssistantShapeProperty>,
+    <sh:nameResearchAssistantShapeProperty>, <sh:memberOfResearchAssistantShapeProperty>,
+    <sh:degreeFromResearchAssistantShapeProperty> .
+
+<sh:telephoneResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:undergraduateDegreeFromResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:takesCourseResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:advisorResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromResearchAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:TeachingAssistantShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneTeachingAssistantShapeProperty>,
+    <sh:emailAddressTeachingAssistantShapeProperty>, <sh:undergraduateDegreeFromTeachingAssistantShapeProperty>,
+    <sh:takesCourseTeachingAssistantShapeProperty>, <sh:advisorTeachingAssistantShapeProperty>,
+    <sh:nameTeachingAssistantShapeProperty>, <sh:teachingAssistantOfTeachingAssistantShapeProperty>,
+    <sh:memberOfTeachingAssistantShapeProperty>, <sh:degreeFromTeachingAssistantShapeProperty> .
+
+<sh:telephoneTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:undergraduateDegreeFromTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:takesCourseTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:advisorTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#advisor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:teachingAssistantOfTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teachingAssistantOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:memberOfTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromTeachingAssistantShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:LecturerShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneLecturerShapeProperty>, <sh:emailAddressLecturerShapeProperty>,
+    <sh:worksForLecturerShapeProperty>, <sh:doctoralDegreeFromLecturerShapeProperty>,
+    <sh:mastersDegreeFromLecturerShapeProperty>, <sh:undergraduateDegreeFromLecturerShapeProperty>,
+    <sh:teacherOfLecturerShapeProperty>, <sh:nameLecturerShapeProperty>, <sh:memberOfLecturerShapeProperty>,
+    <sh:degreeFromLecturerShapeProperty> .
+
+<sh:telephoneLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromLecturerShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:FullProfessorShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneFullProfessorShapeProperty>, <sh:emailAddressFullProfessorShapeProperty>,
+    <sh:worksForFullProfessorShapeProperty>, <sh:doctoralDegreeFromFullProfessorShapeProperty>,
+    <sh:mastersDegreeFromFullProfessorShapeProperty>, <sh:undergraduateDegreeFromFullProfessorShapeProperty>,
+    <sh:teacherOfFullProfessorShapeProperty>, <sh:nameFullProfessorShapeProperty>, <sh:memberOfFullProfessorShapeProperty>,
+    <sh:degreeFromFullProfessorShapeProperty>, <sh:researchInterestFullProfessorShapeProperty> .
+
+<sh:telephoneFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestFullProfessorShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:ChairShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Chair>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneChairShapeProperty>, <sh:emailAddressChairShapeProperty>,
+    <sh:worksForChairShapeProperty>, <sh:doctoralDegreeFromChairShapeProperty>, <sh:mastersDegreeFromChairShapeProperty>,
+    <sh:undergraduateDegreeFromChairShapeProperty>, <sh:teacherOfChairShapeProperty>,
+    <sh:headOfChairShapeProperty>, <sh:nameChairShapeProperty>, <sh:memberOfChairShapeProperty>,
+    <sh:degreeFromChairShapeProperty>, <sh:researchInterestChairShapeProperty> .
+
+<sh:telephoneChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:worksForChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:doctoralDegreeFromChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#doctoralDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:mastersDegreeFromChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#mastersDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:undergraduateDegreeFromChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#undergraduateDegreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:teacherOfChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#teacherOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:headOfChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#headOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:degreeFromChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#degreeFrom>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:researchInterestChairShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#researchInterest>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:DepartmentShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:nameDepartmentShapeProperty>, <sh:memberDepartmentShapeProperty>,
+    <sh:subOrganizationOfDepartmentShapeProperty> .
+
+<sh:nameDepartmentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberDepartmentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#member>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssistantProfessor>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#AssociateProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Student>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateStudent>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchAssistant>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#TeachingAssistant>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Lecturer>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Chair>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:subOrganizationOfDepartmentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#subOrganizationOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:UndergraduateStudentShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#UndergraduateStudent>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:telephoneUndergraduateStudentShapeProperty>,
+    <sh:emailAddressUndergraduateStudentShapeProperty>, <sh:takesCourseUndergraduateStudentShapeProperty>,
+    <sh:nameUndergraduateStudentShapeProperty>, <sh:memberOfUndergraduateStudentShapeProperty> .
+
+<sh:telephoneUndergraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#telephone>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:emailAddressUndergraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#emailAddress>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:takesCourseUndergraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#takesCourse>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<sh:nameUndergraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:memberOfUndergraduateStudentShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:CourseShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Course>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:nameCourseShapeProperty> .
+
+<sh:nameCourseShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:WorkShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Work>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:nameWorkShapeProperty> .
+
+<sh:nameWorkShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:GraduateCourseShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#GraduateCourse>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:nameGraduateCourseShapeProperty> .
+
+<sh:nameGraduateCourseShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<shape:ResearchGroupShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#ResearchGroup>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:subOrganizationOfResearchGroupShapeProperty> .
+
+<sh:subOrganizationOfResearchGroupShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#subOrganizationOf>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Department>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#University>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Organization>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
+
+<shape:PublicationShape> a <http://www.w3.org/ns/shacl#NodeShape>;
+  <http://www.w3.org/ns/shacl#targetClass> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Publication>;
+  <http://www.w3.org/ns/shacl#ignoredProperties> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+  <http://www.w3.org/ns/shacl#closed> false;
+  <http://www.w3.org/ns/shacl#property> <sh:namePublicationShapeProperty>, <sh:publicationAuthorPublicationShapeProperty> .
+
+<sh:namePublicationShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#name>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#Literal> .
+
+<sh:publicationAuthorPublicationShapeProperty> a <http://www.w3.org/ns/shacl#PropertyShape>;
+  <http://www.w3.org/ns/shacl#path> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#publicationAuthor>;
+  <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#int>;
+  <http://www.w3.org/ns/shacl#class> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Employee>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Person>, <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty>,
+    <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor>;
+  <http://www.w3.org/ns/shacl#NodeKind> <http://www.w3.org/ns/shacl#IRI> .
