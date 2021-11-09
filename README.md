@@ -79,12 +79,12 @@ Here we explain how to repeat experiments and the output (numbers) presented in 
 Update the following parameters in the [config](https://github.com/kworkr/qse/blob/master/config.properties) file to setup configuration for **QSE-File** approach:
 
 ```
- QSE_File_Schema_Extractor=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint_Schema_Extractor=false
+ QSE_File=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint=false
 ```
 To run **QSE-Endpoint** approach, you will have to set the following paramteres as well:
 
 ```
-QSE_Endpoint_Schema_Extractor=true, graphDB_URL and graphDB_REPOSITORY, QSE_File_Schema_Extractor=false
+QSE_Endpoint=true, graphDB_URL and graphDB_REPOSITORY, QSE_File=false
 ```
 We have already prepared 3 config files for each of our dataset, you can use these files to run the experiments using the following commands:
 ```
