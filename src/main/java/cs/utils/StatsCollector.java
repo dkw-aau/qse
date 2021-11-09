@@ -12,6 +12,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class reads the data from a csv file containing class, property, and object type values as three columns
+ * and builds SPARQL count queries to execute over the desired endpoint.
+ * Resultant statistics are also written into the provided file
+ */
 public class StatsCollector {
     private final GraphDBUtils graphDBUtils;
     

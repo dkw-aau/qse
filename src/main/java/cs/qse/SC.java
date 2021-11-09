@@ -1,7 +1,8 @@
 package cs.qse;
 
 /**
- * Support Confidence (SC) Computer Class
+ * This class is called Support Confidence (SC) Computer Class, used to get or set the support/confidence of shape
+ * constraints
  */
 public class SC {
     Integer support = 0;

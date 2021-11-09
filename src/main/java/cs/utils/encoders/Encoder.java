@@ -2,6 +2,9 @@ package cs.utils.encoders;
 
 import java.util.HashMap;
 
+/**
+ * This class encodes the String values into Integers and also provides decode functionality
+ */
 public class Encoder  {
     int counter;
     HashMap<Integer, String> table;

@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+/**
+ * This class contains some random utility functions required throughout the project
+ */
 public class Utils {
     
     public static String getCurrentTimeStamp() {

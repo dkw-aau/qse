@@ -3,7 +3,9 @@ package cs.utils.encoders;
 import java.util.HashMap;
 
 import org.semanticweb.yars.nx.Node;
-
+/**
+ * This class encodes the Node (org.semanticweb.yars.nx.Node) values into Integers and also provides decode functionality
+ */
 public class NodeEncoder {
     int counter;
     HashMap<Integer, Node> table;

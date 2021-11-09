@@ -1,12 +1,16 @@
 package cs.qse;
 
-import cs.utils.*;
+import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.experiments.MinCardinalityExperiment;
+import cs.utils.Constants;
+import cs.utils.Tuple2;
+import cs.utils.Tuple3;
+import cs.utils.Utils;
 import cs.utils.encoders.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
-import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -14,9 +18,13 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class parses RDF NT files to extract SHACL shapes and compute the confidence/support for shape constraints
+ */
 public class Parser {
     String rdfFile;
     Integer expectedNumberOfClasses;
@@ -207,20 +215,7 @@ public class Parser {
         System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size());
     }
     
-    private void measureMemoryUsage() {
-        SizeOf sizeOf = SizeOf.newInstance();
-        System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
-        System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(encoder.getTable()));
-        System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
-        System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));
-    }
-    
     public void run() {
         runParser();
-        //new StatsCollector().doTheJob();
-        //measureMemoryUsage();
-        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/lubm.csv",ConfigManager.getProperty("output_file_path") + "/lubm_stacked.csv", false );
-        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/yago.csv", ConfigManager.getProperty("output_file_path") + "/yago_stacked.csv", false);
-        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(ConfigManager.getProperty("output_file_path") + "/dbpedia.csv", ConfigManager.getProperty("output_file_path") + "/dbpedia_stacked.csv", false);
     }
 }

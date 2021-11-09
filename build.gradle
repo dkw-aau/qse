@@ -1,10 +1,4 @@
 buildscript {
-//    repositories {
-//        maven {
-//            url "https://plugins.gradle.org/m2/"
-//        }
-//
-//    }
     dependencies {
         classpath "com.github.jengelman.gradle.plugins:shadow:5.2.0"
     }
@@ -23,12 +17,11 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'com.github.rohansuri:adaptive-radix-tree:1.0.0-beta'
+    implementation group: 'junit', name: 'junit', version: '4.12'
+    implementation 'com.github.rohansuri:adaptive-radix-tree:1.0.0-beta'
     // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-utilities-uri
     //implementation group: 'org.semanticweb.yars', name: 'nxparser-utilities-uri', version: '4.0.0'
 
@@ -59,9 +52,9 @@ dependencies {
     // These are for RDF4J and GraphDB
 
     //https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-repository-sparql
-    compile group: 'org.eclipse.rdf4j', name: 'rdf4j-repository-sparql', version: '3.0.0'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-repository-sparql', version: '3.0.0'
     // https://mvnrepository.com/artifact/com.ontotext.graphdb/graphdb-free-runtime
-    compile group: 'com.ontotext.graphdb', name: 'graphdb-free-runtime', version: '9.3.0'
+    implementation group: 'com.ontotext.graphdb', name: 'graphdb-free-runtime', version: '9.3.0'
 
 
     // https://mvnrepository.com/artifact/org.ehcache/sizeof -> https://github.com/ehcache/sizeof
@@ -73,7 +66,7 @@ dependencies {
     // https://mvnrepository.com/artifact/redis.clients/jedis
     //implementation group: 'redis.clients', name: 'jedis', version: '3.6.0'
 
-    compile 'me.tongfei:progressbar:0.9.1'
+    implementation 'me.tongfei:progressbar:0.9.1'
 
     // https://mvnrepository.com/artifact/org.cache2k/cache2k-core
     implementation group: 'org.cache2k', name: 'cache2k-core', version: '2.1.2.Alpha'
@@ -96,7 +89,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-io
     implementation group: 'org.jgrapht', name: 'jgrapht-io', version: '1.5.1'
 
-    compile "org.neo4j:neo4j:4.3.2"
+    implementation "org.neo4j:neo4j:4.3.2"
 
     // https://mvnrepository.com/artifact/com.sun.jersey/jersey-client
     implementation group: 'com.sun.jersey', name: 'jersey-client', version: '1.19.4'

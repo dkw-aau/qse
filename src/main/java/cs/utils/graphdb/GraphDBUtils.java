@@ -1,19 +1,19 @@
 package cs.utils.graphdb;
 
-import cs.utils.Constants;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesWriter;
-import org.jgrapht.Graph;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * This class helps in querying GraphDB
+ */
 public class GraphDBUtils {
     KBManagement kbManager;
     Repository repository;
@@ -37,7 +37,6 @@ public class GraphDBUtils {
             classesQueryResult.forEach(result::add);
             classesQueryResult.close();
         } catch (Exception e) {
-//            logger.error(e.getMessage());
             e.printStackTrace();
             if (repositoryConnection.isActive())
                 repositoryConnection.rollback();
@@ -77,7 +76,6 @@ public class GraphDBUtils {
         }
     }
     
-    
     public void runGraphQuery(String query, String address) {
         try {
             GraphQuery graphQuery = repositoryConnection.prepareGraphQuery(QueryLanguage.SPARQL, query);
@@ -90,13 +88,11 @@ public class GraphDBUtils {
             
             graphQueryResult.close();
         } catch (Exception e) {
-//            logger.error(e.getMessage());
             e.printStackTrace();
             if (repositoryConnection.isActive())
                 repositoryConnection.rollback();
         }
     }
-    
     
     public List<BindingSet> runSelectQueryWithTimeOut(String query) {
         List<BindingSet> result = new ArrayList<>();
@@ -107,8 +103,6 @@ public class GraphDBUtils {
             classesQueryResult.forEach(result::add);
             classesQueryResult.close();
         } catch (Exception e) {
-//            logger.error(e.getMessage());
-            //e.printStackTrace();
             if (repositoryConnection.isActive())
                 repositoryConnection.rollback();
         }
@@ -117,14 +111,12 @@ public class GraphDBUtils {
     
     public void updateQueryExecutor(String query) {
         try {
-            //System.out.println(query);
             repositoryConnection.begin();
             Update updateOperation = repositoryConnection.prepareUpdate(QueryLanguage.SPARQL, query);
             updateOperation.execute();
             repositoryConnection.commit();
             //repositoryConnection.close();
         } catch (Exception e) {
-//            logger.error(e.getMessage());
             e.printStackTrace();
             if (repositoryConnection.isActive())
                 repositoryConnection.rollback();

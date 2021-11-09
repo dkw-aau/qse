@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This class is used to compute degree distribution of the graph constructed using jgraphT library
+ */
 public class DegreeDistribution {
     DefaultDirectedGraph<Integer, DefaultEdge> directedGraph;
     List<Integer> degrees = new ArrayList<>();

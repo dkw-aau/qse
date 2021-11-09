@@ -1,7 +1,8 @@
-package cs.qse;
+
+package cs.qse.experiments;
 
 import cs.Main;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.SC;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -31,16 +32,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class ShapesExtractor {
+public class MinCardinalityExperiment {
     Model model = null;
     ModelBuilder builder = null;
     Encoder encoder;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
     ValueFactory factory = SimpleValueFactory.getInstance();
-    String logfileAddress = Constants.EXPERIMENTS_RESULT;
+    String logfileAddress = Constants.EXPERIMENTS_RESULT_MIN_CARD;
     
-    public ShapesExtractor(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
+    public MinCardinalityExperiment(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
@@ -65,7 +66,7 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("DEFAULT");
+        //this.writeModelToFile("DEFAULT");
     }
     
     public void constructPrunedShapes(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
@@ -82,8 +83,9 @@ public class ShapesExtractor {
             log = new StringBuilder(log.append(v) + ",");
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        //this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
+    
     private Model constructShapeWithoutPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
@@ -110,21 +112,18 @@ public class ShapesExtractor {
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
             IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
-            //NODE SHAPES PRUNING
-            if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
-                
-                if (propToObjectType != null) {
-                    HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(classEncodedLabel, propToObjectType, confidence, support);
-                    constructNodePropertyShapes(b, subj, nodeShape, propToObjectTypesLocal);
-                }
-            }
             
+            String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+            b.subject(nodeShape)
+                    .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                    .add(SHACL.TARGET_CLASS, subj)
+                    .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                    .add(SHACL.CLOSED, false);
+            
+            if (propToObjectType != null) {
+                //HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(classEncodedLabel, propToObjectType, confidence, support);
+                constructNodePropertyShapes(b, subj, nodeShape, propToObjectType, confidence, support);
+            }
         });
         m = b.build();
         return m;
@@ -142,12 +141,51 @@ public class ShapesExtractor {
             
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
-                if(shapeTripletSupport.containsKey(tuple3)){
+                if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
                 }
-               
+                String objectType = encoder.decode(encodedObjectType);
+                if (objectType != null) {
+                    if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
+                        if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
+                        IRI objectTypeIri = factory.createIRI(objectType);
+                        b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
+                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                    } else {
+                        //objectType = objectType.replace("<", "").replace(">", "");
+                        IRI objectTypeIri = factory.createIRI(objectType);
+                        b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                    }
+                } else {
+                    // in case the type is null, we set it default as string
+                    b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                }
+            });
+        });
+    }
+    
+    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal, Double confidence, Integer support) {
+        propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
+            IRI property = factory.createIRI(encoder.decode(prop));
+            IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
+            b.subject(nodeShape)
+                    .add(SHACL.PROPERTY, propShape);
+            b.subject(propShape)
+                    .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
+                    .add(SHACL.PATH, property);
+            
+            propObjectTypes.forEach(encodedObjectType -> {
+                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                if (shapeTripletSupport.containsKey(tuple3)) {
+                    if (shapeTripletSupport.get(tuple3).getSupport() > support && shapeTripletSupport.get(tuple3).getConfidence() > confidence) {
+                        b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
+                }
+                
+                
                 String objectType = encoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {

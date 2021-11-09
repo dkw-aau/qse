@@ -1,11 +1,11 @@
 package cs;
 
-import cs.parsers.BaselineParserWithBloomFilterCache;
-import cs.parsers.BaselineParserWithBloomFilters;
-import cs.parsers.mg.MgSchemaExtractor;
-import cs.parsers.mg.MgSchemaExtractorCache;
-import cs.parsers.mg.WikiDataMgSeCacheBf;
-import cs.qse.EndpointParser;
+import cs.others.parsers.BaselineParserWithBloomFilterCache;
+import cs.others.parsers.BaselineParserWithBloomFilters;
+import cs.others.parsers.mg.MgSchemaExtractor;
+import cs.others.parsers.mg.MgSchemaExtractorCache;
+import cs.others.parsers.mg.WikiDataMgSeCacheBf;
+import cs.qse.endpoint.EndpointParser;
 import cs.qse.Parser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;

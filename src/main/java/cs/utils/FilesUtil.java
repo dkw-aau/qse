@@ -10,9 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * This class contains various methods used as a utility in the project to interact with files
+ */
 public class FilesUtil {
-    
-    
     public static void writeToFile(String str, String fileNameAndPath) {
         try {
             FileWriter fileWriter = new FileWriter(new File(fileNameAndPath));
