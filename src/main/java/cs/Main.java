@@ -30,45 +30,19 @@ public class Main {
         System.out.println("Benchmark Initiated for " + ConfigManager.getProperty("dataset_path"));
         Utils.getCurrentTimeStamp();
         try {
-            if (isOn("BlSchemaExtractor")) {
+            if (isOn("QSE_File")) {
                 System.out.println("Parser");
                 new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE).run();
             }
-    
-            if (isOn("EndpointSchemaExtractor")) {
+            
+            if (isOn("QSE_Endpoint")) {
                 System.out.println("EndpointSchemaExtractor - Using SPARQL Queries");
                 new EndpointParser().run();
             }
             
-            if (isOn("WikiDataSchemaExtractor")) {
+            if (isOn("QSE_Wikidata")) {
                 System.out.println("WikiParser");
                 new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF).run();
-                //new WikiParser(datasetPath, numberOfClasses).run();
-            }
-            
-            if (isOn("BfSchemaExtractor")) {
-                System.out.println("BfSchemaExtractor - Bloom Filters");
-                new BaselineParserWithBloomFilters(datasetPath, numberOfClasses).run();
-            }
-            
-            if (isOn("BfSchemaExtractorCache")) {
-                System.out.println("BfSchemaExtractorCache - Bloom Filters With Cache");
-                new BaselineParserWithBloomFilterCache(datasetPath, numberOfClasses).run();
-            }
-            
-            if (isOn("MgSchemaExtractor")) {
-                System.out.println("MgSchemaExtractor");
-                new MgSchemaExtractor(datasetPath, numberOfClasses).run();
-            }
-            
-            if (isOn("MgSchemaExtractorCache")) {
-                System.out.println("MgSchemaExtractorCache");
-                new MgSchemaExtractorCache(datasetPath, numberOfClasses).run();
-            }
-    
-            if (isOn("WikiDataMgSchemaExtractor")) {
-                System.out.println("WikiDataMgSchemaExtractor");
-                new WikiDataMgSeCacheBf(datasetPath, numberOfClasses).run();
             }
             
         } catch (Exception e) {
