@@ -84,6 +84,7 @@ public class ShapesExtractor {
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
+    
     private Model constructShapeWithoutPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
@@ -142,12 +143,12 @@ public class ShapesExtractor {
             
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
-                if(shapeTripletSupport.containsKey(tuple3)){
+                if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
                 }
-               
+                
                 String objectType = encoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
@@ -271,5 +272,4 @@ public class ShapesExtractor {
         }
         return queryOutput;
     }
-    
 }

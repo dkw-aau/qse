@@ -16,12 +16,12 @@ public class ComputeStatistics {
         this.shapeTripletSupport = shapeTripletSupport;
     }
     
-    public void compute(Map<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape, HashMap<Node, HashSet<Integer>> instanceToClass, HashMap<Integer, Integer> classInstanceCount) {
+    public void compute(Map<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints, HashMap<Node, HashSet<Integer>> entityToClassTypes, HashMap<Integer, Integer> classEntityCount) {
         //Compute Support
-        instance2propertyShape.forEach((instance, propertyShapeSet) -> {
-            HashSet<Integer> instanceClasses = instanceToClass.get(instance);
+        entityToPropertyConstraints.forEach((instance, propertyShapeSet) -> {
+            HashSet<Integer> instanceClasses = entityToClassTypes.get(instance);
             if (instanceClasses != null) {
-                for (Integer c : instanceToClass.get(instance)) {
+                for (Integer c : entityToClassTypes.get(instance)) {
                     for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
                         if (this.shapeTripletSupport.containsKey(tuple3)) {
@@ -40,7 +40,7 @@ public class ComputeStatistics {
         //Compute Confidence
         for (Map.Entry<Tuple3<Integer, Integer, Integer>, SC> entry : this.shapeTripletSupport.entrySet()) {
             SC value = entry.getValue();
-            double confidence = (double) value.getSupport() / classInstanceCount.get(entry.getKey()._1);
+            double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }
     }

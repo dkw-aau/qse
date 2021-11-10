@@ -26,50 +26,53 @@ import java.util.concurrent.TimeUnit;
  * This class parses RDF NT files to extract SHACL shapes and compute the confidence/support for shape constraints
  */
 public class Parser {
-    String rdfFile;
+    String rdfFilePath;
     Integer expectedNumberOfClasses;
     Encoder encoder;
-    String instanceOfProperty;
-    HashMap<Integer, Integer> classInstanceCount;
+    String typePredicate;
+    
+    HashMap<Node, HashSet<Integer>> entityToClassTypes;
+    HashMap<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints;
+    
+    HashMap<Integer, Integer> classEntityCount;
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
-    
-    HashMap<Node, HashSet<Integer>> instanceToClass;
-    HashMap<Node, HashSet<Tuple2<Integer, Integer>>> instance2propertyShape;
-    
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     
-    public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String instanceOfProperty) {
-        this.rdfFile = filePath;
+    public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
+        this.rdfFilePath = filePath;
         this.expectedNumberOfClasses = expNoOfClasses;
-        this.instanceOfProperty = instanceOfProperty;
-        this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.typePredicate = typePredicate;
+        this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.instanceToClass = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        this.entityToClassTypes = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
     }
     
+    /**
+     * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
+     */
     private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFile))
+            Files.lines(Path.of(rdfFilePath))
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(instanceOfProperty)) {
-                                // Track classes per instance
-                                if (instanceToClass.containsKey(nodes[0])) {
-                                    instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
+                            if (nodes[1].toString().equals(typePredicate)) {
+                                // Track classes per entity
+                                if (entityToClassTypes.containsKey(nodes[0])) {
+                                    entityToClassTypes.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
                                 } else {
                                     HashSet<Integer> list = new HashSet<>(); // initialize 5, 10, 15
                                     list.add(encoder.encode(nodes[2].getLabel()));
-                                    instanceToClass.put(nodes[0], list);
+                                    entityToClassTypes.put(nodes[0], list);
                                 }
-                                if (classInstanceCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
-                                    Integer val = classInstanceCount.get(encoder.encode(nodes[2].getLabel()));
-                                    classInstanceCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
+                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                                    Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
+                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
                                 } else {
-                                    classInstanceCount.put(encoder.encode(nodes[2].getLabel()), 1);
+                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
                                 }
                             }
                         } catch (ParseException e) {
@@ -83,37 +86,43 @@ public class Parser {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    /**
+     * Streaming over RDF (NT Format) triples <s,p,o> line by line to collect the constraints and the metadata required
+     * to compute the support and confidence of each candidate shape.
+     */
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        this.instance2propertyShape = new HashMap<>((int) ((classInstanceCount.size() / 0.75 + 1)));
+        this.entityToPropertyConstraints = new HashMap<>((int) ((classEntityCount.size() / 0.75 + 1)));
         try {
-            Files.lines(Path.of(rdfFile))
-                    .filter(line -> !line.contains(instanceOfProperty))
+            Files.lines(Path.of(rdfFilePath))
+                    .filter(line -> !line.contains(typePredicate))
                     .forEach(line -> {
                         try {
-                            Node[] nodes = NxParser.parseNodes(line);
+                            //Declaring required HashSets
                             HashSet<Integer> objTypes = new HashSet<>();
                             HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
-                            Node instance = nodes[0];
+                            
+                            Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
+                            Node entity = nodes[0];
                             String objectType = extractObjectType(nodes[2].toString());
                             
-                            if (objectType.equals("IRI")) { // // object is an instance of some class e.g., :Paris is an instance of :City & :Capital
-                                if (instanceToClass.containsKey(nodes[2])) {
-                                    for (Integer node : instanceToClass.get(nodes[2])) {
+                            if (objectType.equals("IRI")) { // // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                                if (entityToClassTypes.containsKey(nodes[2])) {
+                                    for (Integer node : entityToClassTypes.get(nodes[2])) {
                                         objTypes.add(node);
                                         prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
                                     }
-                                    addIntoInstance2PropertyShapeMap(prop2objTypeTuples, instance);
+                                    addEntityToPropertyConstraints(prop2objTypeTuples, entity);
                                 }
-                            } else { // Object is literal
+                            } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
                                 objTypes.add(encoder.encode(objectType));
                                 prop2objTypeTuples = new HashSet<>() {{
                                     add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
                                 }};
-                                addIntoInstance2PropertyShapeMap(prop2objTypeTuples, instance);
+                                addEntityToPropertyConstraints(prop2objTypeTuples, entity);
                             }
-                            HashSet<Integer> entityClasses = instanceToClass.get(nodes[0]);
+                            HashSet<Integer> entityClasses = entityToClassTypes.get(nodes[0]);
                             if (entityClasses != null) {
                                 for (Integer entityClass : entityClasses) {
                                     HashMap<Integer, HashSet<Integer>> propToObjTypes;
@@ -143,11 +152,11 @@ public class Parser {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void addIntoInstance2PropertyShapeMap(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node instance) {
-        instance2propertyShape.putIfAbsent(instance, prop2objTypeTuples);
-        HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = instance2propertyShape.get(instance);
+    private void addEntityToPropertyConstraints(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node entity) {
+        entityToPropertyConstraints.putIfAbsent(entity, prop2objTypeTuples);
+        HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = entityToPropertyConstraints.get(entity);
         prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-        instance2propertyShape.put(instance, prop2objTypeTupleSet);
+        entityToPropertyConstraints.put(entity, prop2objTypeTupleSet);
     }
     
     private String extractObjectType(String node) {
@@ -171,7 +180,7 @@ public class Parser {
     public void computeShapeStatistics() {
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         ComputeStatistics cs = new ComputeStatistics(shapeTripletSupport);
-        cs.compute(this.instance2propertyShape, instanceToClass, classInstanceCount);
+        cs.compute(this.entityToPropertyConstraints, entityToClassTypes, classEntityCount);
         this.shapeTripletSupport = cs.getShapeTripletSupport();
         System.out.println("Done");
     }
@@ -180,7 +189,7 @@ public class Parser {
     private void populateShapes() {
         StopWatch watch = new StopWatch();
         watch.start();
-        ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classInstanceCount);
+        ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         shapesExtractor.constructDefaultShapes(classToPropWithObjTypes);
         ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
@@ -195,7 +204,7 @@ public class Parser {
     private void minCardinalityExperiment() {
         StopWatch watch = new StopWatch();
         watch.start();
-        MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classInstanceCount);
+        MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classEntityCount);
         minCardinalityExperiment.constructDefaultShapes(classToPropWithObjTypes);
         ExperimentsUtil.getMinCardinalitySupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
@@ -212,7 +221,7 @@ public class Parser {
         computeShapeStatistics();
         populateShapes();
         minCardinalityExperiment();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classInstanceCount.size());
+        System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
     public void run() {
