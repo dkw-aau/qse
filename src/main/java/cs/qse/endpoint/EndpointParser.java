@@ -18,6 +18,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class queries and endpoint to extract SHACL shapes, compute the confidence/support for shape constraints,
+ * to perform node and property shape constraints pruning based on defined threshold for confidence and support
+ */
 public class EndpointParser {
     private final GraphDBUtils graphDBUtils;
     HashMap<Integer, Integer> classInstanceCount;
