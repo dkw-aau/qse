@@ -11,7 +11,6 @@ import java.util.Map;
 public class ComputeStatistics {
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     
-    
     public ComputeStatistics(HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
         this.shapeTripletSupport = shapeTripletSupport;
     }

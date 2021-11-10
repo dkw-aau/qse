@@ -23,7 +23,8 @@ import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class parses RDF NT files to extract SHACL shapes and compute the confidence/support for shape constraints
+ * This class parses RDF NT file triples to extract SHACL shapes, compute the confidence/support for shape constraints,
+ * and perform node and property shape constraints pruning based on defined threshold for confidence and support
  */
 public class Parser {
     String rdfFilePath;
@@ -46,6 +47,19 @@ public class Parser {
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityToClassTypes = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
+    }
+    
+    public void run() {
+        runParser();
+    }
+    
+    private void runParser() {
+        firstPass();
+        secondPass();
+        computeSupportConfidence();
+        extractSHACLShapes();
+        assignCardinalityConstraints();
+        System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
     /**
@@ -152,6 +166,12 @@ public class Parser {
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    /**
+     * A utility method to add property constraints of each entity in the 2nd pass
+     *
+     * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
+     * @param entity             : Entity such as :Paris
+     */
     private void addEntityToPropertyConstraints(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node entity) {
         entityToPropertyConstraints.putIfAbsent(entity, prop2objTypeTuples);
         HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = entityToPropertyConstraints.get(entity);
@@ -159,16 +179,22 @@ public class Parser {
         entityToPropertyConstraints.put(entity, prop2objTypeTupleSet);
     }
     
-    private String extractObjectType(String node) {
-        Literal theLiteral = new Literal(node, true);
+    /**
+     * A utility method to extract the literal object type
+     *
+     * @param literalIri : IRI for the literal object
+     * @return String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
+     */
+    private String extractObjectType(String literalIri) {
+        Literal theLiteral = new Literal(literalIri, true);
         String type = null;
         if (theLiteral.getDatatype() != null) {   // is literal type
             type = theLiteral.getDatatype().toString();
         } else if (theLiteral.getLanguageTag() != null) {  // is rdf:lang type
             type = "<" + RDF.LANGSTRING + ">"; //theLiteral.getLanguageTag(); will return the language tag
         } else {
-            if (Utils.isValidIRI(node)) {
-                if (SimpleValueFactory.getInstance().createIRI(node).isIRI())
+            if (Utils.isValidIRI(literalIri)) {
+                if (SimpleValueFactory.getInstance().createIRI(literalIri).isIRI())
                     type = "IRI";
             } else {
                 type = "<" + XSD.STRING + ">";
@@ -177,7 +203,10 @@ public class Parser {
         return type;
     }
     
-    public void computeShapeStatistics() {
+    /**
+     * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
+     */
+    public void computeSupportConfidence() {
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         ComputeStatistics cs = new ComputeStatistics(shapeTripletSupport);
         cs.compute(this.entityToPropertyConstraints, entityToClassTypes, classEntityCount);
@@ -185,12 +214,14 @@ public class Parser {
         System.out.println("Done");
     }
     
-    
-    private void populateShapes() {
+    /**
+     * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
+     */
+    private void extractSHACLShapes() {
         StopWatch watch = new StopWatch();
         watch.start();
         ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
-        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes);
+        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
                 shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
@@ -201,7 +232,10 @@ public class Parser {
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void minCardinalityExperiment() {
+    /**
+     * Assigning cardinality constraints  using various values for support and confidence thresholds
+     */
+    private void assignCardinalityConstraints() {
         StopWatch watch = new StopWatch();
         watch.start();
         MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classEntityCount);
@@ -213,18 +247,5 @@ public class Parser {
         });
         watch.stop();
         System.out.println("Time Elapsed minCardinalityExperiment: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
-    private void runParser() {
-        firstPass();
-        secondPass();
-        computeShapeStatistics();
-        populateShapes();
-        minCardinalityExperiment();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
-    }
-    
-    public void run() {
-        runParser();
     }
 }
