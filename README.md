@@ -46,8 +46,44 @@ We provide a copy of all our datasets in a [single archive](http://130.226.98.15
  du -sh yago.n3 or dbpedia.n3 or yago.n3
  wc -l yago.n3 or dbpedia.n3 or yago.n3
 ```
+## Software Setup (with Docker)
 
-## Software Setup
+### Build Docker 
+
+Go inside the project directory and execute the following command to build the docker
+
+```
+docker build . -t shacl:v1
+```
+
+### Run the container
+Running the build image as a container to run QSE approach for LUBM dataset using `lubmConfig.properties`. 
+You can use other config files such as `yagoConfig.properties` or `dbpediaConfig.properties` for YAGO-4 and DBpedia datasets.
+```
+docker run -d --name shacl \
+    -e JAVA_OPTS='-Xmx16g' \
+    --mount type=bind,source=/srv/data/home/data/,target=/app/data \ 
+    --mount type=bind,source=/srv/data/home/git/shacl/,target=/app/local \ 
+    shacl:v1 /app/local/lubmConfig.properties
+```
+
+### Get inside the container
+
+#### In MacBook
+```
+sudo docker exec -it shacl /bin/sh
+```
+#### In Ubuntu
+```
+sudo docker exec -it shacl /bin/bash
+```
+###Logging
+```
+docker logs --follow shacl
+```
+
+
+## Software Setup (without Docker)
 
 1. Install Java
    Follow [these](https://sdkman.io/install) steps to install sdkman and execute the following commands to install the specified version of Java.

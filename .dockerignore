@@ -1,0 +1,6 @@
+target/
+build/
+.idea
+.gradle
+notebooks
+.DS_Store
