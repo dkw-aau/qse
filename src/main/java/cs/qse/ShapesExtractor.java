@@ -37,6 +37,7 @@ public class ShapesExtractor {
     Encoder encoder;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
+    HashMap<Integer, HashSet<Integer>> maxCountSupport;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
     
@@ -88,8 +89,8 @@ public class ShapesExtractor {
     private Model constructShapeWithoutPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
-        classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
+            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             
             String nodeShape = "shape:" + subj.getLocalName() + "Shape";
             b.subject(nodeShape)
@@ -99,7 +100,7 @@ public class ShapesExtractor {
                     .add(SHACL.CLOSED, false);
             
             if (propToObjectType != null) {
-                constructNodePropertyShapes(b, subj, nodeShape, propToObjectType);
+                constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
             }
         });
         m = b.build();
@@ -109,8 +110,8 @@ public class ShapesExtractor {
     private Model constructShapesWithPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
-        classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
+            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             //NODE SHAPES PRUNING
             if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
                 String nodeShape = "shape:" + subj.getLocalName() + "Shape";
@@ -121,8 +122,8 @@ public class ShapesExtractor {
                         .add(SHACL.CLOSED, false);
                 
                 if (propToObjectType != null) {
-                    HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(classEncodedLabel, propToObjectType, confidence, support);
-                    constructNodePropertyShapes(b, subj, nodeShape, propToObjectTypesLocal);
+                    HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                 }
             }
             
@@ -131,7 +132,7 @@ public class ShapesExtractor {
         return m;
     }
     
-    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal) {
+    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             IRI property = factory.createIRI(encoder.decode(prop));
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
@@ -146,6 +147,9 @@ public class ShapesExtractor {
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
+                    if (maxCountSupport.containsKey(prop) && maxCountSupport.get(prop).contains(subjEncoded)) {
+                        b.subject(propShape).add(SHACL.MAX_COUNT, 1);
                     }
                 }
                 
@@ -271,5 +275,9 @@ public class ShapesExtractor {
             e.printStackTrace();
         }
         return queryOutput;
+    }
+    
+    public void setMaxCountSupport(HashMap<Integer, HashSet<Integer>> propToClassesHavingMaxCountGreaterThanOne) {
+        this.maxCountSupport = propToClassesHavingMaxCountGreaterThanOne;
     }
 }
