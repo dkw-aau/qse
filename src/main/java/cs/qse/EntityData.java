@@ -12,9 +12,9 @@ public class EntityData {
     ArrayList<Integer> properties;
     
     EntityData() {
-        this.classTypes = new HashSet<>(1000); //FIXME: Decide about the initial size limit
-        this.propertyConstraints = new HashSet<>(1000);
-        this.properties = new ArrayList<>(1000);
+        this.classTypes = new HashSet<>();
+        this.propertyConstraints = new HashSet<>();
+        this.properties = new ArrayList<>();
     }
     
     public HashSet<Integer> getClassTypes() {
