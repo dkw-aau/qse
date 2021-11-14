@@ -154,7 +154,13 @@ public class Parser {
                                 addEntityToPropertyConstraints(prop2objTypeTuples, entity);
                             }
                             // Keep track of each property of the node
-                            entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
+                            if (entityDataHashMap.get(entity) != null) {
+                                entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
+                            } else {
+                                EntityData entityData = new EntityData();
+                                entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
+                                entityDataHashMap.put(nodes[0], entityData);
+                            }
                             
                             HashSet<Integer> entityClasses = entityDataHashMap.get(nodes[0]).getClassTypes();
                             if (entityClasses != null) {
