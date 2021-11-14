@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ComputeStatistics {
+public class StatsComputer {
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     HashMap<Integer, HashSet<Integer>> propToClassesHavingMaxCountGreaterThanOne = new HashMap<>();
     
-    public ComputeStatistics(HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
+    public StatsComputer(HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
         this.shapeTripletSupport = shapeTripletSupport;
     }
     
