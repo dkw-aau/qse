@@ -2,10 +2,7 @@ package cs.qse;
 
 import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.FilesUtil;
-import cs.utils.Tuple3;
+import cs.utils.*;
 import cs.utils.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
@@ -162,9 +159,16 @@ public class ShapesExtractor {
                         b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                     } else {
                         //objectType = objectType.replace("<", "").replace(">", "");
-                        IRI objectTypeIri = factory.createIRI(objectType);
-                        b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                        if(Utils.isValidIRI(objectType)){
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                        } else {
+                            //IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.CLASS, objectType);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                        }
+                        
                     }
                 } else {
                     // in case the type is null, we set it default as string
