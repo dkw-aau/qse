@@ -61,26 +61,35 @@ Running the build image as a container to run QSE approach for LUBM dataset usin
 You can use other config files such as `yagoConfig.properties` or `dbpediaConfig.properties` for YAGO-4 and DBpedia datasets.
 ```
 docker run -d --name shacl \
-    -e JAVA_OPTS='-Xmx16g' \
+    -m 20GB \
+    -e "JAVA_TOOL_OPTIONS=-Xms16g -Xmx16g" \
     --mount type=bind,source=/srv/data/home/data/,target=/app/data \ 
     --mount type=bind,source=/srv/data/home/git/shacl/,target=/app/local \ 
     shacl:v1 /app/local/lubmConfig.properties
 ```
 
-### Get inside the container
+`-m` limits the container memory.  <br /> 
+`JAVA_TOOL_OPTIONS` specifies the min (`Xms`) and max (`Xmx`) memory values for JVM memory allocation pool. <br />
+`-e` sets environment variables. <br />
+`-d` runs container in background and prints container ID. <br />
+`--name`  assigns a name to the container. <br />
+`--mount` attaches a filesystem mount to the container. <br />
 
-#### In MacBook
+#### Get inside the container
 ```
 sudo docker exec -it shacl /bin/sh
 ```
-#### In Ubuntu
-```
-sudo docker exec -it shacl /bin/bash
-```
-###Logging
+
+#### Log Output
 ```
 docker logs --follow shacl
 ```
+
+#### See Memory Utilization by Docker Container
+```
+docker stats
+```
+
 
 
 ## Software Setup (without Docker)
@@ -90,7 +99,7 @@ docker logs --follow shacl
 
         sdk list java
         sdk install java 11.0.10.fx-zulu 
-        sdk use java 15.0.2.fx-zulu 
+        sdk use java 11.0.10.fx-zulu 
 
 2. Install gradle
 
