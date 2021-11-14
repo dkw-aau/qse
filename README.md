@@ -71,9 +71,9 @@ docker run -d --name shacl \
 `-m` limits the container memory.  <br /> 
 `JAVA_TOOL_OPTIONS` specifies the min (`Xms`) and max (`Xmx`) memory values for JVM memory allocation pool. <br />
 `-e` sets environment variables. <br />
-`-d` runs container in background and print container ID. <br />
-`--name`  assign a name to the container. <br />
-`--mount` attach a filesystem mount to the container. <br />
+`-d` runs container in background and prints container ID. <br />
+`--name`  assigns a name to the container. <br />
+`--mount` attaches a filesystem mount to the container. <br />
 
 #### Get inside the container
 ```
@@ -99,7 +99,7 @@ docker stats
 
         sdk list java
         sdk install java 11.0.10.fx-zulu 
-        sdk use java 15.0.2.fx-zulu 
+        sdk use java 11.0.10.fx-zulu 
 
 2. Install gradle
 
