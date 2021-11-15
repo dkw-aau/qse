@@ -173,7 +173,8 @@ public class ShapesExtractor {
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                         } else {
                             //IRI objectTypeIri = factory.createIRI(objectType);
-                            b.subject(propShape).add(SHACL.CLASS, objectType);
+                            //b.subject(propShape).add(SHACL.CLASS, objectType);
+                            System.out.println("INVALID Object Type IRI: " + objectType);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                         }
                         
