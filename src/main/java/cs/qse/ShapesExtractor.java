@@ -111,21 +111,26 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-            //NODE SHAPES PRUNING
-            if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
-                
-                if (propToObjectType != null) {
-                    HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
-                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                //NODE SHAPES PRUNING
+                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    b.subject(nodeShape)
+                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                            .add(SHACL.TARGET_CLASS, subj)
+                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                            .add(SHACL.CLOSED, false);
+                    
+                    if (propToObjectType != null) {
+                        HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                    }
+                } else {
+                    System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 }
             }
+            
             
         });
         m = b.build();
