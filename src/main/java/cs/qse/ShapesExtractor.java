@@ -87,17 +87,20 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-            
-            String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-            b.subject(nodeShape)
-                    .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                    .add(SHACL.TARGET_CLASS, subj)
-                    .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                    .add(SHACL.CLOSED, false);
-            
-            if (propToObjectType != null) {
-                constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
+            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                b.subject(nodeShape)
+                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                        .add(SHACL.TARGET_CLASS, subj)
+                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        .add(SHACL.CLOSED, false);
+                
+                if (propToObjectType != null) {
+                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
+                }
+            } else {
+                System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
         });
         m = b.build();
@@ -159,7 +162,7 @@ public class ShapesExtractor {
                         b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                     } else {
                         //objectType = objectType.replace("<", "").replace(">", "");
-                        if(Utils.isValidIRI(objectType)){
+                        if (Utils.isValidIRI(objectType)) {
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
