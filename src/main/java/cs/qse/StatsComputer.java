@@ -19,6 +19,9 @@ public class StatsComputer {
         this.shapeTripletSupport = shapeTripletSupport;
     }
     
+    /**
+     * This method is used to compute support and confidence...
+     */
     public void compute(HashMap<Node, EntityData> entityDataHashMap, HashMap<Integer, Integer> classEntityCount) {
         //Compute Support
         entityDataHashMap.forEach((instance, entityData) -> {
@@ -68,7 +71,9 @@ public class StatsComputer {
         return shapeTripletSupport;
     }
     
-    
+    /**
+     * Not used anymore
+     */
     public void compute(Map<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints, HashMap<Node, HashSet<Integer>> entityToClassTypes, HashMap<Integer, Integer> classEntityCount) {
         //Compute Support
         entityToPropertyConstraints.forEach((instance, propertyShapeSet) -> {

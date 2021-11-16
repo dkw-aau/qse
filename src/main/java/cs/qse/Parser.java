@@ -34,10 +34,7 @@ public class Parser {
     StatsComputer statsComputer;
     String typePredicate;
     
-    //HashMap<Node, HashSet<Integer>> entityToClassTypes;
-    //HashMap<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints;
     HashMap<Node, EntityData> entityDataHashMap;
-    
     HashMap<Integer, Integer> classEntityCount;
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
@@ -49,7 +46,6 @@ public class Parser {
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        //this.entityToClassTypes = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
     }
@@ -80,14 +76,6 @@ public class Parser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (nodes[1].toString().equals(typePredicate)) {
                                 // Track classes per entity
-                                /* if (entityToClassTypes.containsKey(nodes[0])) {
-                                    entityToClassTypes.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
-                                } else {
-                                    HashSet<Integer> list = new HashSet<>(); // initialize 5, 10, 15
-                                    list.add(encoder.encode(nodes[2].getLabel()));
-                                    entityToClassTypes.put(nodes[0], list);
-                                }*/
-                                //Using New Structure as an alternative of entityToClassTypes map
                                 if (entityDataHashMap.containsKey(nodes[0])) {
                                     entityDataHashMap.get(nodes[0]).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
                                 } else {
@@ -103,8 +91,6 @@ public class Parser {
                                 } else {
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
                                 }
-                                
-                                
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -124,7 +110,6 @@ public class Parser {
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        //entityToPropertyConstraints = new HashMap<>((int) ((classEntityCount.size() / 0.75 + 1)));
         try {
             Files.lines(Path.of(rdfFilePath))
                     .filter(line -> !line.contains(typePredicate))
@@ -199,12 +184,6 @@ public class Parser {
      * @param entity             : Entity such as :Paris
      */
     private void addEntityToPropertyConstraints(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node entity) {
-        //entityToPropertyConstraints.putIfAbsent(entity, prop2objTypeTuples);
-        //HashSet<Tuple2<Integer, Integer>> prop2objTypeTupleSet = entityToPropertyConstraints.get(entity);
-        //prop2objTypeTupleSet.addAll(prop2objTypeTuples);
-        //entityToPropertyConstraints.put(entity, prop2objTypeTupleSet);
-        
-        //Using new structure
         if (entityDataHashMap.containsKey(entity)) {
             entityDataHashMap.get(entity).getPropertyConstraints().addAll(prop2objTypeTuples);
         } else {
@@ -212,7 +191,6 @@ public class Parser {
             entityData.getPropertyConstraints().addAll(prop2objTypeTuples);
             entityDataHashMap.put(entity, entityData);
         }
-        
     }
     
     /**
@@ -247,7 +225,6 @@ public class Parser {
         watch.start();
         shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         statsComputer = new StatsComputer(shapeTripletSupport);
-        //cs.compute(entityToPropertyConstraints, entityToClassTypes, classEntityCount);
         statsComputer.compute(entityDataHashMap, classEntityCount);
         shapeTripletSupport = statsComputer.getShapeTripletSupport();
         watch.stop();
