@@ -34,7 +34,7 @@ The experiments run on a _single machine_. To reproduce the experiments the sugg
 ## Getting the data
 We have used DBpedia, YAGO-4, and LUBM datasets. Details on how we downloaded are given below:
 
-1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/qse/blob/master/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/Kashif-Rabbani/qse/blob/master/dbpedia-files.txt).
+1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/master/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/master/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
 
@@ -121,7 +121,7 @@ Here we explain how to repeat experiments and the output (numbers) presented in 
 
 #### How to repeat experiments?
 
-Update the following parameters in the [config](https://github.com/Kashif-Rabbani/qse/blob/master/config.properties) file to setup configuration for **QSE-File** approach:
+Update the following parameters in the [config](https://github.com/Kashif-Rabbani/shacl/blob/master/config.properties) file to setup configuration for **QSE-File** approach:
 
 ```
  QSE_File=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint=false
@@ -133,7 +133,7 @@ QSE_Endpoint=true, graphDB_URL and graphDB_REPOSITORY, QSE_File=false
 ```
 We have already prepared 3 config files for each of our dataset, you can use these files to run the experiments using the following commands:
 ```
-java -jar -Xmx16g  build/libs/qse.jar dbpediaConfig.properties &> dbpedia.logs
-java -jar -Xmx16g  build/libs/qse.jar yagoConfig.properties &> yago.logs
-java -jar -Xmx16g  build/libs/qse.jar lubmConfig.properties &> lubm.logs
+java -jar -Xmx16g  build/libs/shacl.jar dbpediaConfig.properties &> dbpedia.logs
+java -jar -Xmx16g  build/libs/shacl.jar yagoConfig.properties &> yago.logs
+java -jar -Xmx16g  build/libs/shacl.jar lubmConfig.properties &> lubm.logs
 ```
