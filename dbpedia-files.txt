@@ -1,0 +1,7 @@
+https://downloads.dbpedia.org/repo/dbpedia/generic/commons-sameas-links/2020.10.01/commons-sameas-links_lang=en.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/generic/infobox-properties/2020.10.01/infobox-properties_lang=en.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/generic/infobox-property-definitions/2020.10.01/infobox-property-definitions_lang=en.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.10.01/labels_lang=en.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.10.01/instance-types_lang=en_specific.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.10.01/mappingbased-literals_lang=en.ttl.bz2
+https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2020.10.01/mappingbased-objects_lang=en.ttl.bz2
