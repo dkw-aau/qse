@@ -34,7 +34,7 @@ The experiments run on a _single machine_. To reproduce the experiments the sugg
 ## Getting the data
 We have used DBpedia, YAGO-4, and LUBM datasets. Details on how we downloaded are given below:
 
-1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/master/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/master/dbpedia-files.txt).
+1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/main/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
 
@@ -121,7 +121,7 @@ Here we explain how to repeat experiments and the output (numbers) presented in 
 
 #### How to repeat experiments?
 
-Update the following parameters in the [config](https://github.com/Kashif-Rabbani/shacl/blob/master/config.properties) file to setup configuration for **QSE-File** approach:
+Update the following parameters in the [config](https://github.com/Kashif-Rabbani/shacl/blob/main/config.properties) file to setup configuration for **QSE-File** approach:
 
 ```
  QSE_File=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint=false
