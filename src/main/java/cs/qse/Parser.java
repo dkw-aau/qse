@@ -56,11 +56,11 @@ public class Parser {
     
     private void runParser() {
         firstPass();
-        secondPass();
-        computeSupportConfidence();
-        extractSHACLShapes();
-        assignCardinalityConstraints();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
+        //secondPass();
+        //computeSupportConfidence();
+        //extractSHACLShapes();
+        //assignCardinalityConstraints();
+        //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
     /**
@@ -101,6 +101,11 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Number of Entities: " + entityDataHashMap.size());
+        System.out.println("Number of Classes: " + classEntityCount.size());
+        System.out.println("---");
+        System.out.println("classEntityCount.values()");
+        System.out.println(classEntityCount.values());
     }
     
     /**
