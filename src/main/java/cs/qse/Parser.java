@@ -91,6 +91,15 @@ public class Parser {
                                 } else {
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
                                 }
+                            } else {
+                                // Keep track of each property of the node
+                                if (entityDataHashMap.get(nodes[0]) != null) {
+                                    entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
+                                } else {
+                                    EntityData entityData = new EntityData();
+                                    entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
+                                    entityDataHashMap.put(nodes[0], entityData);
+                                }
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -104,8 +113,8 @@ public class Parser {
         System.out.println("Number of Entities: " + entityDataHashMap.size());
         System.out.println("Number of Classes: " + classEntityCount.size());
         System.out.println("---");
-        System.out.println("classEntityCount.values()");
-        System.out.println(classEntityCount.values());
+        //System.out.println("classEntityCount.values()");
+        //System.out.println(classEntityCount.values());
     }
     
     /**
