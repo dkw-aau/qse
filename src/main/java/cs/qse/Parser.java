@@ -16,6 +16,10 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -76,7 +80,7 @@ public class Parser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (nodes[1].toString().equals(typePredicate)) {
                                 // Track classes per entity
-                                if (entityDataHashMap.containsKey(nodes[0])) {
+                                /*if (entityDataHashMap.containsKey(nodes[0])) {
                                     entityDataHashMap.get(nodes[0]).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
                                 } else {
                                     HashSet<Integer> hashSet = new HashSet<>();
@@ -84,13 +88,13 @@ public class Parser {
                                     EntityData entityData = new EntityData();
                                     entityData.getClassTypes().addAll(hashSet);
                                     entityDataHashMap.put(nodes[0], entityData);
-                                }
-                                /*if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                                }*/
+                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
                                     Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
                                 } else {
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
-                                }*/
+                                }
                             }
                             /*else {
                                 // Keep track of each property of the node
@@ -111,11 +115,21 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        System.out.println("Number of Entities: " + entityDataHashMap.size());
-        //System.out.println("Number of Classes: " + classEntityCount.size());
-        System.out.println("---");
+        //System.out.println("Number of Entities: " + entityDataHashMap.size());
+        System.out.println("Number of Classes: " + classEntityCount.size());
+        System.out.println("Writing into file");
         //System.out.println("classEntityCount.values()");
-        //System.out.println(classEntityCount.values());
+        
+        try {
+            FileWriter fileWriter = new FileWriter(Constants.CLASS_ENTITY_COUNT_FILE, true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            classEntityCount.forEach((c, count) -> {
+                printWriter.println(c + "|" + encoder.decode(c) + "|" + count);
+            });
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /**
