@@ -85,13 +85,14 @@ public class Parser {
                                     entityData.getClassTypes().addAll(hashSet);
                                     entityDataHashMap.put(nodes[0], entityData);
                                 }
-                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                                /*if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
                                     Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
                                 } else {
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
-                                }
-                            } else {
+                                }*/
+                            }
+                            /*else {
                                 // Keep track of each property of the node
                                 if (entityDataHashMap.get(nodes[0]) != null) {
                                     entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
@@ -100,7 +101,7 @@ public class Parser {
                                     entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
                                     entityDataHashMap.put(nodes[0], entityData);
                                 }
-                            }
+                            }*/
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -111,7 +112,7 @@ public class Parser {
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         System.out.println("Number of Entities: " + entityDataHashMap.size());
-        System.out.println("Number of Classes: " + classEntityCount.size());
+        //System.out.println("Number of Classes: " + classEntityCount.size());
         System.out.println("---");
         //System.out.println("classEntityCount.values()");
         //System.out.println(classEntityCount.values());
