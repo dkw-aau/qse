@@ -4,6 +4,7 @@ import cs.qse.endpoint.EndpointParser;
 import cs.qse.Parser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
+import cs.utils.EntityValidator;
 import cs.utils.Utils;
 
 
@@ -25,6 +26,7 @@ public class Main {
         System.out.println("Benchmark Initiated for " + ConfigManager.getProperty("dataset_path"));
         Utils.getCurrentTimeStamp();
         try {
+            new EntityValidator(datasetPath);
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
                 Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
