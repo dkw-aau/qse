@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.rio.*;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -30,20 +31,17 @@ public class EntityValidator {
         watch.start();
         System.out.println("Started Parsing...");
         try {
-            FileInputStream fileInputStream = new FileInputStream(rdfFilePath);
-            ModelBuilder builder = new ModelBuilder();
-            MyParser myParser = new MyParser();
-            myParser.setRDFHandler(new StatementCollector(builder.build()));
-            try {
+            //ModelBuilder builder = new ModelBuilder();
+            //myParser.setRDFHandler(new StatementCollector(builder.build()));
+    
+            try (FileInputStream fileInputStream = new FileInputStream(rdfFilePath)) {
+                MyParser myParser = new MyParser();
                 myParser.parse(fileInputStream, "");
             } catch (IOException | RDFHandlerException | RDFParseException e) {
                 e.printStackTrace();
-            } finally {
-                fileInputStream.close();
             }
-            System.out.println("About to write model to file ...");
+            /*System.out.println("About to write model to file ...");
             Model model = builder.build();
-            
             FileOutputStream out = new FileOutputStream(Constants.CLEAN_DATASET_FILE);
             RDFWriter writer = Rio.createWriter(RDFFormat.N3, out);
             writer.startRDF();
@@ -52,7 +50,7 @@ public class EntityValidator {
                 writer.getWriterConfig();
             }
             writer.endRDF();
-            out.close();
+            out.close();*/
             
             
         } catch (Exception e) {
@@ -78,6 +76,35 @@ public class EntityValidator {
                     });
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+}
+
+/**
+ * Not used yet but can be used to set the rdfhandler for the parser
+ */
+class StatementWriter extends AbstractRDFHandler {
+    
+    FileOutputStream out;
+    RDFWriter writer;
+    
+    StatementWriter() {
+        try {
+            this.out = new FileOutputStream(Constants.CLEAN_DATASET_FILE);
+            this.writer = Rio.createWriter(RDFFormat.N3, out);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @Override
+    public void handleStatement(Statement st) {
+        try {
+            writer.startRDF();
+            writer.handleStatement(st);
+            writer.endRDF();
+        } catch (RDFHandlerException e) {
+            // oh no, do something!
         }
     }
 }
