@@ -39,6 +39,7 @@ public class Parser {
     String typePredicate;
     
     HashMap<Node, EntityData> entityDataHashMap;
+    HashMap<String, EntityData> entityDataHashMapLite;
     HashMap<Integer, Integer> classEntityCount;
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
@@ -50,8 +51,9 @@ public class Parser {
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        //this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
+        this.entityDataHashMapLite = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
     }
     
     public void run() {
@@ -59,12 +61,50 @@ public class Parser {
     }
     
     private void runParser() {
-        firstPass();
+        optimalFirstPass();
+        //firstPass();
         //secondPass();
         //computeSupportConfidence();
         //extractSHACLShapes();
         //assignCardinalityConstraints();
         //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
+    }
+    
+    private void optimalFirstPass() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (nodes[1].toString().equals(typePredicate)) {
+                                // Track classes per entity
+                                String entityIri = nodes[0].getLabel();
+                                int index = entityIri.lastIndexOf("/");
+                                if (index != -1) {
+                                    String entityShort = entityIri.substring(index + 1);
+                                    if (entityDataHashMapLite.containsKey(entityShort)) {
+                                        entityDataHashMapLite.get(entityShort).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
+                                    } else {
+                                        HashSet<Integer> hashSet = new HashSet<>();
+                                        hashSet.add(encoder.encode(nodes[2].getLabel()));
+                                        EntityData entityData = new EntityData();
+                                        entityData.getClassTypes().addAll(hashSet);
+                                        entityDataHashMapLite.put(entityShort, entityData);
+                                    }
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Size of entities: " + entityDataHashMapLite.size());
+        watch.stop();
+        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     /**
@@ -80,7 +120,7 @@ public class Parser {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (nodes[1].toString().equals(typePredicate)) {
                                 // Track classes per entity
-                                /*if (entityDataHashMap.containsKey(nodes[0])) {
+                                if (entityDataHashMap.containsKey(nodes[0])) {
                                     entityDataHashMap.get(nodes[0]).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
                                 } else {
                                     HashSet<Integer> hashSet = new HashSet<>();
@@ -88,7 +128,7 @@ public class Parser {
                                     EntityData entityData = new EntityData();
                                     entityData.getClassTypes().addAll(hashSet);
                                     entityDataHashMap.put(nodes[0], entityData);
-                                }*/
+                                }
                                 if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
                                     Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
                                     classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
