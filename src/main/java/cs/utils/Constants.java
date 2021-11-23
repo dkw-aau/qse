@@ -28,4 +28,5 @@ public class Constants {
     
     public static String CLASS_ENTITY_COUNT_FILE = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_CEC.csv";
     public static String CLEAN_DATASET_FILE = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_CLEAN_DATASET_FILE.n3";
+    public static String DIRTY_DATASET_FILE = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_DIRTY_DATASET_FILE.n3";
 }

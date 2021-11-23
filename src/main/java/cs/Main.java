@@ -2,10 +2,7 @@ package cs;
 
 import cs.qse.endpoint.EndpointParser;
 import cs.qse.Parser;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.EntityValidator;
-import cs.utils.Utils;
+import cs.utils.*;
 
 
 public class Main {
@@ -26,7 +23,6 @@ public class Main {
         System.out.println("Benchmark Initiated for " + ConfigManager.getProperty("dataset_path"));
         Utils.getCurrentTimeStamp();
         try {
-            new EntityValidator(datasetPath);
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
                 Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
@@ -41,8 +37,9 @@ public class Main {
             
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
-                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                parser.run();
+                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                //parser.run();
+                FilesUtil.removeLinesFromFile(datasetPath);
             }
             
         } catch (Exception e) {
