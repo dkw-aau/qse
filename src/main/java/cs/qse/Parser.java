@@ -7,6 +7,8 @@ import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
 import cs.utils.encoders.Encoder;
+import orestes.bloomfilter.BloomFilter;
+import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -44,6 +46,8 @@ public class Parser {
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     
+    HashMap<Node, BloomFilter<String>> cteBf;
+    
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
         this.expectedNumberOfClasses = expNoOfClasses;
@@ -54,6 +58,8 @@ public class Parser {
         //this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.entityDataHashMapLite = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        
+        this.cteBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     public void run() {
@@ -61,8 +67,9 @@ public class Parser {
     }
     
     private void runParser() {
-        optimalFirstPass();
-        //firstPass();
+        collectEntitiesInBloomFilter();
+        //collectClassEntityCount();
+        //collectEntities();
         //secondPass();
         //computeSupportConfidence();
         //extractSHACLShapes();
@@ -70,7 +77,7 @@ public class Parser {
         //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
-    private void optimalFirstPass() {
+    private void shortEntityStrings() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -102,15 +109,68 @@ public class Parser {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Size of entities: " + entityDataHashMapLite.size());
+        System.out.println("Size of shortEntityStrings: " + entityDataHashMapLite.size());
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    /**
-     * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
-     */
-    private void firstPass() {
+    private void collectEntitiesInBloomFilter() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.out.println("invoked collectEntitiesInBloomFilter() ");
+        try {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (nodes[1].toString().equals(typePredicate)) {
+                                if (cteBf.containsKey(nodes[2])) {
+                                    cteBf.get(nodes[2]).add(nodes[0].getLabel());
+                                } else {
+                                    BloomFilter<String> bf = new FilterBuilder(1000_000, 0.0000001).buildBloomFilter();
+                                    bf.add(nodes[0].getLabel());
+                                    cteBf.put(nodes[2], bf);
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed collectEntitiesInBloomFilter: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void collectClassEntityCount() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (nodes[1].toString().equals(typePredicate)) {
+                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                                    Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
+                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
+                                } else {
+                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed collectClassEntityCount: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void collectEntities() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -129,23 +189,7 @@ public class Parser {
                                     entityData.getClassTypes().addAll(hashSet);
                                     entityDataHashMap.put(nodes[0], entityData);
                                 }
-                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
-                                    Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
-                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
-                                } else {
-                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
-                                }
                             }
-                            /*else {
-                                // Keep track of each property of the node
-                                if (entityDataHashMap.get(nodes[0]) != null) {
-                                    entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
-                                } else {
-                                    EntityData entityData = new EntityData();
-                                    entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
-                                    entityDataHashMap.put(nodes[0], entityData);
-                                }
-                            }*/
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -155,21 +199,36 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        //System.out.println("Number of Entities: " + entityDataHashMap.size());
-        System.out.println("Number of Classes: " + classEntityCount.size());
-        System.out.println("Writing into file");
-        //System.out.println("classEntityCount.values()");
-        
+    }
+    
+    
+    private void collectPropertiesOfEntities() {
+        StopWatch watch = new StopWatch();
+        watch.start();
         try {
-            FileWriter fileWriter = new FileWriter(Constants.CLASS_ENTITY_COUNT_FILE, true);
-            PrintWriter printWriter = new PrintWriter(fileWriter);
-            classEntityCount.forEach((c, count) -> {
-                printWriter.println(c + "|" + encoder.decode(c) + "|" + count);
-            });
-            printWriter.close();
-        } catch (IOException e) {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (!nodes[1].toString().equals(typePredicate)) {
+                                // Keep track of each property of the node
+                                if (entityDataHashMap.get(nodes[0]) != null) {
+                                    entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
+                                } else {
+                                    EntityData entityData = new EntityData();
+                                    entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
+                                    entityDataHashMap.put(nodes[0], entityData);
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        watch.stop();
+        System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     /**
