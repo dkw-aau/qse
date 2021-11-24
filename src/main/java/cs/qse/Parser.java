@@ -24,8 +24,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -69,6 +68,7 @@ public class Parser {
     private void runParser() {
         collectClassEntityCount();
         collectEntitiesInBloomFilter();
+        iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
         //secondPass();
@@ -169,6 +169,39 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed collectEntitiesInBloomFilter: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void iterateOverBloomFilters() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.out.println("invoked iterateOverBloomFilters() ");
+        try {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            List<String> types = new ArrayList<>();
+                            StopWatch innerWatch = new StopWatch();
+                            innerWatch.start();
+                            for (Map.Entry<Node, BloomFilter<String>> entry : cteBf.entrySet()) {
+                                BloomFilter<String> v = entry.getValue();
+                                if (v.contains(nodes[0].getLabel())) {
+                                    types.add(entry.getKey().getLabel());
+                                }
+                            }
+                            System.out.println("Types of given entity: " + types.size());
+                            innerWatch.stop();
+                            System.out.println("Time Elapsed iterateOverBloomFilters: MilliSeconds:" + innerWatch.getTime() + " , Seconds: " + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed iterateOverBloomFilters: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        
     }
     
     
