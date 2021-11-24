@@ -67,6 +67,7 @@ public class Parser {
     }
     
     private void runParser() {
+        collectClassEntityCount();
         collectEntitiesInBloomFilter();
         //collectClassEntityCount();
         //collectEntities();
@@ -114,35 +115,6 @@ public class Parser {
         System.out.println("Time Elapsed firstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void collectEntitiesInBloomFilter() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.out.println("invoked collectEntitiesInBloomFilter() ");
-        try {
-            Files.lines(Path.of(rdfFilePath))
-                    .forEach(line -> {
-                        try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(typePredicate)) {
-                                if (cteBf.containsKey(nodes[2])) {
-                                    cteBf.get(nodes[2]).add(nodes[0].getLabel());
-                                } else {
-                                    BloomFilter<String> bf = new FilterBuilder(1000_000, 0.0000001).buildBloomFilter();
-                                    bf.add(nodes[0].getLabel());
-                                    cteBf.put(nodes[2], bf);
-                                }
-                            }
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                    });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        System.out.println("Time Elapsed collectEntitiesInBloomFilter: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
     private void collectClassEntityCount() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -169,6 +141,36 @@ public class Parser {
         watch.stop();
         System.out.println("Time Elapsed collectClassEntityCount: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
+    
+    private void collectEntitiesInBloomFilter() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.out.println("invoked collectEntitiesInBloomFilter() ");
+        try {
+            Files.lines(Path.of(rdfFilePath))
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            if (nodes[1].toString().equals(typePredicate)) {
+                                if (cteBf.containsKey(nodes[2])) {
+                                    cteBf.get(nodes[2]).add(nodes[0].getLabel());
+                                } else {
+                                    BloomFilter<String> bf = new FilterBuilder(classEntityCount.get(encoder.encode(nodes[2].getLabel())), 0.0001).buildBloomFilter();
+                                    bf.add(nodes[0].getLabel());
+                                    cteBf.put(nodes[2], bf);
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed collectEntitiesInBloomFilter: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
     
     private void collectEntities() {
         StopWatch watch = new StopWatch();
