@@ -68,7 +68,7 @@ public class Parser {
     private void runParser() {
         collectClassEntityCount();
         collectEntitiesInBloomFilter();
-        iterateOverBloomFilters();
+        //iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
         //secondPass();
@@ -155,7 +155,7 @@ public class Parser {
                                 if (cteBf.containsKey(nodes[2])) {
                                     cteBf.get(nodes[2]).add(nodes[0].getLabel());
                                 } else {
-                                    BloomFilter<String> bf = new FilterBuilder(classEntityCount.get(encoder.encode(nodes[2].getLabel())), 0.0001).buildBloomFilter();
+                                    BloomFilter<String> bf = new FilterBuilder(classEntityCount.get(encoder.encode(nodes[2].getLabel())), 0.000001).buildBloomFilter();
                                     bf.add(nodes[0].getLabel());
                                     cteBf.put(nodes[2], bf);
                                 }
