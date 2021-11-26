@@ -64,8 +64,8 @@ public class Parser {
     
     private void runParser() {
         collectClassEntityCount();
-        bfExperiment();
-        //reservoirSamplingFirstPass();
+        //bfExperiment();
+        reservoirSamplingFirstPass();
         //iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
@@ -227,7 +227,7 @@ public class Parser {
         try {
             Set<String> typesDiscovered = new HashSet<>();
             Files.lines(Path.of(rdfFilePath))
-                    .takeWhile(n -> n.length() < 100000)
+                    .takeWhile(n -> n.length() < 10000)
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
@@ -267,7 +267,7 @@ public class Parser {
         try {
             Set<String> typesDiscovered = new HashSet<>();
             Files.lines(Path.of(rdfFilePath))
-                    .takeWhile(n -> n.length() < 100000)
+                    .takeWhile(n -> n.length() < 10000)
                     .forEach(line -> {
                         try {
                             Node[] nodes = NxParser.parseNodes(line);
