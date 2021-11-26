@@ -74,6 +74,10 @@ public class Parser {
         //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
+    private void reservoirSamplingFirstPass() {
+    
+    }
+    
     private void bfExperiment() {
         System.out.println("BF Creation Experiment");
         Set<Double> fppSet = new HashSet<>(Arrays.asList(0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001));
@@ -190,7 +194,7 @@ public class Parser {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     Node[] nodes = NxParser.parseNodes(line);
-                    List<String> types = new ArrayList<>();
+                    Set<String> types = new HashSet<>();
                     StopWatch innerWatch = new StopWatch();
                     if (!typesDiscovered.contains(nodes[0].getLabel())) {
                         typesDiscovered.add(nodes[0].getLabel());
@@ -227,10 +231,11 @@ public class Parser {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     Node[] nodes = NxParser.parseNodes(line);
-                    List<String> types = new ArrayList<>();
+                    
                     StopWatch innerWatch = new StopWatch();
                     if (!typesDiscovered.contains(nodes[0].getLabel())) {
                         typesDiscovered.add(nodes[0].getLabel());
+                        Set<String>  types = new HashSet<>();
                         innerWatch.start();
                         cteBf.entrySet().parallelStream().forEach(entry -> {
                             BloomFilter<String> v = entry.getValue();
