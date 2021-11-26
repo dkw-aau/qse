@@ -63,15 +63,7 @@ public class Parser {
     
     private void runParser() {
         collectClassEntityCount();
-        System.out.println("BF Creation Experiment");
-        Set<Double> fppSet = new HashSet<>(Arrays.asList(0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001));
-        System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS),Iterating Time Parallel (MS)");
-        fppSet.forEach(fpp -> {
-            long creationTime = collectEntitiesInBloomFilter(fpp);
-            double iteratingTime = iterateOverBloomFilters();
-            double iteratingTimeParallel = iterateOverBloomFilters();
-            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," + iteratingTimeParallel);
-        });
+        bfExperiment();
         //iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
@@ -80,6 +72,18 @@ public class Parser {
         //extractSHACLShapes();
         //assignCardinalityConstraints();
         //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
+    }
+    
+    private void bfExperiment() {
+        System.out.println("BF Creation Experiment");
+        Set<Double> fppSet = new HashSet<>(Arrays.asList(0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001));
+        System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS),Iterating Time Parallel (MS)");
+        fppSet.forEach(fpp -> {
+            long creationTime = collectEntitiesInBloomFilter(fpp);
+            double iteratingTime = iterateOverBloomFilters();
+            double iteratingTimeParallel = iterateOverBloomFiltersInParallel();
+            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," + iteratingTimeParallel);
+        });
     }
     
     private void shortEntityStrings() {
@@ -212,7 +216,6 @@ public class Parser {
         System.out.println("Time Elapsed iterateOverBloomFilters: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         return findAverage(bfIterationTime);
     }
-    
     
     private double iterateOverBloomFiltersInParallel() {
         StopWatch watch = new StopWatch();
