@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class parses RDF NT file triples to extract SHACL shapes, compute the confidence/support for shape constraints,
@@ -64,6 +65,7 @@ public class Parser {
     private void runParser() {
         collectClassEntityCount();
         bfExperiment();
+        //reservoirSamplingFirstPass();
         //iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
@@ -75,12 +77,41 @@ public class Parser {
     }
     
     private void reservoirSamplingFirstPass() {
-    
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            AtomicInteger lineNo = new AtomicInteger();
+            int k = 200;
+            ArrayList<String> reservoir = new ArrayList<>();
+            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
+                try {
+                    lineNo.getAndIncrement();
+                    Node[] nodes = NxParser.parseNodes(line);
+                    //if (nodes[1].toString().equals(typePredicate)) {
+                    if (lineNo.get() < k) {
+                        reservoir.add(line);
+                    }
+                    Random random = new Random();
+                    int randomIndex = random.nextInt(lineNo.get() + 1);
+                    if (randomIndex < k) {
+                        reservoir.add(randomIndex, line);
+                    }
+                    //}
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            });
+            System.out.println(reservoir.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed reservoirSamplingFirstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void bfExperiment() {
         System.out.println("BF Creation Experiment");
-        Set<Double> fppSet = new HashSet<>(Arrays.asList(0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001));
+        ArrayList<Double> fppSet = new ArrayList<>(Arrays.asList(0.0000001, 0.000001, 0.00001, 0.0001));
         System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS),Iterating Time Parallel (MS)");
         fppSet.forEach(fpp -> {
             long creationTime = collectEntitiesInBloomFilter(fpp);
@@ -235,7 +266,7 @@ public class Parser {
                     StopWatch innerWatch = new StopWatch();
                     if (!typesDiscovered.contains(nodes[0].getLabel())) {
                         typesDiscovered.add(nodes[0].getLabel());
-                        Set<String>  types = new HashSet<>();
+                        Set<String> types = new HashSet<>();
                         innerWatch.start();
                         cteBf.entrySet().parallelStream().forEach(entry -> {
                             BloomFilter<String> v = entry.getValue();
@@ -265,7 +296,7 @@ public class Parser {
         return sum / array.size();
     }
     
-    private void collectEntities() {
+    private void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
