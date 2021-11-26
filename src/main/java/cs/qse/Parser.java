@@ -81,27 +81,27 @@ public class Parser {
         watch.start();
         try {
             AtomicInteger lineNo = new AtomicInteger();
-            int k = 200;
+            int k = 10;
             ArrayList<String> reservoir = new ArrayList<>();
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     lineNo.getAndIncrement();
                     Node[] nodes = NxParser.parseNodes(line);
-                    //if (nodes[1].toString().equals(typePredicate)) {
-                    if (lineNo.get() < k) {
-                        reservoir.add(line);
+                    if (nodes[1].toString().equals(typePredicate)) {
+                        if (lineNo.get() < k) {
+                            reservoir.add(line);
+                        }
+                        Random random = new Random();
+                        int randomIndex = random.nextInt(lineNo.get() + 1);
+                        if (randomIndex < k) {
+                            reservoir.add(randomIndex, line);
+                        }
                     }
-                    Random random = new Random();
-                    int randomIndex = random.nextInt(lineNo.get() + 1);
-                    if (randomIndex < k) {
-                        reservoir.add(randomIndex, line);
-                    }
-                    //}
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
             });
-            System.out.println(reservoir.size());
+            System.out.println(reservoir);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -114,9 +114,13 @@ public class Parser {
         ArrayList<Double> fppSet = new ArrayList<>(Arrays.asList(0.0000001, 0.000001, 0.00001, 0.0001));
         System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS),Iterating Time Parallel (MS)");
         fppSet.forEach(fpp -> {
+            System.out.println("fpp: " + fpp);
             long creationTime = collectEntitiesInBloomFilter(fpp);
+            System.out.println("creationTime: " + creationTime);
             double iteratingTime = iterateOverBloomFilters();
+            System.out.println("iteratingTime: " + iteratingTime);
             double iteratingTimeParallel = iterateOverBloomFiltersInParallel();
+            System.out.println("iteratingTimeParallel: " + iteratingTimeParallel);
             System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," + iteratingTimeParallel);
         });
     }
@@ -222,28 +226,31 @@ public class Parser {
         List<Long> bfIterationTime = new ArrayList<>();
         try {
             Set<String> typesDiscovered = new HashSet<>();
-            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
-                try {
-                    Node[] nodes = NxParser.parseNodes(line);
-                    Set<String> types = new HashSet<>();
-                    StopWatch innerWatch = new StopWatch();
-                    if (!typesDiscovered.contains(nodes[0].getLabel())) {
-                        typesDiscovered.add(nodes[0].getLabel());
-                        innerWatch.start();
-                        cteBf.forEach((key, v) -> {
-                            if (v.contains(nodes[0].getLabel())) {
-                                types.add(key.getLabel());
+            Files.lines(Path.of(rdfFilePath))
+                    .takeWhile(n -> n.length() < 100000)
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            Set<String> types = new HashSet<>();
+                            StopWatch innerWatch = new StopWatch();
+                            if (!typesDiscovered.contains(nodes[0].getLabel())) {
+                                typesDiscovered.add(nodes[0].getLabel());
+                                innerWatch.start();
+                                cteBf.forEach((key, v) -> {
+                                    if (v.contains(nodes[0].getLabel())) {
+                                        types.add(key.getLabel());
+                                    }
+                                });
+                                innerWatch.stop();
+                                bfIterationTime.add(innerWatch.getTime());
                             }
-                        });
-                        innerWatch.stop();
-                        bfIterationTime.add(innerWatch.getTime());
-                    }
-                    //System.out.println("Types of given entity: " + types.size());
-                    //System.out.println("Time Elapsed iterateOverBloomFilters: MilliSeconds:" + innerWatch.getTime() + " , Seconds: " + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            });
+                            
+                            //System.out.println("Types of given entity: " + types.size());
+                            //System.out.println("Time Elapsed iterateOverBloomFilters: MilliSeconds:" + innerWatch.getTime() + " , Seconds: " + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -259,30 +266,32 @@ public class Parser {
         List<Long> bfIterationTime = new ArrayList<>();
         try {
             Set<String> typesDiscovered = new HashSet<>();
-            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
-                try {
-                    Node[] nodes = NxParser.parseNodes(line);
-                    
-                    StopWatch innerWatch = new StopWatch();
-                    if (!typesDiscovered.contains(nodes[0].getLabel())) {
-                        typesDiscovered.add(nodes[0].getLabel());
-                        Set<String> types = new HashSet<>();
-                        innerWatch.start();
-                        cteBf.entrySet().parallelStream().forEach(entry -> {
-                            BloomFilter<String> v = entry.getValue();
-                            if (v.contains(nodes[0].getLabel())) {
-                                types.add(entry.getKey().getLabel());
+            Files.lines(Path.of(rdfFilePath))
+                    .takeWhile(n -> n.length() < 100000)
+                    .forEach(line -> {
+                        try {
+                            Node[] nodes = NxParser.parseNodes(line);
+                            
+                            StopWatch innerWatch = new StopWatch();
+                            if (!typesDiscovered.contains(nodes[0].getLabel())) {
+                                typesDiscovered.add(nodes[0].getLabel());
+                                Set<String> types = new HashSet<>();
+                                innerWatch.start();
+                                cteBf.entrySet().parallelStream().forEach(entry -> {
+                                    BloomFilter<String> v = entry.getValue();
+                                    if (v.contains(nodes[0].getLabel())) {
+                                        types.add(entry.getKey().getLabel());
+                                    }
+                                });
+                                innerWatch.stop();
+                                bfIterationTime.add(innerWatch.getTime());
                             }
-                        });
-                        innerWatch.stop();
-                        bfIterationTime.add(innerWatch.getTime());
-                    }
-                    //System.out.println("Types of given entity: " + types.size());
-                    //System.out.println("Time Elapsed iterateOverBloomFilters: MilliSeconds:" + innerWatch.getTime() + " , Seconds: " + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            });
+                            //System.out.println("Types of given entity: " + types.size());
+                            //System.out.println("Time Elapsed iterateOverBloomFilters: MilliSeconds:" + innerWatch.getTime() + " , Seconds: " + TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
         } catch (Exception e) {
             e.printStackTrace();
         }
