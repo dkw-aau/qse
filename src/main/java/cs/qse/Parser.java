@@ -64,8 +64,8 @@ public class Parser {
     
     private void runParser() {
         collectClassEntityCount();
-        //bfExperiment();
-        reservoirSamplingFirstPass();
+        bfExperiment();
+        //reservoirSamplingFirstPass();
         //iterateOverBloomFilters();
         //collectClassEntityCount();
         //collectEntities();
