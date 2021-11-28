@@ -299,13 +299,14 @@ public class Parser {
                         System.out.println("Breaking at " + typesDiscovered.size());
                         breaker.stop();
                     } else {
+                        System.out.println(typesDiscovered.size());
                         Node[] nodes = NxParser.parseNodes(line);
                         StopWatch innerWatch = new StopWatch();
                         if (!typesDiscovered.contains(nodes[0].getLabel())) {
                             typesDiscovered.add(nodes[0].getLabel());
                             Set<String> types = new HashSet<>();
                             innerWatch.start();
-                            cteBf.entrySet().parallelStream().forEach(entry -> {
+                            cteBf.entrySet().parallelStream().parallel().forEach(entry -> {
                                 BloomFilter<String> v = entry.getValue();
                                 if (v.contains(nodes[0].getLabel())) {
                                     types.add(entry.getKey().getLabel());
@@ -331,6 +332,7 @@ public class Parser {
     
     public double findAverage(List<Long> array) {
         double sum = array.stream().mapToDouble(Long::doubleValue).sum();
+        System.out.println("Sum: " + sum + ", size: " + array.size());
         return sum / array.size();
     }
     
