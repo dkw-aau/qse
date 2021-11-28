@@ -136,7 +136,7 @@ public class Parser {
     private void bfExperiment() {
         System.out.println("BF Creation Experiment");
         ArrayList<Double> fppSet = new ArrayList<>(Arrays.asList(0.0000001, 0.000001, 0.00001, 0.0001));
-        System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS),Iterating Time Parallel (MS)");
+        System.out.println("::: FPP,Creation Time (Minutes),Iterating Time (MS)");
         fppSet.forEach(fpp -> {
             this.cteBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
             System.out.println("fpp: " + fpp);
@@ -144,9 +144,9 @@ public class Parser {
             System.out.println("creationTime: " + creationTime);
             double iteratingTime = iterateOverBloomFilters();
             System.out.println("iteratingTime: " + iteratingTime);
-            double iteratingTimeParallel = iterateOverBloomFiltersInParallel();
-            System.out.println("iteratingTimeParallel: " + iteratingTimeParallel);
-            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," + iteratingTimeParallel);
+            //double iteratingTimeParallel = iterateOverBloomFiltersInParallel();
+            //System.out.println("iteratingTimeParallel: " + iteratingTimeParallel);
+            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," );
         });
     }
     
