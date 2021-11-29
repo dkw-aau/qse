@@ -8,6 +8,7 @@ import cs.utils.Tuple3;
 import cs.utils.Utils;
 import cs.utils.custom.CustomForEach;
 import cs.utils.encoders.Encoder;
+import cs.utils.parallelism.ThreadExecutor;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
@@ -22,6 +23,7 @@ import org.semanticweb.yars.nx.parser.ParseException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -45,6 +47,7 @@ public class Parser {
     HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
     
     HashMap<Node, BloomFilter<String>> cteBf;
+    ConcurrentHashMap<Node, BloomFilter<String>> concurrentHashMapCteBf;
     
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
@@ -56,6 +59,9 @@ public class Parser {
         //this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.entityDataHashMapLite = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        
+        this.cteBf = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.concurrentHashMapCteBf = new ConcurrentHashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     public void run() {
@@ -63,10 +69,17 @@ public class Parser {
     }
     
     private void runParser() {
-        parsing();
-        parallelFileParsing();
+        collectClassEntityCount();
+        test(2);
+        test(4);
+        test(6);
+        test(8);
+        test(10);
+        test(12);
+        //parsing();
+        //parallelFileParsing();
         //test();
-        //collectClassEntityCount();
+        //
         //bfExperiment();
         //reservoirSamplingFirstPass();
         //iterateOverBloomFilters();
@@ -79,24 +92,25 @@ public class Parser {
         //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
-    private void test() {
+    private void test(int cores) {
+        StopWatch watch = new StopWatch();
+        watch.start();
         try {
-            AtomicInteger lineNo = new AtomicInteger();
-            Files.lines(Path.of(rdfFilePath))
-                    //.takeWhile(n -> n.length() < 10)
-                    .forEach(line -> {
-                        try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            lineNo.getAndIncrement();
-                            System.out.println(line);
-                            if (lineNo.get() > 10) {
-                                throw new Exception();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            
-                        }
-                    });
+            Stream<String> lines = Files.lines(Path.of(rdfFilePath));
+            ThreadExecutor.execute(cores, "FileParsingTask", lines,
+                    (Stream<String> lineStream) -> lines.parallel().forEach(this::parse)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed test with " + cores + " cores : " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    public void parse(String line) {
+        try {
+            Node[] nodes = NxParser.parseNodes(line);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
