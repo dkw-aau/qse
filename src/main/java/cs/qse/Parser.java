@@ -70,12 +70,12 @@ public class Parser {
     
     private void runParser() {
         collectClassEntityCount();
-        test(2);
+        //test(2);
         test(4);
-        test(6);
-        test(8);
-        test(10);
-        test(12);
+        //test(6);
+        //test(8);
+        //test(10);
+        //test(12);
         //parsing();
         //parallelFileParsing();
         //test();
