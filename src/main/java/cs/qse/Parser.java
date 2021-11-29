@@ -69,7 +69,7 @@ public class Parser {
     }
     
     private void runParser() {
-        collectClassEntityCount();
+        //collectClassEntityCount();
         //test(2);
         test(4);
         //test(6);
