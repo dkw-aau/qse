@@ -63,9 +63,11 @@ public class Parser {
     }
     
     private void runParser() {
+        parsing();
+        parallelFileParsing();
         //test();
-        collectClassEntityCount();
-        bfExperiment();
+        //collectClassEntityCount();
+        //bfExperiment();
         //reservoirSamplingFirstPass();
         //iterateOverBloomFilters();
         //collectClassEntityCount();
@@ -133,6 +135,46 @@ public class Parser {
         System.out.println("Time Elapsed reservoirSamplingFirstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    private void parallelFileParsing() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFilePath)).parallel().forEach(line -> {
+                try {
+                    Node[] nodes = NxParser.parseNodes(line);
+                    
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed parallelFileParsing: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void parsing() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
+                try {
+                    Node[] nodes = NxParser.parseNodes(line);
+                    
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("Time Elapsed parsing: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
     private void bfExperiment() {
         System.out.println("BF Creation Experiment");
         ArrayList<Double> fppSet = new ArrayList<>(Arrays.asList(0.0000001, 0.000001, 0.00001, 0.0001));
@@ -146,7 +188,7 @@ public class Parser {
             System.out.println("iteratingTime: " + iteratingTime);
             //double iteratingTimeParallel = iterateOverBloomFiltersInParallel();
             //System.out.println("iteratingTimeParallel: " + iteratingTimeParallel);
-            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + "," );
+            System.out.println("::: " + fpp + "," + creationTime + "," + iteratingTime + ",");
         });
     }
     
