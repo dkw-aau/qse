@@ -71,7 +71,7 @@ public class Parser {
     private void runParser() {
         //collectClassEntityCount();
         //test(2);
-        test(4);
+        test(1);
         //test(6);
         //test(8);
         //test(10);
