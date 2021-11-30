@@ -283,11 +283,11 @@ public class Parser {
         ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         shapesExtractor.setMaxCountSupport(statsComputer.propToClassesHavingMaxCountGreaterThanOne);
         shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+        /*ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
                 shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
             });
-        });
+        });*/
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
