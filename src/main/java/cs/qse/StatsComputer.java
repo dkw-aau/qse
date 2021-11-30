@@ -22,6 +22,50 @@ public class StatsComputer {
     /**
      * This method is used to compute support and confidence...
      */
+    public void computeEncoded(HashMap<Integer, EntityData> entityDataHashMap, HashMap<Integer, Integer> classEntityCount) {
+        //Compute Support
+        entityDataHashMap.forEach((instance, entityData) -> {
+            HashSet<Integer> instanceClasses = entityDataHashMap.get(instance).getClassTypes();
+            if (instanceClasses != null) {
+                for (Integer c : entityDataHashMap.get(instance).getClassTypes()) {
+                    for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
+                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
+                        if (this.shapeTripletSupport.containsKey(tuple3)) {
+                            SC sc = this.shapeTripletSupport.get(tuple3);
+                            Integer newSupp = sc.getSupport() + 1;
+                            sc.setSupport(newSupp);
+                            this.shapeTripletSupport.put(tuple3, sc);
+                        } else {
+                            this.shapeTripletSupport.put(tuple3, new SC(1));
+                        }
+                    }
+                }
+            }
+            
+            //identify properties having max count != 1
+            List<Integer> duplicates = entityData.getProperties().stream().collect(Collectors.groupingBy(Function.identity()))
+                    .entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey).collect(Collectors.toList());
+            duplicates.forEach(prop -> {
+                if (propToClassesHavingMaxCountGreaterThanOne.containsKey(prop)) {
+                    propToClassesHavingMaxCountGreaterThanOne.get(prop).addAll(instanceClasses);
+                } else {
+                    propToClassesHavingMaxCountGreaterThanOne.put(prop, instanceClasses);
+                }
+            });
+        });
+        
+        //Compute Confidence
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SC> entry : this.shapeTripletSupport.entrySet()) {
+            SC value = entry.getValue();
+            double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
+            value.setConfidence(confidence);
+        }
+        
+    }
+    
+    /**
+     * This method is used to compute support and confidence...
+     */
     public void compute(HashMap<Node, EntityData> entityDataHashMap, HashMap<Integer, Integer> classEntityCount) {
         //Compute Support
         entityDataHashMap.forEach((instance, entityData) -> {
