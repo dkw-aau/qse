@@ -77,6 +77,7 @@ public class ExperimentsUtil {
     }
     
     public static void prepareCsvForGroupedStackedBarChart(String fileAddress, String targetFileAddress, boolean skipFirstRow) {
+        System.out.println("invoked::prepareCsvForGroupedStackedBarChart()");
         try {
             FileReader filereader = new FileReader(fileAddress);
             CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
