@@ -126,9 +126,9 @@ public class ShapesExtractor {
                         HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
-                } else {
-                    System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 }
+            } else {
+                System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
             
             
@@ -244,17 +244,22 @@ public class ShapesExtractor {
                 type = "max";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
-                    Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
+                if (queryOutput != null) {
+                    if (queryOutput.isLiteral()) {
+                        Literal literalCount = (Literal) queryOutput;
+                        shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
+                    }
                 }
+                
                 //MIN STATS
                 type = "min";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
-                    Literal literalCount = (Literal) queryOutput;
-                    shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
+                if (queryOutput != null) {
+                    if (queryOutput.isLiteral()) {
+                        Literal literalCount = (Literal) queryOutput;
+                        shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
+                    }
                 }
             }
         } finally {
