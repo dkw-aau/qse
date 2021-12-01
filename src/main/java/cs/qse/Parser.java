@@ -41,7 +41,7 @@ public class Parser {
     NodeEncoder nodeEncoder;
     StatsComputer statsComputer;
     String typePredicate;
-    
+    Integer entityThreshold = 100;
     
     HashMap<Integer, EntityData> encodedEntityDataHashMap;
     
@@ -77,7 +77,7 @@ public class Parser {
     }
     
     private void runParser() {
-        samplingBasedFirstPass(1000);
+        samplingBasedFirstPass();
         secondPass();
         computeSupportConfidence();
         extractSHACLShapes();
@@ -87,63 +87,65 @@ public class Parser {
      * Currently this method performs the following tasks
      * 1. Perform reservoir sampling on typed entities for the given threshold for maximum number of entities
      * 2. Collect class to entity count
-     *
-     * @param threshold for number of max entities to sample for each class
      */
-    private void samplingBasedFirstPass(int threshold) {
+    private void samplingBasedFirstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
-                try {
-                    Node[] nodes = NxParser.parseNodes(line);
-                    //for typed triples
-                    if (nodes[1].toString().equals(typePredicate)) {
-                        int type = encoder.encode(nodes[2].getLabel());
-                        classEntityCountForSampling.putIfAbsent(type, 0);
-                        int entityCount = classEntityCountForSampling.get(type);
-                        if (entityCount < threshold) {
-                            //System.out.println("EntityCount: " + entityCount + " , threshold: " + threshold);
-                            // Track classes per entity
-                            if (encodedEntityDataHashMap.containsKey(nodeEncoder.encode(nodes[0]))) {
-                                encodedEntityDataHashMap.get(nodeEncoder.encode(nodes[0])).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
-                            } else {
-                                HashSet<Integer> hashSet = new HashSet<>();
-                                hashSet.add(encoder.encode(nodes[2].getLabel()));
-                                EntityData entityData = new EntityData();
-                                entityData.getClassTypes().addAll(hashSet);
-                                encodedEntityDataHashMap.put(nodeEncoder.encode(nodes[0]), entityData);
-                            }
-                            entityCount = entityCount + 1;
-                            classEntityCountForSampling.put(type, entityCount);
-                        }
-                        Random random = new Random();
-                        int randomIndex = random.nextInt(entityCount + 1);
-                        
-                        if (randomIndex < threshold && randomIndex < entityCount) {
-                            //randomly pick a number , replace the key
-                            //System.out.println("randomIndex: " + randomIndex + ", entityCount: " + entityCount + " , threshold: " + threshold);
-                            encodedEntityDataHashMap.get(randomIndex).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
-                        }
-                        
-                        if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
-                            Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
-                            classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
-                        } else {
-                            classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
-                        }
-                    }
-                    //for non-typed triples
-                    
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            });
+            Files.lines(Path.of(rdfFilePath)).forEach(this::parsing);
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         System.out.println("Time Elapsed samplingBasedFirstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Size encodedEntityDataHashMap: " + encodedEntityDataHashMap.size());
+        System.out.println("Size classEntityCount: " + classEntityCount.size());
+    }
+    
+    private void parsing(String line) {
+        try {
+            Node[] nodes = NxParser.parseNodes(line);
+            //for typed triples
+            if (nodes[1].toString().equals(typePredicate)) {
+                int type = encoder.encode(nodes[2].getLabel());
+                classEntityCountForSampling.putIfAbsent(type, 0);
+                int entityCount = classEntityCountForSampling.get(type);
+                if (entityCount < entityThreshold) {
+                    //System.out.println("EntityCount: " + entityCount + " , threshold: " + threshold);
+                    // Track classes per entity
+                    if (encodedEntityDataHashMap.containsKey(nodeEncoder.encode(nodes[0]))) {
+                        encodedEntityDataHashMap.get(nodeEncoder.encode(nodes[0])).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
+                    } else {
+                        HashSet<Integer> hashSet = new HashSet<>();
+                        hashSet.add(encoder.encode(nodes[2].getLabel()));
+                        EntityData entityData = new EntityData();
+                        entityData.getClassTypes().addAll(hashSet);
+                        encodedEntityDataHashMap.put(nodeEncoder.encode(nodes[0]), entityData);
+                    }
+                    entityCount = entityCount + 1;
+                    classEntityCountForSampling.put(type, entityCount);
+                }
+                Random random = new Random();
+                int randomIndex = random.nextInt(entityCount + 1);
+                
+                if (randomIndex < entityThreshold && randomIndex < entityCount) {
+                    //randomly pick a number , replace the key
+                    //System.out.println("randomIndex: " + randomIndex + ", entityCount: " + entityCount + " , threshold: " + threshold);
+                    encodedEntityDataHashMap.get(randomIndex).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
+                }
+                
+                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
+                    Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
+                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
+                } else {
+                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
+                }
+            }
+            //for non-typed triples
+            
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
     
     /**
