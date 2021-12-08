@@ -41,7 +41,7 @@ public class Parser {
     NodeEncoder nodeEncoder;
     StatsComputer statsComputer;
     String typePredicate;
-    Integer entityThreshold = 100;
+    Integer entityThreshold = 10;
     
     HashMap<Integer, EntityData> encodedEntityDataHashMap;
     
