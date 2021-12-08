@@ -6,12 +6,8 @@ import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.utils.custom.CustomForEach;
 import cs.utils.encoders.Encoder;
 import cs.utils.encoders.NodeEncoder;
-import cs.utils.parallelism.ThreadExecutor;
-import orestes.bloomfilter.BloomFilter;
-import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -23,11 +19,10 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /**
  * This class parses RDF NT file triples to extract SHACL shapes, compute the confidence/support for shape constraints,
@@ -44,6 +39,7 @@ public class Parser {
     Integer entityThreshold = 10;
     
     HashMap<Integer, EntityData> encodedEntityDataHashMap;
+    HashSet<String> properties = new HashSet<>();
     
     HashMap<Integer, Integer> classEntityCount;
     HashMap<Integer, Integer> classEntityCountForSampling;
@@ -100,11 +96,13 @@ public class Parser {
         System.out.println("Time Elapsed samplingBasedFirstPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         System.out.println("Size encodedEntityDataHashMap: " + encodedEntityDataHashMap.size());
         System.out.println("Size classEntityCount: " + classEntityCount.size());
+        System.out.println("Properties: " + properties.size());
     }
     
     private void parsing(String line) {
         try {
             Node[] nodes = NxParser.parseNodes(line);
+            properties.add(nodes[1].getLabel());
             //for typed triples
             if (nodes[1].toString().equals(typePredicate)) {
                 int type = encoder.encode(nodes[2].getLabel());
@@ -219,6 +217,7 @@ public class Parser {
         }
         watch.stop();
         System.out.println("Time Elapsed secondPass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("classToPropWithObjTypes.size(): " + classToPropWithObjTypes.size());
     }
     
     /**
@@ -265,6 +264,7 @@ public class Parser {
      * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
      */
     public void computeSupportConfidence() {
+        System.out.println("invoked::computeSupportConfidence()");
         StopWatch watch = new StopWatch();
         watch.start();
         shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
@@ -280,16 +280,20 @@ public class Parser {
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      */
     private void extractSHACLShapes() {
+        System.out.println("invoked::extractSHACLShapes()");
         StopWatch watch = new StopWatch();
         watch.start();
         ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         shapesExtractor.setMaxCountSupport(statsComputer.propToClassesHavingMaxCountGreaterThanOne);
+        System.out.println("invoked::constructDefaultShapes()");
         shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        /*ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+        
+        ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
+                System.out.println("invoked::constructPrunedShapes with confidence:" + conf + ", and support " + supp);
                 shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
             });
-        });*/
+        });
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
