@@ -75,8 +75,8 @@ public class Parser {
     private void runParser() {
         samplingBasedFirstPass();
         secondPass();
-        computeSupportConfidence();
-        extractSHACLShapes();
+        //computeSupportConfidence();
+        //extractSHACLShapes();
     }
     
     /**
