@@ -31,17 +31,18 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class MinCardinalityExperiment {
     Model model = null;
     ModelBuilder builder = null;
     Encoder encoder;
-    HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
-    HashMap<Integer, Integer> classInstanceCount;
+    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    Map<Integer, Integer> classInstanceCount;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT_MIN_CARD;
     
-    public MinCardinalityExperiment(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
+    public MinCardinalityExperiment(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
@@ -49,7 +50,7 @@ public class MinCardinalityExperiment {
         builder.setNamespace("shape", Constants.SHAPES_NAMESPACE);
     }
     
-    public void constructDefaultShapes(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
+    public void constructDefaultShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
@@ -69,7 +70,7 @@ public class MinCardinalityExperiment {
         //this.writeModelToFile("DEFAULT");
     }
     
-    public void constructPrunedShapes(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+    public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
@@ -86,7 +87,7 @@ public class MinCardinalityExperiment {
         //this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
     
-    private Model constructShapeWithoutPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes) {
+    private Model constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
@@ -107,7 +108,7 @@ public class MinCardinalityExperiment {
         return m;
     }
     
-    private Model constructShapesWithPruning(HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+    private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
@@ -129,7 +130,7 @@ public class MinCardinalityExperiment {
         return m;
     }
     
-    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal) {
+    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             IRI property = factory.createIRI(encoder.decode(prop));
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
@@ -167,7 +168,7 @@ public class MinCardinalityExperiment {
         });
     }
     
-    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal, Double confidence, Integer support) {
+    private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal, Double confidence, Integer support) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             IRI property = factory.createIRI(encoder.decode(prop));
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");

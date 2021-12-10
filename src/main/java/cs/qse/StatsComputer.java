@@ -4,28 +4,25 @@ import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import org.semanticweb.yars.nx.Node;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class StatsComputer {
-    HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
-    HashMap<Integer, HashSet<Integer>> propToClassesHavingMaxCountGreaterThanOne = new HashMap<>();
+    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    Map<Integer, Set<Integer>> propToClassesHavingMaxCountGreaterThanOne = new HashMap<>();
     
-    public StatsComputer(HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
+    public StatsComputer(Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
         this.shapeTripletSupport = shapeTripletSupport;
     }
     
     /**
      * This method is used to compute support and confidence...
      */
-    public void compute(HashMap<Node, EntityData> entityDataHashMap, HashMap<Integer, Integer> classEntityCount) {
+    public void compute(Map<Node, EntityData> entityDataHashMap, Map<Integer, Integer> classEntityCount) {
         //Compute Support
         entityDataHashMap.forEach((instance, entityData) -> {
-            HashSet<Integer> instanceClasses = entityDataHashMap.get(instance).getClassTypes();
+            Set<Integer> instanceClasses = entityDataHashMap.get(instance).getClassTypes();
             if (instanceClasses != null) {
                 for (Integer c : entityDataHashMap.get(instance).getClassTypes()) {
                     for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
@@ -63,11 +60,11 @@ public class StatsComputer {
         
     }
     
-    public HashMap<Integer, HashSet<Integer>> getPropToClassesHavingMaxCountGreaterThanOne() {
+    public Map<Integer, Set<Integer>> getPropToClassesHavingMaxCountGreaterThanOne() {
         return propToClassesHavingMaxCountGreaterThanOne;
     }
     
-    public HashMap<Tuple3<Integer, Integer, Integer>, SC> getShapeTripletSupport() {
+    public Map<Tuple3<Integer, Integer, Integer>, SC> getShapeTripletSupport() {
         return shapeTripletSupport;
     }
     

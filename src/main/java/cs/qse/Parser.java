@@ -18,8 +18,7 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,11 +32,16 @@ public class Parser {
     Encoder encoder;
     StatsComputer statsComputer;
     String typePredicate;
-    
-    HashMap<Node, EntityData> entityDataHashMap;
-    HashMap<Integer, Integer> classEntityCount;
-    HashMap<Integer, HashMap<Integer, HashSet<Integer>>> classToPropWithObjTypes;
-    HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+
+    // In the following the size of each data structure
+    // N = number of distinct nodes in the graph
+    // T = number of distinct types
+    // P = number of distinct predicates
+
+    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information -- > for every node we store 1 integer for every node edge --> entityDataHashMap stores the entire graph in memory!
+    Map<Integer, Integer> classEntityCount; // Size == T
+    Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
+    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport; // Size O(T*P*T)
     
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
@@ -73,24 +77,25 @@ public class Parser {
             Files.lines(Path.of(rdfFilePath))
                     .forEach(line -> {
                         try {
-                            Node[] nodes = NxParser.parseNodes(line);
-                            if (nodes[1].toString().equals(typePredicate)) {
+                            // Get [S,P,O] as Node from triple
+                            Node[] nodes = NxParser.parseNodes(line); // how much time is spent parsing?
+                            if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                                 // Track classes per entity
-                                if (entityDataHashMap.containsKey(nodes[0])) {
-                                    entityDataHashMap.get(nodes[0]).getClassTypes().add(encoder.encode(nodes[2].getLabel()));
+
+                                int objID = encoder.encode(nodes[2].getLabel());
+
+                                if (entityDataHashMap.containsKey(nodes[0])) { // we check if we have seen the subject earlier
+                                    entityDataHashMap.get(nodes[0]).getClassTypes().add(objID); // add the type to the list of types of this node
                                 } else {
                                     HashSet<Integer> hashSet = new HashSet<>();
-                                    hashSet.add(encoder.encode(nodes[2].getLabel()));
+                                    hashSet.add(objID);
                                     EntityData entityData = new EntityData();
                                     entityData.getClassTypes().addAll(hashSet);
+                                    // if entityDataHashMap.contains(nodes[0]) || random <0.1
                                     entityDataHashMap.put(nodes[0], entityData);
                                 }
-                                if (classEntityCount.containsKey(encoder.encode(nodes[2].getLabel()))) {
-                                    Integer val = classEntityCount.get(encoder.encode(nodes[2].getLabel()));
-                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), val + 1);
-                                } else {
-                                    classEntityCount.put(encoder.encode(nodes[2].getLabel()), 1);
-                                }
+
+                                classEntityCount.merge(objID, 1, Integer::sum);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -116,41 +121,43 @@ public class Parser {
                     .forEach(line -> {
                         try {
                             //Declaring required HashSets
-                            HashSet<Integer> objTypes = new HashSet<>();
-                            HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
+                            Set<Integer> objTypes ;
+                            Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>();
                             
                             Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
-                            Node entity = nodes[0];
+                            Node subject = nodes[0];
                             String objectType = extractObjectType(nodes[2].toString());
                             
-                            if (objectType.equals("IRI")) { // // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                            if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                                 if (entityDataHashMap.containsKey(nodes[2])) {
-                                    for (Integer node : entityDataHashMap.get(nodes[2]).getClassTypes()) {
-                                        objTypes.add(node);
+                                    objTypes = entityDataHashMap.get(nodes[2]).getClassTypes();
+                                    for (Integer node : objTypes ) { // get classes of node2
                                         prop2objTypeTuples.add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), node));
                                     }
-                                    addEntityToPropertyConstraints(prop2objTypeTuples, entity);
+                                    addEntityToPropertyConstraints(prop2objTypeTuples, subject);
+                                } else {
+                                    // If we do not have data this is an unlabelled IRI
+                                    objTypes = Collections.emptySet();
                                 }
                             } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                                objTypes.add(encoder.encode(objectType));
-                                prop2objTypeTuples = new HashSet<>() {{
-                                    add(new Tuple2<>(encoder.encode(nodes[1].getLabel()), encoder.encode(objectType)));
-                                }};
-                                addEntityToPropertyConstraints(prop2objTypeTuples, entity);
+                                int objID =  encoder.encode(objectType);
+                                objTypes = Collections.singleton(objID);
+                                prop2objTypeTuples = Collections.singleton(new Tuple2<>(encoder.encode(nodes[1].getLabel()), objID));
+                                addEntityToPropertyConstraints(prop2objTypeTuples, subject);
                             }
                             // Keep track of each property of the node
-                            if (entityDataHashMap.get(entity) != null) {
-                                entityDataHashMap.get(nodes[0]).getProperties().add(encoder.encode(nodes[1].getLabel()));
-                            } else {
-                                EntityData entityData = new EntityData();
-                                entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
-                                entityDataHashMap.put(nodes[0], entityData);
+
+                            EntityData entityData=  entityDataHashMap.get(subject);
+                            if ( entityData == null) {
+                                entityData = new EntityData();
+                                entityDataHashMap.put(subject, entityData);
                             }
+                            entityData.getProperties().add(encoder.encode(nodes[1].getLabel()));
                             
-                            HashSet<Integer> entityClasses = entityDataHashMap.get(nodes[0]).getClassTypes();
+                            Set<Integer> entityClasses = entityData.getClassTypes();
                             if (entityClasses != null) {
                                 for (Integer entityClass : entityClasses) {
-                                    HashMap<Integer, HashSet<Integer>> propToObjTypes;
+                                    Map<Integer, Set<Integer>> propToObjTypes;//todo optimize
                                     if (classToPropWithObjTypes.containsKey(entityClass)) {
                                         propToObjTypes = classToPropWithObjTypes.get(entityClass);
                                         int prop = encoder.encode(nodes[1].getLabel());
@@ -183,7 +190,7 @@ public class Parser {
      * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
      * @param entity             : Entity such as :Paris
      */
-    private void addEntityToPropertyConstraints(HashSet<Tuple2<Integer, Integer>> prop2objTypeTuples, Node entity) {
+    private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node entity) {
         if (entityDataHashMap.containsKey(entity)) {
             entityDataHashMap.get(entity).getPropertyConstraints().addAll(prop2objTypeTuples);
         } else {
