@@ -154,6 +154,7 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
+                    //todo this needs to be fixed 
                     if (maxCountSupport.containsKey(prop) && maxCountSupport.get(prop).contains(subjEncoded)) {
                         b.subject(propShape).add(SHACL.MAX_COUNT, 1);
                     }

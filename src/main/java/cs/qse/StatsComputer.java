@@ -21,13 +21,13 @@ public class StatsComputer {
      */
     public void compute(Map<Node, EntityData> entityDataHashMap, Map<Integer, Integer> classEntityCount) {
         //Compute Support
-        entityDataHashMap.forEach((instance, entityData) -> {
-            Set<Integer> instanceClasses = entityDataHashMap.get(instance).getClassTypes();
+        entityDataHashMap.forEach((entity, entityData) -> {
+            Set<Integer> instanceClasses = entityDataHashMap.get(entity).getClassTypes();
             if (instanceClasses != null) {
-                for (Integer c : entityDataHashMap.get(instance).getClassTypes()) {
+                for (Integer c : entityDataHashMap.get(entity).getClassTypes()) {
                     for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
-                        if (this.shapeTripletSupport.containsKey(tuple3)) {
+                        if (this.shapeTripletSupport.containsKey(tuple3)) { //todo: Optimize it
                             SC sc = this.shapeTripletSupport.get(tuple3);
                             Integer newSupp = sc.getSupport() + 1;
                             sc.setSupport(newSupp);
@@ -38,9 +38,19 @@ public class StatsComputer {
                     }
                 }
             }
-            
+            //todo , fix max count feature
             //identify properties having max count != 1
-            List<Integer> duplicates = entityData.getProperties().stream().collect(Collectors.groupingBy(Function.identity()))
+            entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
+                if (propertyData.count > 1) {
+                    if (propToClassesHavingMaxCountGreaterThanOne.containsKey(property)) {
+                        propToClassesHavingMaxCountGreaterThanOne.get(property).addAll(propertyData.objTypes);
+                    } else {
+                        propToClassesHavingMaxCountGreaterThanOne.put(property, instanceClasses);
+                    }
+                }
+            });
+            
+            /*List<Integer> duplicates = entityData.getProperties().stream().collect(Collectors.groupingBy(Function.identity()))
                     .entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey).collect(Collectors.toList());
             duplicates.forEach(prop -> {
                 if (propToClassesHavingMaxCountGreaterThanOne.containsKey(prop)) {
@@ -49,6 +59,7 @@ public class StatsComputer {
                     propToClassesHavingMaxCountGreaterThanOne.put(prop, instanceClasses);
                 }
             });
+            */
         });
         
         //Compute Confidence
