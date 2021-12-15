@@ -137,9 +137,9 @@ public class Parser {
                         addEntityToPropertyConstraints(prop2objTypeTuples, subject);
                     }
                     
-                    EntityData entityData = entityDataHashMap.get(subject);
-                    if (entityData != null) {
-                        for (Integer entityClass : entityData.getClassTypes()) {
+                    //EntityData entityData = entityDataHashMap.get(subject);
+                    if (entityDataHashMap.get(subject) != null) {
+                        for (Integer entityClass : entityDataHashMap.get(subject).getClassTypes()) {
                             Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
                             if (propToObjTypes == null) {
                                 propToObjTypes = new HashMap<>();
