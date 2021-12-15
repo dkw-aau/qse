@@ -139,14 +139,13 @@ public class Parser {
                     
                     EntityData entityData = entityDataHashMap.get(subject);
                     if (entityData != null) {
-                        Set<Integer> entityClasses = entityData.getClassTypes();
-                        for (Integer entityClass : entityClasses) {
+                        for (Integer entityClass : entityData.getClassTypes()) {
                             Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
-                            if (propToObjTypes == null) {
-                                propToObjTypes = new HashMap<>();
+                            if (propToObjTypes.containsKey(propID))
+                                propToObjTypes.get(propID).addAll(objTypes);
+                            else {
+                                propToObjTypes.put(propID, objTypes);
                             }
-                            propToObjTypes.putIfAbsent(propID, objTypes);
-                            propToObjTypes.get(propID).addAll(objTypes);
                             classToPropWithObjTypes.put(entityClass, propToObjTypes);
                         }
                     }
