@@ -24,7 +24,7 @@ public class StatsComputer {
         entityDataHashMap.forEach((entity, entityData) -> {
             Set<Integer> instanceClasses = entityDataHashMap.get(entity).getClassTypes();
             if (instanceClasses != null) {
-                for (Integer c : entityDataHashMap.get(entity).getClassTypes()) {
+                for (Integer c : instanceClasses) {
                     for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
                         if (this.shapeTripletSupport.containsKey(tuple3)) { //todo: Optimize it
@@ -43,7 +43,8 @@ public class StatsComputer {
             entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
                 if (propertyData.count > 1) {
                     if (propToClassesHavingMaxCountGreaterThanOne.containsKey(property)) {
-                        propToClassesHavingMaxCountGreaterThanOne.get(property).addAll(propertyData.objTypes);
+                        assert instanceClasses != null;
+                        propToClassesHavingMaxCountGreaterThanOne.get(property).addAll(instanceClasses);
                     } else {
                         propToClassesHavingMaxCountGreaterThanOne.put(property, instanceClasses);
                     }
