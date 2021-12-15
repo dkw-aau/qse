@@ -29,17 +29,20 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
+ */
 public class ShapesExtractor {
     Model model = null;
-    ModelBuilder builder = null;
+    ModelBuilder builder;
     Encoder encoder;
-    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
+    Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
     Map<Integer, Integer> classInstanceCount;
-    Map<Integer, Set<Integer>> maxCountSupport;
+    Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
     
-    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
@@ -131,8 +134,6 @@ public class ShapesExtractor {
                     System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 }
             }
-            
-            
         });
         m = b.build();
         return m;
@@ -147,8 +148,8 @@ public class ShapesExtractor {
             b.subject(propShape)
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
-            //todo this needs to be fixed
-            if (maxCountSupport.containsKey(prop) && maxCountSupport.get(prop).contains(subjEncoded)) {
+            
+            if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                 b.subject(propShape).add(SHACL.MAX_COUNT, 1);
             }
             propObjectTypes.forEach(encodedObjectType -> {
@@ -193,7 +194,7 @@ public class ShapesExtractor {
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
-                    SuppConf sc = shapeTripletSupport.get(tuple3);
+                    SupportConfidence sc = shapeTripletSupport.get(tuple3);
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
                             objTypesSet.add(encodedObjectType);
@@ -289,7 +290,7 @@ public class ShapesExtractor {
         return queryOutput;
     }
     
-    public void setMaxCountSupport(Map<Integer, Set<Integer>> propToClassesHavingMaxCountGreaterThanOne) {
-        this.maxCountSupport = propToClassesHavingMaxCountGreaterThanOne;
+    public void setPropWithClassesHavingMaxCountOne(Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne) {
+        this.propWithClassesHavingMaxCountOne = propWithClassesHavingMaxCountOne;
     }
 }

@@ -6,18 +6,20 @@ import org.semanticweb.yars.nx.Node;
 
 import java.util.*;
 
+/**
+ * This class is used to compute stats like confidence, support, and cardinality constraints.
+ */
 public class StatsComputer {
-    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
-    Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne = new HashMap<>();
+    Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T)
+    Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne; // Size O(P*T)
     
-    public StatsComputer(Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport) {
-        this.shapeTripletSupport = shapeTripletSupport;
-    }
+    public StatsComputer() {this.propWithClassesHavingMaxCountOne = new HashMap<>();}
     
     /**
-     * This method is used to compute support and confidence...
+     * This method is used to compute support and confidence.
+     * Additionally, while iterating over entities, we prepare a new Map propWithClassesHavingMaxCountOne to store all the properties (along with their classes) having max count = 1;
      */
-    public void compute(Map<Node, EntityData> entityDataHashMap, Map<Integer, Integer> classEntityCount) {
+    public void computeSupportConfidence(Map<Node, EntityData> entityDataHashMap, Map<Integer, Integer> classEntityCount) {
         //Compute Support
         entityDataHashMap.forEach((entity, entityData) -> {
             Set<Integer> instanceClasses = entityDataHashMap.get(entity).getClassTypes();
@@ -25,63 +27,59 @@ public class StatsComputer {
                 for (Integer c : instanceClasses) {
                     for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
-                        if (this.shapeTripletSupport.containsKey(tuple3)) { //todo: Optimize it
-                            SuppConf sc = this.shapeTripletSupport.get(tuple3);
+                        SupportConfidence sc = this.shapeTripletSupport.get(tuple3);
+                        if (sc == null) {
+                            this.shapeTripletSupport.put(tuple3, new SupportConfidence(1));
+                        } else {
+                            //SupportConfidence sc = this.shapeTripletSupport.get(tuple3);
                             Integer newSupp = sc.getSupport() + 1;
                             sc.setSupport(newSupp);
                             this.shapeTripletSupport.put(tuple3, sc);
-                        } else {
-                            this.shapeTripletSupport.put(tuple3, new SuppConf(1));
                         }
                     }
                 }
             }
-            //todo , fix max count feature
-            //identify properties having max count != 1
+            //here keep track of all the properties (along with their classes) having max count = 1;
             entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
                 if (propertyData.count <= 1) {
-                    if (propWithClassesHavingMaxCountOne.containsKey(property)) {
-                        assert instanceClasses != null;
-                        propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
-                    } else {
-                        propWithClassesHavingMaxCountOne.put(property, instanceClasses);
-                    }
+                    propWithClassesHavingMaxCountOne.putIfAbsent(property, new HashSet<>());
+                    assert instanceClasses != null;
+                    propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
                 }
             });
-            
-            /*List<Integer> duplicates = entityData.getProperties().stream().collect(Collectors.groupingBy(Function.identity()))
-                    .entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey).collect(Collectors.toList());
-            duplicates.forEach(prop -> {
-                if (propToClassesHavingMaxCountGreaterThanOne.containsKey(prop)) {
-                    propToClassesHavingMaxCountGreaterThanOne.get(prop).addAll(instanceClasses);
-                } else {
-                    propToClassesHavingMaxCountGreaterThanOne.put(prop, instanceClasses);
-                }
-            });
-            */
         });
         
         //Compute Confidence
-        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SuppConf> entry : this.shapeTripletSupport.entrySet()) {
-            SuppConf value = entry.getValue();
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
+            SupportConfidence value = entry.getValue();
             double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }
         
     }
     
+    //Setters
+    public void setShapeTripletSupport(Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport) {
+        this.shapeTripletSupport = shapeTripletSupport;
+    }
+    
+    
+    public void setPropWithClassesHavingMaxCountOne(Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne) {
+        this.propWithClassesHavingMaxCountOne = propWithClassesHavingMaxCountOne;
+    }
+    
+    
+    //Getters
     public Map<Integer, Set<Integer>> getPropWithClassesHavingMaxCountOne() {
-        return propWithClassesHavingMaxCountOne;
+        return this.propWithClassesHavingMaxCountOne;
     }
     
-    public Map<Tuple3<Integer, Integer, Integer>, SuppConf> getShapeTripletSupport() {
-        return shapeTripletSupport;
+    public Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> getShapeTripletSupport() {
+        return this.shapeTripletSupport;
     }
     
-    /**
-     * Not used anymore
-     */
-    public void compute(Map<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints, HashMap<Node, HashSet<Integer>> entityToClassTypes, HashMap<Integer, Integer> classEntityCount) {
+    //Not used anymore
+    public void computeSupportConfidence(Map<Node, HashSet<Tuple2<Integer, Integer>>> entityToPropertyConstraints, HashMap<Node, HashSet<Integer>> entityToClassTypes, HashMap<Integer, Integer> classEntityCount) {
         //Compute Support
         entityToPropertyConstraints.forEach((instance, propertyShapeSet) -> {
             HashSet<Integer> instanceClasses = entityToClassTypes.get(instance);
@@ -90,12 +88,12 @@ public class StatsComputer {
                     for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
                         if (this.shapeTripletSupport.containsKey(tuple3)) {
-                            SuppConf sc = this.shapeTripletSupport.get(tuple3);
+                            SupportConfidence sc = this.shapeTripletSupport.get(tuple3);
                             Integer newSupp = sc.getSupport() + 1;
                             sc.setSupport(newSupp);
                             this.shapeTripletSupport.put(tuple3, sc);
                         } else {
-                            this.shapeTripletSupport.put(tuple3, new SuppConf(1));
+                            this.shapeTripletSupport.put(tuple3, new SupportConfidence(1));
                         }
                     }
                 }
@@ -103,8 +101,8 @@ public class StatsComputer {
         });
         
         //Compute Confidence
-        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SuppConf> entry : this.shapeTripletSupport.entrySet()) {
-            SuppConf value = entry.getValue();
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
+            SupportConfidence value = entry.getValue();
             double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }

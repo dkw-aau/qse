@@ -17,7 +17,7 @@ public class Main {
         configPath = args[0];
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes")); // expected or estimated numberOfClasses
-        numberOfInstances = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines")); // expected or estimated numberOfInstances
+        numberOfInstances = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
         benchmark();
     }
     
