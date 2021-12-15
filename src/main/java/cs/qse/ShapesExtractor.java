@@ -91,7 +91,7 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+            //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                 String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                 b.subject(nodeShape)
@@ -103,9 +103,9 @@ public class ShapesExtractor {
                 if (propToObjectType != null) {
                     constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
                 }
-            } else {
-                System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-            }
+            //} else {
+            //    System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+            //}
         });
         m = b.build();
         return m;
@@ -115,7 +115,7 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+            //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                 //NODE SHAPES PRUNING
                 if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
@@ -130,9 +130,9 @@ public class ShapesExtractor {
                         Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
-                } else {
-                    System.out.println("INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-                }
+                //} else {
+                //    System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+                //}
             }
         });
         m = b.build();
@@ -149,14 +149,15 @@ public class ShapesExtractor {
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
             
-            if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
-                b.subject(propShape).add(SHACL.MAX_COUNT, 1);
-            }
+            
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
+                    if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                        b.subject(propShape).add(SHACL.MAX_COUNT, 1);
                     }
                 }
                 String objectType = encoder.decode(encodedObjectType);
