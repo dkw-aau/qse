@@ -2,7 +2,7 @@
 package cs.qse.experiments;
 
 import cs.Main;
-import cs.qse.SC;
+import cs.qse.SuppConf;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -37,12 +37,12 @@ public class MinCardinalityExperiment {
     Model model = null;
     ModelBuilder builder = null;
     Encoder encoder;
-    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
     Map<Integer, Integer> classInstanceCount;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT_MIN_CARD;
     
-    public MinCardinalityExperiment(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+    public MinCardinalityExperiment(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
@@ -215,7 +215,7 @@ public class MinCardinalityExperiment {
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
-                    SC sc = shapeTripletSupport.get(tuple3);
+                    SuppConf sc = shapeTripletSupport.get(tuple3);
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
                             objTypesSet.add(encodedObjectType);

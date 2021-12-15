@@ -1,7 +1,7 @@
 package cs.qse.endpoint;
 
 import cs.Main;
-import cs.qse.SC;
+import cs.qse.SuppConf;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.Tuple3;
@@ -33,7 +33,7 @@ public class SHACLER {
     Model model = null;
     ModelBuilder builder = null;
     Encoder encoder;
-    HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    HashMap<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
     String logfileAddress = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
     
@@ -42,7 +42,7 @@ public class SHACLER {
         builder.setNamespace("shape", Constants.SHAPES_NAMESPACE);
     }
     
-    public SHACLER(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
+    public SHACLER(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;

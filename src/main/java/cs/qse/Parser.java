@@ -41,7 +41,7 @@ public class Parser {
     Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information -- > for every node we store 1 integer for every node edge --> entityDataHashMap stores the entire graph in memory!
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
-    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport; // Size O(T*P*T) //todo define or explain what is it
+    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport; // Size O(T*P*T) //todo define or explain what is it
     
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
@@ -256,7 +256,14 @@ public class Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         ShapesExtractor shapesExtractor = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
-        shapesExtractor.setMaxCountSupport(statsComputer.propToClassesHavingMaxCountGreaterThanOne);
+        shapesExtractor.setMaxCountSupport(statsComputer.propWithClassesHavingMaxCountOne);
+        statsComputer.propWithClassesHavingMaxCountOne.forEach((k, v) -> {
+            System.out.print(k + " " + encoder.decode(k) + " --> ");
+            v.forEach(type-> {
+                System.out.print(encoder.decode(type) + " , ");
+            });
+            System.out.println();
+        });
         shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         /*ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {

@@ -5,14 +5,12 @@ import cs.utils.Tuple3;
 import org.semanticweb.yars.nx.Node;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class StatsComputer {
-    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
-    Map<Integer, Set<Integer>> propToClassesHavingMaxCountGreaterThanOne = new HashMap<>();
+    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
+    Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne = new HashMap<>();
     
-    public StatsComputer(Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport) {
+    public StatsComputer(Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport) {
         this.shapeTripletSupport = shapeTripletSupport;
     }
     
@@ -28,12 +26,12 @@ public class StatsComputer {
                     for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
                         if (this.shapeTripletSupport.containsKey(tuple3)) { //todo: Optimize it
-                            SC sc = this.shapeTripletSupport.get(tuple3);
+                            SuppConf sc = this.shapeTripletSupport.get(tuple3);
                             Integer newSupp = sc.getSupport() + 1;
                             sc.setSupport(newSupp);
                             this.shapeTripletSupport.put(tuple3, sc);
                         } else {
-                            this.shapeTripletSupport.put(tuple3, new SC(1));
+                            this.shapeTripletSupport.put(tuple3, new SuppConf(1));
                         }
                     }
                 }
@@ -41,12 +39,12 @@ public class StatsComputer {
             //todo , fix max count feature
             //identify properties having max count != 1
             entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
-                if (propertyData.count > 1) {
-                    if (propToClassesHavingMaxCountGreaterThanOne.containsKey(property)) {
+                if (propertyData.count <= 1) {
+                    if (propWithClassesHavingMaxCountOne.containsKey(property)) {
                         assert instanceClasses != null;
-                        propToClassesHavingMaxCountGreaterThanOne.get(property).addAll(instanceClasses);
+                        propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
                     } else {
-                        propToClassesHavingMaxCountGreaterThanOne.put(property, instanceClasses);
+                        propWithClassesHavingMaxCountOne.put(property, instanceClasses);
                     }
                 }
             });
@@ -64,19 +62,19 @@ public class StatsComputer {
         });
         
         //Compute Confidence
-        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SC> entry : this.shapeTripletSupport.entrySet()) {
-            SC value = entry.getValue();
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SuppConf> entry : this.shapeTripletSupport.entrySet()) {
+            SuppConf value = entry.getValue();
             double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }
         
     }
     
-    public Map<Integer, Set<Integer>> getPropToClassesHavingMaxCountGreaterThanOne() {
-        return propToClassesHavingMaxCountGreaterThanOne;
+    public Map<Integer, Set<Integer>> getPropWithClassesHavingMaxCountOne() {
+        return propWithClassesHavingMaxCountOne;
     }
     
-    public Map<Tuple3<Integer, Integer, Integer>, SC> getShapeTripletSupport() {
+    public Map<Tuple3<Integer, Integer, Integer>, SuppConf> getShapeTripletSupport() {
         return shapeTripletSupport;
     }
     
@@ -92,12 +90,12 @@ public class StatsComputer {
                     for (Tuple2<Integer, Integer> propObjTuple : propertyShapeSet) {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
                         if (this.shapeTripletSupport.containsKey(tuple3)) {
-                            SC sc = this.shapeTripletSupport.get(tuple3);
+                            SuppConf sc = this.shapeTripletSupport.get(tuple3);
                             Integer newSupp = sc.getSupport() + 1;
                             sc.setSupport(newSupp);
                             this.shapeTripletSupport.put(tuple3, sc);
                         } else {
-                            this.shapeTripletSupport.put(tuple3, new SC(1));
+                            this.shapeTripletSupport.put(tuple3, new SuppConf(1));
                         }
                     }
                 }
@@ -105,8 +103,8 @@ public class StatsComputer {
         });
         
         //Compute Confidence
-        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SC> entry : this.shapeTripletSupport.entrySet()) {
-            SC value = entry.getValue();
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SuppConf> entry : this.shapeTripletSupport.entrySet()) {
+            SuppConf value = entry.getValue();
             double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }

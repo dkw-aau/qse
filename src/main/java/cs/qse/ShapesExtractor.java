@@ -33,13 +33,13 @@ public class ShapesExtractor {
     Model model = null;
     ModelBuilder builder = null;
     Encoder encoder;
-    Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport;
+    Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport;
     Map<Integer, Integer> classInstanceCount;
     Map<Integer, Set<Integer>> maxCountSupport;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
     
-    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SC> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SuppConf> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
@@ -147,19 +147,17 @@ public class ShapesExtractor {
             b.subject(propShape)
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
-            
+            //todo this needs to be fixed
+            if (maxCountSupport.containsKey(prop) && maxCountSupport.get(prop).contains(subjEncoded)) {
+                b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+            }
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
-                    //todo this needs to be fixed
-                    if (maxCountSupport.containsKey(prop) && !maxCountSupport.get(prop).contains(subjEncoded)) {
-                        b.subject(propShape).add(SHACL.MAX_COUNT, 1);
-                    }
                 }
-                
                 String objectType = encoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
@@ -179,7 +177,6 @@ public class ShapesExtractor {
                             System.out.println("INVALID Object Type IRI: " + objectType);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                         }
-                        
                     }
                 } else {
                     // in case the type is null, we set it default as string
@@ -196,7 +193,7 @@ public class ShapesExtractor {
             propObjectTypes.forEach(encodedObjectType -> {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
-                    SC sc = shapeTripletSupport.get(tuple3);
+                    SuppConf sc = shapeTripletSupport.get(tuple3);
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
                             objTypesSet.add(encodedObjectType);

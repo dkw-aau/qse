@@ -1,20 +1,20 @@
 package cs.qse;
 
 /**
- * This class is called Support Confidence (SC) Computer Class, used to get or set the support/confidence of shape
+ * This class is called Support Confidence (SuppConf) Computer Class, used to get or set the support/confidence of shape
  * constraints
  */
-public class SC { //todo change the name of this class
+public class SuppConf {
     Integer support = 0;
     Double confidence = 0D;
     
-    public SC() {}
+    public SuppConf() {}
     
-    public SC(Integer support) {
+    public SuppConf(Integer support) {
         this.support = support;
     }
     
-    public SC(Integer s, Double c) {
+    public SuppConf(Integer s, Double c) {
         this.support = s;
         this.confidence = c;
     }
