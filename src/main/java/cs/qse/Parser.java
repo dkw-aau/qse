@@ -61,8 +61,8 @@ public class Parser {
     private void runParser() {
         firstPass();
         secondPass();
-        computeSupportConfidence();
-        extractSHACLShapes();
+        //computeSupportConfidence();
+        //extractSHACLShapes();
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -136,36 +136,10 @@ public class Parser {
                         prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
                         addEntityToPropertyConstraints(prop2objTypeTuples, subject);
                     }
-    
-                    EntityData entityData=  entityDataHashMap.get(subject);
-                    if ( entityData == null) {
-                        entityData = new EntityData();
-                        entityDataHashMap.put(subject, entityData);
-                    }
-    
-                    Set<Integer> entityClasses = entityData.getClassTypes();
-                    if (entityClasses != null) {
-                        for (Integer entityClass : entityClasses) {
-                            Map<Integer, Set<Integer>> propToObjTypes;//todo optimize
-                            if (classToPropWithObjTypes.containsKey(entityClass)) {
-                                propToObjTypes = classToPropWithObjTypes.get(entityClass);
-                                //int prop = encoder.encode(nodes[1].getLabel());
-                                if (propToObjTypes.containsKey(propID))
-                                    propToObjTypes.get(propID).addAll(objTypes);
-                                else {
-                                    propToObjTypes.put(propID, objTypes);
-                                }
-                            } else {
-                                propToObjTypes = new HashMap<>();
-                                propToObjTypes.put(propID, objTypes);
-                            }
-                            classToPropWithObjTypes.put(entityClass, propToObjTypes);
-                        }
-                    }
                     
-                    /*//EntityData entityData = entityDataHashMap.get(subject);
-                    if (entityDataHashMap.get(subject) != null) {
-                        for (Integer entityClass : entityDataHashMap.get(subject).getClassTypes()) {
+                    EntityData entityData = entityDataHashMap.get(subject);
+                    if (entityData != null) {
+                        for (Integer entityClass : entityData.getClassTypes()) {
                             Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
                             if (propToObjTypes == null) {
                                 propToObjTypes = new HashMap<>();
@@ -178,7 +152,7 @@ public class Parser {
                             }
                             classToPropWithObjTypes.put(entityClass, propToObjTypes);
                         }
-                    }*/
+                    }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
