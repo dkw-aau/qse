@@ -143,14 +143,16 @@ public class Parser {
                             Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
                             if (propToObjTypes == null) {
                                 propToObjTypes = new HashMap<>();
-                                propToObjTypes.put(propID, objTypes);
+                                classToPropWithObjTypes.put(entityClass, propToObjTypes);
                             }
-                            if (propToObjTypes.containsKey(propID))
-                                propToObjTypes.get(propID).addAll(objTypes);
-                            else {
-                                propToObjTypes.put(propID, objTypes);
+
+                            Set<Integer> classObjTypes = propToObjTypes.get(propID);
+                            if (classObjTypes == null){
+                                classObjTypes = new HashSet<>();
+                                propToObjTypes.put(propID, classObjTypes);
                             }
-                            classToPropWithObjTypes.put(entityClass, propToObjTypes);
+
+                            classObjTypes.addAll(objTypes);
                         }
                     }
                 } catch (ParseException e) {
