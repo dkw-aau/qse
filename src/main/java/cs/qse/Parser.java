@@ -1,5 +1,6 @@
 package cs.qse;
 
+import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
 import cs.qse.experiments.MinCardinalityExperiment;
 import cs.utils.Constants;
@@ -61,8 +62,8 @@ public class Parser {
     private void runParser() {
         firstPass();
         secondPass();
-        computeSupportConfidence();
-        extractSHACLShapes();
+        //computeSupportConfidence();
+        //extractSHACLShapes();
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -180,7 +181,7 @@ public class Parser {
         //Add Property Constraint and Property cardinality
         for (Tuple2<Integer, Integer> tuple2 : prop2objTypeTuples) {
             currentEntityData.addPropertyConstraint(tuple2._1, tuple2._2);
-            if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+            if (Main.extractMaxCardConstraints) {
                 currentEntityData.addPropertyCardinality(tuple2._1);
             }
         }

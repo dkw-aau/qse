@@ -12,12 +12,14 @@ public class Main {
     public static String datasetPath;
     public static int numberOfClasses;
     public static int numberOfInstances;
+    public static boolean extractMaxCardConstraints;
     
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         datasetPath = ConfigManager.getProperty("dataset_path");
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes")); // expected or estimated numberOfClasses
         numberOfInstances = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
+        extractMaxCardConstraints = isActivated("EXTRACT_MAX_CARDINALITY");
         benchmark();
     }
     

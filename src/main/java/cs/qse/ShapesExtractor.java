@@ -156,7 +156,7 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
-                    if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+                    if (Main.extractMaxCardConstraints) {
                         if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                             b.subject(propShape).add(SHACL.MAX_COUNT, 1);
                         }

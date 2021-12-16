@@ -1,5 +1,6 @@
 package cs.qse;
 
+import cs.Main;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
@@ -42,7 +43,7 @@ public class StatsComputer {
             }
             
             //here keep track of all the properties (along with their classes) having max count = 1;
-            if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+            if (Main.extractMaxCardConstraints) {
                 entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
                     if (propertyData.count <= 1) {
                         propWithClassesHavingMaxCountOne.putIfAbsent(property, new HashSet<>());
