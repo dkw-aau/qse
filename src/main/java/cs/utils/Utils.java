@@ -39,4 +39,6 @@ public class Utils {
         Node[] triple = new Node[]{subjRes, predRes, bn}; // yields <http://example.org/123> <http://example.org/123> _:bnodeId
         return triple[0];
     }
+    
+    public static boolean isActivated(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
 }

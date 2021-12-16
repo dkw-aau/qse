@@ -145,13 +145,13 @@ public class Parser {
                                 propToObjTypes = new HashMap<>();
                                 classToPropWithObjTypes.put(entityClass, propToObjTypes);
                             }
-
+                            
                             Set<Integer> classObjTypes = propToObjTypes.get(propID);
-                            if (classObjTypes == null){
+                            if (classObjTypes == null) {
                                 classObjTypes = new HashSet<>();
                                 propToObjTypes.put(propID, classObjTypes);
                             }
-
+                            
                             classObjTypes.addAll(objTypes);
                         }
                     }
@@ -180,7 +180,9 @@ public class Parser {
         //Add Property Constraint and Property cardinality
         for (Tuple2<Integer, Integer> tuple2 : prop2objTypeTuples) {
             currentEntityData.addPropertyConstraint(tuple2._1, tuple2._2);
-            currentEntityData.addPropertyCardinality(tuple2._1);
+            if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+                currentEntityData.addPropertyCardinality(tuple2._1);
+            }
         }
         //Add entity data into the map
         entityDataHashMap.put(subject, currentEntityData);

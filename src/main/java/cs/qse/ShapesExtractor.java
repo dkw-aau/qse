@@ -92,17 +92,17 @@ public class ShapesExtractor {
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
-                
-                if (propToObjectType != null) {
-                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
-                }
+            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+            String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+            b.subject(nodeShape)
+                    .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                    .add(SHACL.TARGET_CLASS, subj)
+                    .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                    .add(SHACL.CLOSED, false);
+            
+            if (propToObjectType != null) {
+                constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
+            }
             //} else {
             //    System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             //}
@@ -116,20 +116,20 @@ public class ShapesExtractor {
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                //NODE SHAPES PRUNING
-                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                    b.subject(nodeShape)
-                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                            .add(SHACL.TARGET_CLASS, subj)
-                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                            .add(SHACL.CLOSED, false);
-                    
-                    if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
-                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
-                    }
+            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+            //NODE SHAPES PRUNING
+            if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                b.subject(nodeShape)
+                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                        .add(SHACL.TARGET_CLASS, subj)
+                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        .add(SHACL.CLOSED, false);
+                
+                if (propToObjectType != null) {
+                    Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                }
                 //} else {
                 //    System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 //}
@@ -156,8 +156,10 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
-                    if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
-                        b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+                    if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+                        if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                            b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+                        }
                     }
                 }
                 String objectType = encoder.decode(encodedObjectType);

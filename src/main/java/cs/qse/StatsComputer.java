@@ -2,6 +2,7 @@ package cs.qse;
 
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
+import cs.utils.Utils;
 import org.semanticweb.yars.nx.Node;
 
 import java.util.*;
@@ -39,14 +40,17 @@ public class StatsComputer {
                     }
                 }
             }
+            
             //here keep track of all the properties (along with their classes) having max count = 1;
-            entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
-                if (propertyData.count <= 1) {
-                    propWithClassesHavingMaxCountOne.putIfAbsent(property, new HashSet<>());
-                    assert instanceClasses != null;
-                    propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
-                }
-            });
+            if (Utils.isActivated("EXTRACT_MAX_CARDINALITY")) {
+                entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
+                    if (propertyData.count <= 1) {
+                        propWithClassesHavingMaxCountOne.putIfAbsent(property, new HashSet<>());
+                        assert instanceClasses != null;
+                        propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
+                    }
+                });
+            }
         });
         
         //Compute Confidence
