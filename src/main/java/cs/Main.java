@@ -25,6 +25,7 @@ public class Main {
     
     private static void benchmark() {
         System.out.println("Benchmark Initiated for " + ConfigManager.getProperty("dataset_path"));
+        Utils.log("Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath");
         Utils.getCurrentTimeStamp();
         try {
             if (isActivated("QSE_File")) {
