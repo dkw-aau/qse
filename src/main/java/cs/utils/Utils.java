@@ -1,5 +1,6 @@
 package cs.utils;
 
+import cs.Main;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -7,6 +8,9 @@ import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.Resource;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -15,6 +19,8 @@ import java.util.Arrays;
  * This class contains some random utility functions required throughout the project
  */
 public class Utils {
+    private static long secondsTotal;
+    private static long minutesTotal;
     
     public static String getCurrentTimeStamp() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss");
@@ -38,5 +44,26 @@ public class Utils {
         BNode bn = new BNode("_:bnodeId", true);
         Node[] triple = new Node[]{subjRes, predRes, bn}; // yields <http://example.org/123> <http://example.org/123> _:bnodeId
         return triple[0];
+    }
+    
+    public static void log(String log) {
+        try {
+            FileWriter fileWriter = new FileWriter(Constants.RUNTIME_LOGS, true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            printWriter.println(log);
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void logTime(String method, long seconds, long minutes) {
+        secondsTotal += seconds;
+        minutesTotal += minutes;
+        //Header: "Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath"
+        String line = ConfigManager.getProperty("dataset_name") + "," + method + "," + seconds + "," + minutes + "," + secondsTotal + "," + minutesTotal + "," + Main.extractMaxCardConstraints + "," + Main.datasetPath;
+        log(line);
+        System.out.println("Time Elapsed " + method + " " + seconds + " sec , " + minutes + " min");
+        System.out.println("Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min");
     }
 }
