@@ -15,14 +15,20 @@ docker ps
 
 ### Get the status of the current docker container
 status=$(docker container inspect -f '{{.State.Status}}' $container)
-
 echo "Status of the ${container} is ${status}"
 
 ### Keep it in sleep for 2 minutes while this container is running
-until [ $status == "running" ]; do
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
   sleep 2m
 done
 
+status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}" ### Container exited
 
 echo "------------------ DBpedia ------------------"
@@ -32,14 +38,22 @@ container=QSE_dbpedia_wd_maxCard
 docker run -m 32GB -d --name QSE_dbpedia_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST /app/local/config/wd-max-card/dbpediaConfig.properties
 
 docker ps
+status=$(docker container inspect -f '{{.State.Status}}' $container)
+echo "Status of the ${container} is ${status}"
+
+### Keep it in sleep for 2 minutes while this container is running
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
+  sleep 2m
+done
 
 status=$(docker container inspect -f '{{.State.Status}}' $container)
 
-echo "Status of the ${container} is ${status}"
-
-until [ $status == "running" ]; do
-  sleep 2m
-done
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
@@ -55,12 +69,20 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}"
 
-until [ $status == "running" ]; do
+### Keep it in sleep for 2 minutes while this container is running
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
   sleep 2m
 done
 
-echo "Status of the ${container} is ${status}" ### Container exited
+status=$(docker container inspect -f '{{.State.Status}}' $container)
 
+echo "Status of the ${container} is ${status}" ### Container exited
 
 ##### __________________________________________________________________________________________________
 
@@ -80,9 +102,18 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}"
 
 ### Keep it in sleep for 2 minutes while this container is running
-until [ $status == "running" ]; do
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
   sleep 2m
 done
+
+status=$(docker container inspect -f '{{.State.Status}}' $container)
+
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
@@ -98,9 +129,18 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}"
 
-until [ $status == "running" ]; do
+### Keep it in sleep for 2 minutes while this container is running
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
   sleep 2m
 done
+
+status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
@@ -113,11 +153,19 @@ docker run -m 32GB -d --name QSE_yago_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" 
 docker ps
 
 status=$(docker container inspect -f '{{.State.Status}}' $container)
-
 echo "Status of the ${container} is ${status}"
 
-until [ $status == "running" ]; do
+### Keep it in sleep for 2 minutes while this container is running
+while :
+do
+  status=$(docker container inspect -f '{{.State.Status}}' $container)
+  if [ $status == "exited" ]; then
+    break
+  fi
+  echo "Sleeping for 2 minutes : $(date +%T)"
   sleep 2m
 done
+
+status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
