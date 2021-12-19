@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### Build Docker Image
-
+cd ..
 docker build . -t shacl:QSE-LATEST
 
 echo "------------------ LUBM - WITHOUT- MAX CARD ------------------"
