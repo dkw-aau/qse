@@ -66,4 +66,15 @@ public class Utils {
         System.out.println("Time Elapsed Time " + method + " " + seconds + " sec , " + minutes + " min");
         System.out.println("Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min");
     }
+    
+    public static void simpleTest() {
+        ValueFactory factory = SimpleValueFactory.getInstance();
+        String iri = "http://www.wikidata.org/entity/Q829554";
+        IRI subj = factory.createIRI(iri);
+        if(Utils.isValidIRI(iri)){
+            System.out.println("True");
+        } else {
+            System.out.println("False");
+        }
+    }
 }

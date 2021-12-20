@@ -91,7 +91,7 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
             IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             String nodeShape = "shape:" + subj.getLocalName() + "Shape";
             b.subject(nodeShape)
@@ -103,9 +103,9 @@ public class ShapesExtractor {
             if (propToObjectType != null) {
                 constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
             }
-            //} else {
-            //    System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-            //}
+            } else {
+                System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+            }
         });
         m = b.build();
         return m;
@@ -115,7 +115,7 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            //if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
             IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             //NODE SHAPES PRUNING
             if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
@@ -130,9 +130,9 @@ public class ShapesExtractor {
                     Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
                     constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                 }
-                //} else {
-                //    System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-                //}
+                } else {
+                    System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+                }
             }
         });
         m = b.build();
