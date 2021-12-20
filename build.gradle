@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     implementation group: 'junit', name: 'junit', version: '4.12'
-    implementation 'com.github.rohansuri:adaptive-radix-tree:1.0.0-beta'
+    //implementation 'com.github.rohansuri:adaptive-radix-tree:1.0.0-beta'
     // https://mvnrepository.com/artifact/org.semanticweb.yars/nxparser-utilities-uri
     //implementation group: 'org.semanticweb.yars', name: 'nxparser-utilities-uri', version: '4.0.0'
 
