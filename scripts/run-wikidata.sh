@@ -19,15 +19,16 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}"
 
-### Keep it in sleep for 15 minutes while this container is running
+### Keep it in sleep for 1 minutes while this container is running
 while :
 do
   status=$(docker container inspect -f '{{.State.Status}}' $container)
   if [ $status == "exited" ]; then
     break
   fi
-  echo "Sleeping for 15 minutes : $(date +%T)"
-  sleep 15m
+  docker stats --no-stream | cat >>   "${container}-Docker-Stats.csv"
+  echo "Sleeping for 1 minutes : $(date +%T)"
+  sleep 1m
 done
 
 status=$(docker container inspect -f '{{.State.Status}}' $container)
@@ -50,15 +51,16 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}"
 
-### Keep it in sleep for 15 minutes while this container is running
+### Keep it in sleep for 1 minutes while this container is running
 while :
 do
   status=$(docker container inspect -f '{{.State.Status}}' $container)
   if [ $status == "exited" ]; then
     break
   fi
-  echo "Sleeping for 15 minutes : $(date +%T)"
-  sleep 15m
+  docker stats --no-stream | cat >>   "${container}-Docker-Stats.csv"
+  echo "Sleeping for 1 minutes : $(date +%T)"
+  sleep 1m
 done
 
 status=$(docker container inspect -f '{{.State.Status}}' $container)
