@@ -92,17 +92,17 @@ public class ShapesExtractor {
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-            String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-            b.subject(nodeShape)
-                    .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                    .add(SHACL.TARGET_CLASS, subj)
-                    .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                    .add(SHACL.CLOSED, false);
-            
-            if (propToObjectType != null) {
-                constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
-            }
+                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                b.subject(nodeShape)
+                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                        .add(SHACL.TARGET_CLASS, subj)
+                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        .add(SHACL.CLOSED, false);
+                
+                if (propToObjectType != null) {
+                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
+                }
             } else {
                 System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
@@ -116,23 +116,23 @@ public class ShapesExtractor {
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-            IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-            //NODE SHAPES PRUNING
-            if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
-                
-                if (propToObjectType != null) {
-                    Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
-                    constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                //NODE SHAPES PRUNING
+                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    b.subject(nodeShape)
+                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                            .add(SHACL.TARGET_CLASS, subj)
+                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                            .add(SHACL.CLOSED, false);
+                    
+                    if (propToObjectType != null) {
+                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                    }
                 }
-                } else {
-                    System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-                }
+            } else {
+                System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
         });
         m = b.build();
@@ -239,7 +239,7 @@ public class ShapesExtractor {
                 String type = "avg";
                 TupleQuery query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 Value queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getAverageHeader().get(i), literalCount.stringValue());
                 }
@@ -247,7 +247,7 @@ public class ShapesExtractor {
                 type = "max";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
                 }
@@ -255,7 +255,7 @@ public class ShapesExtractor {
                 type = "min";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
                 }
