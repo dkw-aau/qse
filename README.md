@@ -34,7 +34,7 @@ The experiments run on a _single machine_. To reproduce the experiments the sugg
 ## Getting the data
 We have used DBpedia, YAGO-4, and LUBM datasets. Details on how we downloaded are given below:
 
-1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/main/dbpedia-files.txt).
+1. **DBPedia:** We used  [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/download-dbpedia.sh) to download all the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
 
@@ -46,8 +46,19 @@ We provide a copy of all our datasets in a [single archive](http://130.226.98.15
  du -sh yago.n3 or dbpedia.n3 or yago.n3
  wc -l yago.n3 or dbpedia.n3 or yago.n3
 ```
-## Software Setup (with Docker)
+## Software Setup and Experiments (with Docker)
 
+
+Assuming you are in the project's directory, and docker is installed in your machine, run the following commands:
+
+```
+ cd scripts
+ chmod +rwx run.sh
+ ./run.sh
+```
+Note: You will have to update the configuration files for each dataset in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory, i.e., yagoConfig.properties, dbpediaConfig.properties, and dbpediaConfig.properties to set the correct directories path.
+
+In case you want to execute each docker individually:
 ### Build Docker 
 
 Go inside the project directory and execute the following command to build the docker
@@ -92,7 +103,7 @@ docker stats
 
 
 
-## Software Setup (without Docker)
+## Software Setup and Experiments (without Docker)
 
 1. Install Java
    Follow [these](https://sdkman.io/install) steps to install sdkman and execute the following commands to install the specified version of Java.
@@ -115,25 +126,25 @@ docker stats
 4. Install GraphDB by following the instructions listed [here](https://graphdb.ontotext.com/).
 
 
-## Experimentation
+[comment]: <> (## Experimentation)
 Here we explain how to repeat experiments and the output (numbers) presented in the evaluation section of our paper.
 
 
 #### How to repeat experiments?
 
-Update the following parameters in the [config](https://github.com/Kashif-Rabbani/shacl/blob/main/config.properties) file to setup configuration for **QSE-File** approach:
+Update the following parameters for each of the config file in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory to configure **QSE-File** approach:
 
 ```
  QSE_File=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint=false
 ```
-To run **QSE-Endpoint** approach, you will have to set the following paramteres as well:
+To run **QSE-Endpoint** approach, you will have to set the following parameters as well:
 
 ```
 QSE_Endpoint=true, graphDB_URL and graphDB_REPOSITORY, QSE_File=false
 ```
 We have already prepared 3 config files for each of our dataset, you can use these files to run the experiments using the following commands:
 ```
-java -jar -Xmx16g  build/libs/shacl.jar dbpediaConfig.properties &> dbpedia.logs
-java -jar -Xmx16g  build/libs/shacl.jar yagoConfig.properties &> yago.logs
-java -jar -Xmx16g  build/libs/shacl.jar lubmConfig.properties &> lubm.logs
+java -jar -Xmx16g  build/libs/shacl.jar config/dbpediaConfig.properties &> dbpedia.logs
+java -jar -Xmx16g  build/libs/shacl.jar config/yagoConfig.properties &> yago.logs
+java -jar -Xmx16g  build/libs/shacl.jar config/lubmConfig.properties &> lubm.logs
 ```
