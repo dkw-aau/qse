@@ -7,7 +7,7 @@ docker build . -t shacl:WWW-Wikidata
 
 echo "------------------ WIKIDATA  ------------------"
 
-container=QSE_WIKIDATA_wo_maxCard
+container=QSE_WIKIDATA_WWW
 
 echo "About to run docker container: ${container}"
 
