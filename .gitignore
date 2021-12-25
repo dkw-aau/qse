@@ -11,7 +11,7 @@ local.properties
 .recommenders
 .DS_Store
 out/
-
+Logs/
 
 # Eclipse Core
 .project
