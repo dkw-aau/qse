@@ -48,7 +48,8 @@ We provide a copy of all our datasets in a [single archive](http://130.226.98.15
 ```
 ## Software Setup and Experiments (with Docker)
 
-
+### With Script:
+We have prepared shell scripts in the [scripts](https://github.com/Kashif-Rabbani/shacl/tree/main/scripts) directory to smoothly run the experiments.
 Assuming you are in the project's directory, and docker is installed in your machine, run the following commands:
 
 ```
@@ -56,10 +57,12 @@ Assuming you are in the project's directory, and docker is installed in your mac
  chmod +rwx run.sh
  ./run.sh
 ```
-Note: You will have to update the configuration files for each dataset in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory, i.e., yagoConfig.properties, dbpediaConfig.properties, and dbpediaConfig.properties to set the correct directories path.
+Note: You will have to update the configuration files for each dataset in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory, i.e., `yagoConfig.properties`, `dbpediaConfig.properties`, and `dbpediaConfig.properties` to set the correct paths.
 
-In case you want to execute each docker individually:
-### Build Docker 
+### Without Script:
+In case you want to build and run docker for each dataset individually, then follow these guidelines:
+
+#### Build Docker 
 
 Go inside the project directory and execute the following command to build the docker
 
@@ -67,7 +70,7 @@ Go inside the project directory and execute the following command to build the d
 docker build . -t shacl:v1
 ```
 
-### Run the container
+#### Run the container
 Running the build image as a container to run QSE approach for LUBM dataset using `lubmConfig.properties`. 
 You can use other config files such as `yagoConfig.properties` or `dbpediaConfig.properties` for YAGO-4 and DBpedia datasets.
 ```
