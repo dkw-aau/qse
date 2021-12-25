@@ -11,7 +11,7 @@ container=QSE_WIKIDATA_wo_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WIKIDATA_WWW -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/www/shacl/,target=/app/local shacl:WWW-Wikidata /app/local/config/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_WWW -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/www/shacl/,target=/app/local shacl:WWW-Wikidata /app/local/wikiDataConfig.properties
 
 docker ps
 
