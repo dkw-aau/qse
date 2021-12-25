@@ -46,8 +46,19 @@ We provide a copy of all our datasets in a [single archive](http://130.226.98.15
  du -sh yago.n3 or dbpedia.n3 or yago.n3
  wc -l yago.n3 or dbpedia.n3 or yago.n3
 ```
+## Software Setup (with Docker)
 
-## Software Setup
+Assuming you are in the project's directory, and docker is installed in your machine, run the following commands:
+
+```
+ cd scripts
+ chmod +rwx run.sh
+ ./run.sh
+```
+Note: You will have to update the configuration files for each dataset, i.e., yagoConfig.properties, dbpediaConfig.properties, and dbpediaConfig.properties to set the correct directories path.
+
+
+## Software Setup (Without Docker)
 
 1. Install Java
    Follow [these](https://sdkman.io/install) steps to install sdkman and execute the following commands to install the specified version of Java.
