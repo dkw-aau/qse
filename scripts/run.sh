@@ -6,6 +6,11 @@ docker build . -t shacl:QSE-LATEST
 
 echo "------------------ LUBM ------------------"
 
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
+
+
 ### Run LUBM Docker Container
 container=QSE_lubm_wd_maxCard
 docker run -m 32GB -d --name QSE_lubm_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx17g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST /app/local/config/wd-max-card/lubmConfig.properties
@@ -33,6 +38,11 @@ echo "Status of the ${container} is ${status}" ### Container exited
 
 echo "------------------ DBpedia ------------------"
 
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
+
+
 ### Run DBpedia Docker Container
 container=QSE_dbpedia_wd_maxCard
 docker run -m 32GB -d --name QSE_dbpedia_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST /app/local/config/wd-max-card/dbpediaConfig.properties
@@ -58,6 +68,11 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}" ### Container exited
 
 echo "------------------ YAGO ------------------"
+
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
+
 
 ### Run YAGO Docker Container
 container=QSE_yago_wd_maxCard
@@ -88,6 +103,9 @@ echo "Status of the ${container} is ${status}" ### Container exited
 
 
 echo "------------------ LUBM - WITHOUT- MAX CARD ------------------"
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run LUBM Docker Container
 container=QSE_lubm_wo_maxCard
@@ -118,6 +136,9 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}" ### Container exited
 
 echo "------------------ DBpedia - WITHOUT- MAX CARD ------------------"
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run DBpedia Docker Container
 container=QSE_dbpedia_wo_maxCard
@@ -145,6 +166,9 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}" ### Container exited
 
 echo "------------------ YAGO - WITHOUT- MAX CARD ------------------"
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run YAGO Docker Container
 container=QSE_yago_wo_maxCard
@@ -169,3 +193,7 @@ done
 status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
+
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches

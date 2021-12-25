@@ -5,6 +5,9 @@ cd ..
 docker build . -t shacl:QSE-LATEST-WIKIDATA
 
 echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
 
 container=QSE_WIKIDATA_wo_maxCard
 
@@ -37,6 +40,10 @@ echo "Status of the ${container} is ${status}" ### Container exited
 
 
 echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
+
 
 container=QSE_WIKIDATA_wd_maxCard
 
