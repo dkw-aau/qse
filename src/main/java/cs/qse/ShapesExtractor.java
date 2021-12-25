@@ -2,10 +2,7 @@ package cs.qse;
 
 import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.FilesUtil;
-import cs.utils.Tuple3;
+import cs.utils.*;
 import cs.utils.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
@@ -89,18 +86,23 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
-            
-            String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-            b.subject(nodeShape)
-                    .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                    .add(SHACL.TARGET_CLASS, subj)
-                    .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                    .add(SHACL.CLOSED, false);
-            
-            if (propToObjectType != null) {
-                constructNodePropertyShapes(b, subj, nodeShape, propToObjectType);
+            if (Utils.isValidIRI(encoder.decode(classEncodedLabel))) {
+                IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+                
+                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                b.subject(nodeShape)
+                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                        .add(SHACL.TARGET_CLASS, subj)
+                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        .add(SHACL.CLOSED, false);
+                
+                if (propToObjectType != null) {
+                    constructNodePropertyShapes(b, subj, nodeShape, propToObjectType);
+                }
+            } else {
+                System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(classEncodedLabel));
             }
+            
         });
         m = b.build();
         return m;
@@ -110,22 +112,26 @@ public class ShapesExtractor {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
-            //NODE SHAPES PRUNING
-            if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
-                
-                if (propToObjectType != null) {
-                    HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(classEncodedLabel, propToObjectType, confidence, support);
-                    constructNodePropertyShapes(b, subj, nodeShape, propToObjectTypesLocal);
-                }
-            }
             
+            if (Utils.isValidIRI(encoder.decode(classEncodedLabel))) {
+                IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+                //NODE SHAPES PRUNING
+                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    b.subject(nodeShape)
+                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                            .add(SHACL.TARGET_CLASS, subj)
+                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                            .add(SHACL.CLOSED, false);
+                    
+                    if (propToObjectType != null) {
+                        HashMap<Integer, HashSet<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(classEncodedLabel, propToObjectType, confidence, support);
+                        constructNodePropertyShapes(b, subj, nodeShape, propToObjectTypesLocal);
+                    }
+                }
+            } else {
+                System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(classEncodedLabel));
+            }
         });
         m = b.build();
         return m;
