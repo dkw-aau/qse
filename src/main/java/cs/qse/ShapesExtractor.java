@@ -164,8 +164,12 @@ public class ShapesExtractor {
                         b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                     } else {
                         //objectType = objectType.replace("<", "").replace(">", "");
-                        IRI objectTypeIri = factory.createIRI(objectType);
-                        b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                        if (Utils.isValidIRI(objectType)) {
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                        } else {
+                            System.out.println("INVALID Object Type IRI: " + objectType);
+                        }
                         b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                     }
                 } else {
