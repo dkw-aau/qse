@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class RandomSamplingParser extends Parser {
-    public int randomSamplingThreshold = 10; // Random sampling threshold like 10 means: 10%
+    public int randomSamplingThreshold = 20; // Random sampling threshold like 10 means: 10%
     Map<Integer, Integer> sampledClassEntityCount; // Size == T (number of distinct types) having count of entities sampled randomly based on defined threshold
     
     public RandomSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
