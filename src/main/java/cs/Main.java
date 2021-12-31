@@ -1,5 +1,6 @@
 package cs;
 
+import cs.qse.RandomSamplingParser;
 import cs.qse.endpoint.EndpointParser;
 import cs.qse.Parser;
 import cs.utils.ConfigManager;
@@ -30,8 +31,10 @@ public class Main {
         try {
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
-                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
-                parser.run();
+                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                //parser.run();
+                RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                rsp.run();
             }
             
             if (isActivated("QSE_Endpoint")) {
@@ -42,8 +45,10 @@ public class Main {
             
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
-                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                parser.run();
+                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                //parser.run();
+                RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                rsp.run();
             }
             
         } catch (Exception e) {

@@ -39,7 +39,7 @@ public class Parser {
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information -- > for every node we store 1 integer for every node edge --> entityDataHashMap stores the entire graph in memory!
+    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
@@ -63,7 +63,7 @@ public class Parser {
         firstPass();
         secondPass();
         computeSupportConfidence();
-        extractSHACLShapes();
+        extractSHACLShapes(true);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -71,7 +71,7 @@ public class Parser {
     /**
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
      */
-    private void firstPass() {
+    protected void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -105,7 +105,7 @@ public class Parser {
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to collect the constraints and the metadata required
      * to compute the support and confidence of each candidate shape.
      */
-    private void secondPass() {
+    protected void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -173,7 +173,7 @@ public class Parser {
      * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
      * @param subject            : Subject entity such as :Paris
      */
-    private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node subject) {
+    protected void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node subject) {
         EntityData currentEntityData = entityDataHashMap.get(subject);
         if (currentEntityData == null) {
             currentEntityData = new EntityData();
@@ -195,7 +195,7 @@ public class Parser {
      * @param literalIri : IRI for the literal object
      * @return String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
      */
-    private String extractObjectType(String literalIri) {
+    protected String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
         String type = null;
         if (theLiteral.getDatatype() != null) {   // is literal type
@@ -225,26 +225,32 @@ public class Parser {
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
         watch.stop();
         Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    
+        
     }
     
     /**
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      */
-    private void extractSHACLShapes() {
+    protected void extractSHACLShapes(Boolean performPruning) {
         StopWatch watch = new StopWatch();
         watch.start();
+        String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
-            supportRange.forEach(supp -> {
-                se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+        if (performPruning) {
+            ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+                supportRange.forEach(supp -> {
+                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                });
             });
-        });
+            methodName =  "extractSHACLShapes";
+        }
+        
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
-        Utils.logTime("extractSHACLShapes", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     /**
