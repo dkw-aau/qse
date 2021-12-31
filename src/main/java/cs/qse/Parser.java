@@ -39,7 +39,7 @@ public class Parser {
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information -- > for every node we store 1 integer for every node edge --> entityDataHashMap stores the entire graph in memory!
+    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information 
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
