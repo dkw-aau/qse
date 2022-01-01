@@ -3,11 +3,12 @@ package cs.utils.encoders;
 import java.util.HashMap;
 
 import org.semanticweb.yars.nx.Node;
+
 /**
  * This class encodes the Node (org.semanticweb.yars.nx.Node) values into Integers and also provides decode functionality
  */
 public class NodeEncoder {
-    int counter;
+    public int counter;
     HashMap<Integer, Node> table;
     HashMap<Node, Integer> reverseTable;
     
@@ -34,16 +35,27 @@ public class NodeEncoder {
         }
     }
     
+    public boolean remove(int val) {
+        boolean returnVal = true;
+        if (table.containsKey(val)) {
+            this.reverseTable.remove(this.table.get(val));
+            this.table.remove(val);
+        } else {
+            returnVal = false;
+        }
+        return returnVal;
+    }
+    
     public Node decode(int val) {
         return this.table.get(val);
     }
     
     public HashMap<Integer, Node> getTable() {
-        return table;
+        return this.table;
     }
     
     public HashMap<Node, Integer> getReverseTable() {
-        return reverseTable;
+        return this.reverseTable;
     }
     
     public void setCounter(int counter) {
