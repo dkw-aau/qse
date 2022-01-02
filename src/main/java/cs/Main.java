@@ -1,6 +1,7 @@
 package cs;
 
 import cs.qse.RandomSamplingParser;
+import cs.qse.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
 import cs.qse.Parser;
 import cs.utils.ConfigManager;
@@ -33,8 +34,10 @@ public class Main {
                 System.out.println("QSE over File");
                 //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //parser.run();
-                RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
-                rsp.run();
+                //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                //rsp.run();
+                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                reservoirSamplingParser.run();
             }
             
             if (isActivated("QSE_Endpoint")) {
@@ -47,8 +50,10 @@ public class Main {
                 System.out.println("QSE over File -specific to WikiData");
                 //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 //parser.run();
-                RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                rsp.run();
+                //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                //rsp.run();
+                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                reservoirSamplingParser.run();
             }
             
         } catch (Exception e) {
