@@ -60,7 +60,51 @@ public class StatsComputer {
             double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
             value.setConfidence(confidence);
         }
+    }
+    
+    /**
+     * This method is used to compute support and confidence where nodes are encoded as integer
+     * Additionally, while iterating over entities, we prepare a new Map propWithClassesHavingMaxCountOne to store all the properties (along with their classes) having max count = 1;
+     */
+    public void computeSupportConfidenceWithEncodedEntities(Map<Integer, EntityData> entityDataMapReservoir, Map<Integer, Integer> classEntityCount) {
+        //Compute Support
+        entityDataMapReservoir.forEach((entity, entityData) -> {
+            Set<Integer> instanceClasses = entityDataMapReservoir.get(entity).getClassTypes();
+            if (instanceClasses != null) {
+                for (Integer c : instanceClasses) {
+                    for (Tuple2<Integer, Integer> propObjTuple : entityData.getPropertyConstraints()) {
+                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(c, propObjTuple._1, propObjTuple._2);
+                        SupportConfidence sc = this.shapeTripletSupport.get(tuple3);
+                        if (sc == null) {
+                            this.shapeTripletSupport.put(tuple3, new SupportConfidence(1));
+                        } else {
+                            //SupportConfidence sc = this.shapeTripletSupport.get(tuple3);
+                            Integer newSupp = sc.getSupport() + 1;
+                            sc.setSupport(newSupp);
+                            this.shapeTripletSupport.put(tuple3, sc);
+                        }
+                    }
+                }
+            }
+            
+            //here keep track of all the properties (along with their classes) having max count = 1;
+            if (Main.extractMaxCardConstraints) {
+                entityData.propertyConstraintsMap.forEach((property, propertyData) -> {
+                    if (propertyData.count <= 1) {
+                        propWithClassesHavingMaxCountOne.putIfAbsent(property, new HashSet<>());
+                        assert instanceClasses != null;
+                        propWithClassesHavingMaxCountOne.get(property).addAll(instanceClasses);
+                    }
+                });
+            }
+        });
         
+        //Compute Confidence
+        for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
+            SupportConfidence value = entry.getValue();
+            double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
+            value.setConfidence(confidence);
+        }
     }
     
     //Setters
