@@ -1,5 +1,9 @@
 package cs.qse;
 
+import cs.Main;
+import cs.qse.experiments.ExperimentsUtil;
+import cs.utils.Constants;
+import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
 import cs.utils.encoders.Encoder;
@@ -24,16 +28,16 @@ public class ReservoirSamplingParser extends Parser {
     StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
-    Integer entityThreshold = 100;
+    Integer entityThreshold = 2;
     
     // In the following the size of each data structure
     // N = number of distinct nodes in the graph
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Integer, EntityData> entityDataMap; // Size == N For every entity (encoded as integer) we save a number of summary information
+    Map<Integer, EntityData> entityDataMapReservoir; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
-    Map<Integer, List<Integer>> class2SampledEntityCount; // Size == T
+    Map<Integer, List<Integer>> classSampledEntityContainer; // Size == O(T*entityThreshold)
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
@@ -44,9 +48,9 @@ public class ReservoirSamplingParser extends Parser {
         this.expNoOfInstances = expNoOfInstances;
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.class2SampledEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classSampledEntityContainer = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.entityDataMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        this.entityDataMapReservoir = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
     }
@@ -57,9 +61,9 @@ public class ReservoirSamplingParser extends Parser {
     
     private void runParser() {
         firstPass();
-        //secondPass();
-        //computeSupportConfidence();
-        //extractSHACLShapes(false);
+        secondPass();
+        computeSupportConfidence();
+        extractSHACLShapes(false);
         //assignCardinalityConstraints();
         System.out.println("No. of Classes: Total: " + classEntityCount.size());
         
@@ -74,68 +78,68 @@ public class ReservoirSamplingParser extends Parser {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     // Get [S,P,O] as Node from triple
-                    Node[] nodes = NxParser.parseNodes(line); // how much time is spent parsing?
+                    Node[] nodes = NxParser.parseNodes(line);
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
-                        class2SampledEntityCount.putIfAbsent(objID, new ArrayList<>(entityThreshold));
-                        int numberOfSampledEntities = class2SampledEntityCount.get(objID).size();
-                        
-                        
+                        classSampledEntityContainer.putIfAbsent(objID, new ArrayList<>(entityThreshold));
+                        int numberOfSampledEntities = classSampledEntityContainer.get(objID).size();
+                        // Initializing entityDataMapReservoir with first k = entityThreshold elements for each class
                         if (numberOfSampledEntities < entityThreshold) {
-                            int subjID = nodeEncoder.encode(nodes[0]);
-                            // Track classes per entity
-                            EntityData entityData = entityDataMap.get(subjID);
+                            int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
+                            EntityData entityData = entityDataMapReservoir.get(subjID); // Track classes per entity
                             if (entityData == null) {
                                 entityData = new EntityData();
                             }
                             entityData.getClassTypes().add(objID);
-                            entityDataMap.put(subjID, entityData);
-                            class2SampledEntityCount.get(objID).add(subjID);
-                            //System.out.println("Inserting " + subjID + " " + nodeEncoder.decode(subjID) + " for " + objID);
-                            //System.out.println("1. Types After Insertion: " + encodedEntityDataMap.get(subjID).getClassTypes());
-                        } else {
+                            entityDataMapReservoir.put(subjID, entityData);
+                            classSampledEntityContainer.get(objID).add(subjID);
+                        }
+                        // once the reservoir (entityDataMap) is filled with entities upto the defined entityThreshold for specific classes, we enter the else block
+                        //  Now one by one consider all items from (k+1)th item to nth item.
+                        //      a) Generate a random number from 0 to i where i is the index of the current item in stream, i.e., lineCounter.
+                        //      Let the generated random number is candidateIndex.
+                        //	    b) If candidateIndex is in range 0 to number of entities sampled for the current class (obtained from classSampledEntityContainer)
+                        //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityContainer
+                        
+                        else {
                             int candidateIndex = new Random().nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                            if (candidateIndex < class2SampledEntityCount.get(objID).size()) {
-                                int candidate = class2SampledEntityCount.get(objID).get(candidateIndex);
-                                //FIXME : It should never be null
-                                if (entityDataMap.get(candidate) != null) {
-                                    //Removal
-                                    entityDataMap.get(candidate).getClassTypes().forEach(obj -> {
-                                        if (class2SampledEntityCount.containsKey(obj)) {
-                                            //System.out.println("Removing " + candidate + " " + nodeEncoder.decode(candidate) + " from " + obj + " : " + objID);
-                                            class2SampledEntityCount.get(obj).remove(Integer.valueOf(candidate));
+                            if (candidateIndex < classSampledEntityContainer.get(objID).size()) {
+                                int candidateNode = classSampledEntityContainer.get(objID).get(candidateIndex); // get the candidate node at the candidate index
+                                
+                                if (entityDataMapReservoir.get(candidateNode) != null) {
+                                    //Remove the candidate node from the classSampledEntityContainer
+                                    entityDataMapReservoir.get(candidateNode).getClassTypes().forEach(obj -> {
+                                        if (classSampledEntityContainer.containsKey(obj)) {
+                                            classSampledEntityContainer.get(obj).remove(Integer.valueOf(candidateNode));
                                         }
                                     });
-                                    //System.out.println("Types: " + encodedEntityDataMap.get(candidate).getClassTypes());
-                                    entityDataMap.remove(candidate);
-                                    boolean status = nodeEncoder.remove(candidate);
-                                    if (!status)
-                                        System.out.println("Failed to remove the node with id: " + candidate);
                                     
-                                    //Update or Addition
-                                    int subjID = nodeEncoder.encode(nodes[0]);
-                                    EntityData entityData = entityDataMap.get(subjID);
+                                    entityDataMapReservoir.remove(candidateNode); // Remove the candidate node from the entityDataMapReservoir
+                                    boolean status = nodeEncoder.remove(candidateNode);
+                                    if (!status)
+                                        System.out.println("WARNING::Failed to remove the candidateNode: " + candidateNode);
+                                    
+                                    //Update the reservoir and container with the current focus node
+                                    int subjID = nodeEncoder.encode(nodes[0]); // Encode the current focus node
+                                    EntityData entityData = entityDataMapReservoir.get(subjID);
                                     if (entityData == null) {
                                         entityData = new EntityData();
                                     }
                                     entityData.getClassTypes().add(objID);
-                                    entityDataMap.put(subjID, entityData);
-                                    class2SampledEntityCount.get(objID).add(subjID);
-                                    //System.out.println("Inserting " + subjID + " " + nodeEncoder.decode(subjID) + " for " + objID);
-                                    //System.out.println("2. Types After Insertion: " + encodedEntityDataMap.get(subjID).getClassTypes());
+                                    entityDataMapReservoir.put(subjID, entityData); // Add the focus node in the reservoir
+                                    classSampledEntityContainer.get(objID).add(subjID); // Update the classSampledEntityContainer with the current focus node for current class
                                 } else {
-                                    class2SampledEntityCount.forEach((k, v) -> {
-                                        if (v.contains(candidate)) {
-                                            System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidate);
-                                        }
+                                    System.out.println("WARNING::It's null for candidateNode " + candidateNode);
+                                    classSampledEntityContainer.forEach((k, v) -> {
+                                        if (v.contains(candidateNode))
+                                            System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
                                     });
-                                    System.out.println("It's null " + candidate);
                                 }
                             }
                         }
-                        classEntityCount.merge(objID, 1, Integer::sum);
+                        classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
                     }
-                    lineCounter.getAndIncrement();
+                    lineCounter.getAndIncrement(); // increment the line counter
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -143,17 +147,141 @@ public class ReservoirSamplingParser extends Parser {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        watch.stop();
+        Utils.logTime("firstPass:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         
-        System.out.println("encodedEntityDataMap.size(): " + NumberFormat.getInstance().format(entityDataMap.size()));
+        //Printing some statistics
+        System.out.println("entityDataMapReservoir.size(): " + NumberFormat.getInstance().format(entityDataMapReservoir.size()));
         System.out.println("nodeEncoder.getTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getTable().size()));
         System.out.println("nodeEncoder.getReverseTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getReverseTable().size()));
         System.out.println("nodeEncoder.counter: " + NumberFormat.getInstance().format(nodeEncoder.counter));
-        watch.stop();
-        Utils.logTime("firstPass:RandomSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     @Override
     protected void secondPass() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Files.lines(Path.of(rdfFilePath)).filter(line -> !line.contains(typePredicate)).forEach(line -> {
+                try {
+                    //Declaring required sets
+                    Set<Integer> objTypes = new HashSet<>(10);
+                    Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
+                    
+                    Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
+                    //Node subject = nodes[0];
+                    int subjID = nodeEncoder.encode(nodes[0]);
+                    // if the entity is in the Reservoir, we go for it
+                    if (entityDataMapReservoir.get(subjID) != null) {
+                        String objectType = extractObjectType(nodes[2].toString());
+                        int propID = encoder.encode(nodes[1].getLabel());
+                        if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                            EntityData currEntityData = entityDataMapReservoir.get(nodeEncoder.encode(nodes[2]));
+                            if (currEntityData != null) {
+                                objTypes = currEntityData.getClassTypes();
+                                for (Integer node : objTypes) { // get classes of node2
+                                    prop2objTypeTuples.add(new Tuple2<>(propID, node));
+                                }
+                                addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
+                            }
+                            /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                            
+                        } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+                            int objID = encoder.encode(objectType);
+                            objTypes.add(objID);
+                            prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+                            addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
+                        }
+                        
+                        EntityData entityData = entityDataMapReservoir.get(subjID);
+                        if (entityData != null) {
+                            for (Integer entityClass : entityData.getClassTypes()) {
+                                Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
+                                if (propToObjTypes == null) {
+                                    propToObjTypes = new HashMap<>();
+                                    classToPropWithObjTypes.put(entityClass, propToObjTypes);
+                                }
+                                
+                                Set<Integer> classObjTypes = propToObjTypes.get(propID);
+                                if (classObjTypes == null) {
+                                    classObjTypes = new HashSet<>();
+                                    propToObjTypes.put(propID, classObjTypes);
+                                }
+                                
+                                classObjTypes.addAll(objTypes);
+                            }
+                        }
+                    } // if condition for presence of node in the reservoir ends here
+                    
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("secondPass:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
     
+    /**
+     * * A utility method to add property constraints of each entity in the 2nd pass
+     *
+     * @param prop2objTypeTuples
+     * @param subject
+     */
+    private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Integer subject) {
+        EntityData currentEntityData = entityDataMapReservoir.get(subject);
+        if (currentEntityData == null) {
+            currentEntityData = new EntityData();
+        }
+        //Add Property Constraint and Property cardinality
+        for (Tuple2<Integer, Integer> tuple2 : prop2objTypeTuples) {
+            currentEntityData.addPropertyConstraint(tuple2._1, tuple2._2);
+            if (Main.extractMaxCardConstraints) {
+                currentEntityData.addPropertyCardinality(tuple2._1);
+            }
+        }
+        //Add entity data into the map
+        entityDataMapReservoir.put(subject, currentEntityData);
+    }
+    
+    /**
+     * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
+     */
+    @Override
+    public void computeSupportConfidence() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.statsComputer = new StatsComputer();
+        statsComputer.setShapeTripletSupport(shapeTripletSupport);
+        statsComputer.computeSupportConfidenceWithEncodedEntities(entityDataMapReservoir, classEntityCount);
+        watch.stop();
+        Utils.logTime("computeSupportConfidence:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        
+    }
+    
+    @Override
+    protected void extractSHACLShapes(Boolean performPruning) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:ReservoirSampling: No Pruning";
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
+        se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        if (performPruning) {
+            ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+                supportRange.forEach(supp -> {
+                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                });
+            });
+            methodName = "extractSHACLShapes:ReservoirSampling";
+        }
+        
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
 }
