@@ -11,6 +11,7 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,14 +24,14 @@ public class ReservoirSamplingParser extends Parser {
     StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
-    Integer entityThreshold = 20;
+    Integer entityThreshold = 100;
     
     // In the following the size of each data structure
     // N = number of distinct nodes in the graph
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Integer, EntityData> encodedEntityDataMap; // Size == N For every entity (encoded as integer) we save a number of summary information
+    Map<Integer, EntityData> entityDataMap; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, List<Integer>> class2SampledEntityCount; // Size == T
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
@@ -45,7 +46,7 @@ public class ReservoirSamplingParser extends Parser {
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.class2SampledEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.encodedEntityDataMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        this.entityDataMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
     }
@@ -76,53 +77,60 @@ public class ReservoirSamplingParser extends Parser {
                     Node[] nodes = NxParser.parseNodes(line); // how much time is spent parsing?
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
-                        
                         class2SampledEntityCount.putIfAbsent(objID, new ArrayList<>(entityThreshold));
                         int numberOfSampledEntities = class2SampledEntityCount.get(objID).size();
-                        // encodedEntityDataMap is our reservoir, let's fill it with first k elements
+                        
+                        
                         if (numberOfSampledEntities < entityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]);
                             // Track classes per entity
-                            EntityData entityData = encodedEntityDataMap.get(subjID);
+                            EntityData entityData = entityDataMap.get(subjID);
                             if (entityData == null) {
                                 entityData = new EntityData();
                             }
                             entityData.getClassTypes().add(objID);
-                            encodedEntityDataMap.put(subjID, entityData);
+                            entityDataMap.put(subjID, entityData);
                             class2SampledEntityCount.get(objID).add(subjID);
+                            //System.out.println("Inserting " + subjID + " " + nodeEncoder.decode(subjID) + " for " + objID);
+                            //System.out.println("1. Types After Insertion: " + encodedEntityDataMap.get(subjID).getClassTypes());
                         } else {
-                            int randomIndex = new Random().nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                            if (randomIndex < class2SampledEntityCount.get(objID).size()) {
-                                int candidateIndex = class2SampledEntityCount.get(objID).get(randomIndex);
-                                //Removal
-                                //fixme: entityDataAtCandidateIndex can be null
-                                EntityData entityDataAtCandidateIndex = encodedEntityDataMap.get(candidateIndex);
-                                Set<Integer> types = entityDataAtCandidateIndex.getClassTypes();
-                                if (types != null) {
-                                    if (types.size() > 1) {
-                                        System.out.println("I am " + objID + " and I got " + types.size() + " more ->" + types);
+                            int candidateIndex = new Random().nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
+                            if (candidateIndex < class2SampledEntityCount.get(objID).size()) {
+                                int candidate = class2SampledEntityCount.get(objID).get(candidateIndex);
+                                //FIXME : It should never be null
+                                if (entityDataMap.get(candidate) != null) {
+                                    //Removal
+                                    entityDataMap.get(candidate).getClassTypes().forEach(obj -> {
+                                        if (class2SampledEntityCount.containsKey(obj)) {
+                                            //System.out.println("Removing " + candidate + " " + nodeEncoder.decode(candidate) + " from " + obj + " : " + objID);
+                                            class2SampledEntityCount.get(obj).remove(Integer.valueOf(candidate));
+                                        }
+                                    });
+                                    //System.out.println("Types: " + encodedEntityDataMap.get(candidate).getClassTypes());
+                                    entityDataMap.remove(candidate);
+                                    boolean status = nodeEncoder.remove(candidate);
+                                    if (!status)
+                                        System.out.println("Failed to remove the node with id: " + candidate);
+                                    
+                                    //Update or Addition
+                                    int subjID = nodeEncoder.encode(nodes[0]);
+                                    EntityData entityData = entityDataMap.get(subjID);
+                                    if (entityData == null) {
+                                        entityData = new EntityData();
                                     }
-                                    class2SampledEntityCount.get(objID).remove(randomIndex);
+                                    entityData.getClassTypes().add(objID);
+                                    entityDataMap.put(subjID, entityData);
+                                    class2SampledEntityCount.get(objID).add(subjID);
+                                    //System.out.println("Inserting " + subjID + " " + nodeEncoder.decode(subjID) + " for " + objID);
+                                    //System.out.println("2. Types After Insertion: " + encodedEntityDataMap.get(subjID).getClassTypes());
+                                } else {
+                                    class2SampledEntityCount.forEach((k, v) -> {
+                                        if (v.contains(candidate)) {
+                                            System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidate);
+                                        }
+                                    });
+                                    System.out.println("It's null " + candidate);
                                 }
-                                
-                                encodedEntityDataMap.remove(candidateIndex);
-                                //System.out.println("Node: " + nodeEncoder.decode(candidateIndex) + ", index: " + candidateIndex);
-                                
-                                boolean status = nodeEncoder.remove(candidateIndex);
-                                if (!status)
-                                    System.out.println("Failed to remove the node with id: " + randomIndex + " - " + entityDataAtCandidateIndex);
-                                //else
-                                //    System.out.println("Successfully removed the node with id: " + randomIndex + " - " + entityDataAtCandidateIndex);
-                                
-                                //Addition
-                                EntityData entityData = encodedEntityDataMap.get(candidateIndex);
-                                if (entityData == null) {
-                                    entityData = new EntityData();
-                                }
-                                entityData.getClassTypes().add(objID);
-                                int subjID = nodeEncoder.encode(nodes[0]);
-                                encodedEntityDataMap.put(subjID, entityData);
-                                class2SampledEntityCount.get(objID).add(subjID);
                             }
                         }
                         classEntityCount.merge(objID, 1, Integer::sum);
@@ -135,10 +143,11 @@ public class ReservoirSamplingParser extends Parser {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("encodedEntityDataMap.size(): " + encodedEntityDataMap.size());
-        System.out.println("nodeEncoder.getTable().size(): " + nodeEncoder.getTable().size());
-        System.out.println("nodeEncoder.getReverseTable().size(): " + nodeEncoder.getReverseTable().size());
-        System.out.println("nodeEncoder.counter: " + nodeEncoder.counter);
+        
+        System.out.println("encodedEntityDataMap.size(): " + NumberFormat.getInstance().format(entityDataMap.size()));
+        System.out.println("nodeEncoder.getTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getTable().size()));
+        System.out.println("nodeEncoder.getReverseTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getReverseTable().size()));
+        System.out.println("nodeEncoder.counter: " + NumberFormat.getInstance().format(nodeEncoder.counter));
         watch.stop();
         Utils.logTime("firstPass:RandomSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
