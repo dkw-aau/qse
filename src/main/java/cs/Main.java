@@ -14,6 +14,7 @@ public class Main {
     public static String datasetPath;
     public static int numberOfClasses;
     public static int numberOfInstances;
+    public static int entitySamplingThreshold;
     public static boolean extractMaxCardConstraints;
     
     public static void main(String[] args) throws Exception {
@@ -36,7 +37,8 @@ public class Main {
                 //parser.run();
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //rsp.run();
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
                 reservoirSamplingParser.run();
             }
             
@@ -52,7 +54,8 @@ public class Main {
                 //parser.run();
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 //rsp.run();
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
                 reservoirSamplingParser.run();
             }
             

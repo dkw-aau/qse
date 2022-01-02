@@ -28,7 +28,7 @@ public class ReservoirSamplingParser extends Parser {
     StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
-    Integer entityThreshold = 2;
+    Integer entityThreshold;
     
     // In the following the size of each data structure
     // N = number of distinct nodes in the graph
@@ -42,7 +42,7 @@ public class ReservoirSamplingParser extends Parser {
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
     
-    public ReservoirSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
+    public ReservoirSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
         this.rdfFilePath = filePath;
         this.expectedNumberOfClasses = expNoOfClasses;
         this.expNoOfInstances = expNoOfInstances;
@@ -53,6 +53,7 @@ public class ReservoirSamplingParser extends Parser {
         this.entityDataMapReservoir = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
+        this.entityThreshold = entitySamplingThreshold;
     }
     
     public void run() {
@@ -60,6 +61,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     private void runParser() {
+        System.out.println("Entity Sampling Threshold : " + entityThreshold);
         firstPass();
         secondPass();
         computeSupportConfidence();
