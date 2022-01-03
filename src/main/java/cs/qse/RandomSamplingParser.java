@@ -9,16 +9,18 @@ import org.semanticweb.yars.nx.parser.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class RandomSamplingParser extends Parser {
-    public int randomSamplingThreshold = 20; // Random sampling threshold like 10 means: 10%
+    public int randomSamplingThreshold; // Random sampling threshold like 10 means: 10%
     Map<Integer, Integer> sampledClassEntityCount; // Size == T (number of distinct types) having count of entities sampled randomly based on defined threshold
     
-    public RandomSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
+    public RandomSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, int entitySamplingThreshold) {
         super(filePath, expNoOfClasses, expNoOfInstances, typePredicate);
         this.sampledClassEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.randomSamplingThreshold = entitySamplingThreshold;
     }
     
     public void run() {
@@ -26,6 +28,7 @@ public class RandomSamplingParser extends Parser {
     }
     
     private void runParser() {
+        System.out.println("Entity Sampling Threshold : " + randomSamplingThreshold);
         firstPass();
         secondPass();
         computeSupportConfidence();
@@ -34,9 +37,9 @@ public class RandomSamplingParser extends Parser {
         
         int sum = classEntityCount.values().stream().reduce(0, Integer::sum);
         int sumSampled = sampledClassEntityCount.values().stream().reduce(0, Integer::sum);
-        System.out.println("No. of Classes: Total: " + classEntityCount.size());
-        System.out.println("No. of Classes Sampled: " + sampledClassEntityCount.size());
-        System.out.println("Sum of Entities: " + sum + " \n Sum of Sampled Entities : " + sumSampled);
+        System.out.println("No. of Classes: Total: " + NumberFormat.getInstance().format(classEntityCount.size()));
+        System.out.println("No. of Classes Sampled: " + NumberFormat.getInstance().format(sampledClassEntityCount.size()));
+        System.out.println("Sum of Entities: " + NumberFormat.getInstance().format(sum) + " \n Sum of Sampled Entities : " + NumberFormat.getInstance().format(sumSampled));
     }
     
     @Override
