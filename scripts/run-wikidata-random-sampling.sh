@@ -13,7 +13,7 @@ container=QSE_WIKIDATA_RandomSampling_wo_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 100GB -d --name QSE_WIKIDATA_RandomSampling_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx80g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-RandomSampling-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 150GB -d --name QSE_WIKIDATA_RandomSampling_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx128g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-RandomSampling-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
@@ -49,7 +49,7 @@ container=QSE_WIKIDATA_RandomSampling_wd_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 100GB -d --name QSE_WIKIDATA_RandomSampling_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx80g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-RandomSampling-WIKIDATA /app/local/config/wd-max-card/wikiDataConfig.properties
+docker run -m 150GB -d --name QSE_WIKIDATA_RandomSampling_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx128g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-RandomSampling-WIKIDATA /app/local/config/wd-max-card/wikiDataConfig.properties
 
 docker ps
 

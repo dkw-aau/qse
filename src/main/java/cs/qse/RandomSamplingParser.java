@@ -34,12 +34,6 @@ public class RandomSamplingParser extends Parser {
         computeSupportConfidence();
         extractSHACLShapes(false);
         //assignCardinalityConstraints();
-        
-        int sum = classEntityCount.values().stream().reduce(0, Integer::sum);
-        int sumSampled = sampledClassEntityCount.values().stream().reduce(0, Integer::sum);
-        System.out.println("No. of Classes: Total: " + NumberFormat.getInstance().format(classEntityCount.size()));
-        System.out.println("No. of Classes Sampled: " + NumberFormat.getInstance().format(sampledClassEntityCount.size()));
-        System.out.println("Sum of Entities: " + NumberFormat.getInstance().format(sum) + " \n Sum of Sampled Entities : " + NumberFormat.getInstance().format(sumSampled));
     }
     
     @Override
@@ -77,6 +71,12 @@ public class RandomSamplingParser extends Parser {
         }
         watch.stop();
         Utils.logTime("firstPass:RandomSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        //logging some statistics
+        int sum = classEntityCount.values().stream().reduce(0, Integer::sum);
+        int sumSampled = sampledClassEntityCount.values().stream().reduce(0, Integer::sum);
+        System.out.println("No. of Classes: Total: " + NumberFormat.getInstance().format(classEntityCount.size()));
+        System.out.println("No. of Classes Sampled: " + NumberFormat.getInstance().format(sampledClassEntityCount.size()));
+        System.out.println("Sum of Entities: " + NumberFormat.getInstance().format(sum) + " \n Sum of Sampled Entities : " + NumberFormat.getInstance().format(sumSampled));
     }
     
     @Override
