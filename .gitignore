@@ -26,7 +26,7 @@ gradlew.bat
 .gradle
 .idea/
 classes
-
+TEMP
 
 settings.gradle
 
