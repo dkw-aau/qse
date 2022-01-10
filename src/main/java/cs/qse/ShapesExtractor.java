@@ -8,13 +8,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -41,6 +41,9 @@ public class ShapesExtractor {
     Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
+    IRI confidenceIRI = Values.iri(Constants.SHACL_CONFIDENCE);
+    IRI supportIRI = Values.iri(Constants.SHACL_SUPPORT);
+    IRI reificationIRI;
     
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
@@ -50,11 +53,14 @@ public class ShapesExtractor {
         builder.setNamespace("shape", Constants.SHAPES_NAMESPACE);
     }
     
+    
+    //Shapes :: NO PRUNING
+    
     public void constructDefaultShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
-        this.model.addAll(constructShapeWithoutPruning(classToPropWithObjTypes));
+        this.model.addAll(constructShapesWithoutPruning(classToPropWithObjTypes));
         System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
         //System.out.println(currentShapesModelStats);
@@ -70,24 +76,28 @@ public class ShapesExtractor {
         this.writeModelToFile("DEFAULT");
     }
     
-    public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+    public void constructDefaultShapesWithSupportConfidence(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
-        this.model.addAll(constructShapesWithPruning(classToPropWithObjTypes, confidence, support));
-        System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
-        
+        this.model.addAll(constructShapesWithoutPruningWithSupportConfidence(classToPropWithObjTypes));
+        System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
+        //System.out.println(currentShapesModelStats);
+        StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
             log = new StringBuilder(log.append(v) + ",");
+            header = new StringBuilder(header.append(entry.getKey()) + ",");
         }
+        FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        //this.writeModelToFileInRdfStar("DEFAULT");
+        this.writeModelToFile("DEFAULT");
     }
     
-    private Model constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
+    private Model constructShapesWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
@@ -111,28 +121,28 @@ public class ShapesExtractor {
         return m;
     }
     
-    private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+    /**
+     * Adding Support in the Node Shapes in the form of triples
+     */
+    private Model constructShapesWithoutPruningWithSupportConfidence(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                //NODE SHAPES PRUNING
-                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
-                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                    b.subject(nodeShape)
-                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                            .add(SHACL.TARGET_CLASS, subj)
-                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                            .add(SHACL.CLOSED, false);
-                    
-                    if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
-                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
-                    }
+                String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                b.subject(nodeShape)
+                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                        .add(SHACL.TARGET_CLASS, subj)
+                        .add(Constants.SHACL_SUPPORT, classInstanceCount.get(encodedClassIRI))
+                        //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        .add(SHACL.CLOSED, false);
+                
+                if (propToObjectType != null) {
+                    constructNodePropertyShapesWithSupportConfidence(b, subj, encodedClassIRI, nodeShape, propToObjectType);
                 }
             } else {
-                System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+                System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
         });
         m = b.build();
@@ -190,6 +200,160 @@ public class ShapesExtractor {
         });
     }
     
+    /**
+     * Adding Support and Confidence in the Property Shapes in the form of triples
+     */
+    private void constructNodePropertyShapesWithSupportConfidence(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
+        
+        propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
+            IRI property = factory.createIRI(encoder.decode(prop));
+            
+            IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
+            reificationIRI = factory.createIRI(Constants.SHAPES_NAMESPACE + subj.getLocalName() + "/" + property.getLocalName());
+            b.subject(nodeShape)
+                    .add(SHACL.PROPERTY, propShape);
+            b.subject(propShape)
+                    .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
+                    .add(SHACL.PATH, property);
+            
+            
+            propObjectTypes.forEach(encodedObjectType -> {
+                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                if (shapeTripletSupport.containsKey(tuple3)) {
+                    if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                        b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                    }
+                    if (Main.extractMaxCardConstraints) {
+                        if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                            b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+                        }
+                    }
+                }
+                
+                //Model model = Rio.parse(new FileInputStream("/path/to/file.ttls"), "", RDFFormat.TURTLESTAR);
+                String objectType = encoder.decode(encodedObjectType);
+                if (objectType != null) {
+                    if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
+                        if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
+                        IRI objectTypeIri = factory.createIRI(objectType);
+                        b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
+                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                        
+                        //Adding Confidence and Support
+                        if (shapeTripletSupport.containsKey(tuple3)) {
+                            //Statement confStatement = Statements.statement(triple, confidence, Values.literal(10), null); //just another way of creating a statement triple
+                            //RDF-Star Approach
+                            Literal confidenceValue = Values.literal(shapeTripletSupport.get(tuple3).getConfidence().floatValue());
+                            Literal supportValue = Values.literal(shapeTripletSupport.get(tuple3).getSupport());
+                            IRI objectTypeIRI = Values.iri(objectType);
+                            //RDF-Star Approach
+                            /*
+                            Triple triple = Values.triple(propShape, SHACL.DATATYPE, objectTypeIri);
+                            b.add(triple, confidenceIRI, confidenceValue);
+                            b.add(triple, supportIRI,supportValue);
+                            */
+                            //TODO: Test Reification Approach
+                            IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
+                            b.add(localReificationIRI, RDF.SUBJECT, propShape);
+                            b.add(localReificationIRI, RDF.PREDICATE, SHACL.DATATYPE);
+                            b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
+                            b.add(localReificationIRI, confidenceIRI, confidenceValue);
+                            b.add(localReificationIRI, supportIRI, supportValue);
+                        }
+                        
+                    } else {
+                        //objectType = objectType.replace("<", "").replace(">", "");
+                        if (Utils.isValidIRI(objectType)) {
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            
+                            //Adding Confidence and Support
+                            if (shapeTripletSupport.containsKey(tuple3)) {
+                                Literal confidenceValue = Values.literal(shapeTripletSupport.get(tuple3).getConfidence().floatValue());
+                                Literal supportValue = Values.literal(shapeTripletSupport.get(tuple3).getSupport());
+                                IRI objectTypeIRI = Values.iri(objectType.replace("<", "").replace(">", ""));
+                                
+                                //RDF-Star Approach
+                                /*
+                                Triple triple = Values.triple(propShape, SHACL.CLASS, objectTypeIri);
+                                b.add(triple, confidenceIRI, confidenceValue);
+                                b.add(triple, supportIRI, supportValue);
+                                */
+                                
+                                //TODO: Test Reification Approach
+                                IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
+                                b.add(localReificationIRI, RDF.SUBJECT, propShape);
+                                b.add(localReificationIRI, RDF.PREDICATE, SHACL.CLASS);
+                                b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
+                                b.add(localReificationIRI, confidenceIRI, confidenceValue);
+                                b.add(localReificationIRI, supportIRI, supportValue);
+                                
+                            }
+                            
+                        } else {
+                            //IRI objectTypeIri = factory.createIRI(objectType);
+                            //b.subject(propShape).add(SHACL.CLASS, objectType);
+                            System.out.println("INVALID Object Type IRI: " + objectType);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                        }
+                    }
+                } else {
+                    // in case the type is null, we set it default as string
+                    b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                }
+            });
+        });
+    }
+    
+    
+    //Shapes :: WITH PRUNING
+    
+    public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+        this.model = null;
+        this.builder = new ModelBuilder();
+        this.model = builder.build();
+        this.model.addAll(constructShapesWithPruning(classToPropWithObjTypes, confidence, support));
+        System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
+        
+        HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
+        for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
+            String v = entry.getValue();
+            log = new StringBuilder(log.append(v) + ",");
+        }
+        FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
+        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+    }
+    
+    private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+        Model m = null;
+        ModelBuilder b = new ModelBuilder();
+        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
+            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                //NODE SHAPES PRUNING
+                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    b.subject(nodeShape)
+                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                            .add(SHACL.TARGET_CLASS, subj)
+                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                            .add(SHACL.CLOSED, false);
+                    
+                    if (propToObjectType != null) {
+                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                    }
+                }
+            } else {
+                System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+            }
+        });
+        m = b.build();
+        return m;
+    }
+    
     private Map<Integer, Set<Integer>> performNodeShapePropPruning(Integer classEncodedLabel, Map<Integer, Set<Integer>> propToObjectType, Double confidence, Integer support) {
         Map<Integer, Set<Integer>> propToObjectTypesLocal = new HashMap<>();
         propToObjectType.forEach((prop, propObjectTypes) -> {
@@ -217,9 +381,13 @@ public class ShapesExtractor {
         return propToObjectTypesLocal;
     }
     
+    
+    // Methods used while constructing Shapes with and without pruning
+    
     public HashMap<String, String> computeShapeStatistics(Model currentModel) {
         HashMap<String, String> shapesStats = new HashMap<>();
-        Repository db = new SailRepository(new MemoryStore());
+        
+        SailRepository db = new SailRepository(new MemoryStore());
         db.init();
         try (RepositoryConnection conn = db.getConnection()) {
             conn.add(currentModel); // You need to load the model in the repo to query
@@ -264,6 +432,18 @@ public class ShapesExtractor {
             db.shutDown();
         }
         return shapesStats;
+    }
+    
+    public void writeModelToFileInRdfStar(String fileIdentifier) {
+        Path path = Paths.get(Main.datasetPath);
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttls";
+        System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
+        try {
+            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            Rio.write(model, fileWriter, RDFFormat.TURTLESTAR);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     public void writeModelToFile(String fileIdentifier) {

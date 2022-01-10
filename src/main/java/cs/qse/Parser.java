@@ -225,7 +225,7 @@ public class Parser {
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
         watch.stop();
         Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    
+        
     }
     
     /**
@@ -236,12 +236,15 @@ public class Parser {
         watch.start();
         ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+        //se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        se.constructDefaultShapesWithSupportConfidence(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        
+        /*ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {
                 se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
             });
         });
+        */
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         Utils.logTime("extractSHACLShapes", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));

@@ -9,6 +9,8 @@ public class Constants {
     public static String RDF_TYPE = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     public static String INSTANCE_OF = "<http://www.wikidata.org/prop/direct/P31>";
     public static String SUB_CLASS_OF = "<http://www.w3.org/2000/01/rdf-schema#subClassOf>";
+    public static String SHACL_SUPPORT = "http://www.w3.org/ns/shacl#support";
+    public static String SHACL_CONFIDENCE = "http://www.w3.org/ns/shacl#confidence";
     
     // some constant addresses of files
     public static String MG_VERTICES_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "mg_vertices.csv";
