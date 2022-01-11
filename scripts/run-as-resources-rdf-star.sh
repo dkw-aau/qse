@@ -2,7 +2,7 @@
 
 ### Build Docker Image
 cd ..
-docker build . -t shacl:QSE-LATEST-Reification
+docker build . -t shacl:QSE-LATEST-RDF-Star
 
 echo "------------------ LUBM ------------------"
 
@@ -12,8 +12,8 @@ sync; echo 1 > /proc/sys/vm/drop_caches
 
 
 ### Run LUBM Docker Container
-container=QSE_REIFICATION_lubm_wd_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_lubm_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx17g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wd-max-card/lubmConfig.properties
+container=QSE_RDFSTAR_lubm_wd_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_lubm_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx17g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wd-max-card/lubmConfig.properties
 
 ### Check the status of docker containers
 docker ps
@@ -44,8 +44,8 @@ sync; echo 1 > /proc/sys/vm/drop_caches
 
 
 ### Run DBpedia Docker Container
-container=QSE_REIFICATION_dbpedia_wd_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_dbpedia_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wd-max-card/dbpediaConfig.properties
+container=QSE_RDFSTAR_dbpedia_wd_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_dbpedia_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wd-max-card/dbpediaConfig.properties
 
 docker ps
 status=$(docker container inspect -f '{{.State.Status}}' $container)
@@ -75,8 +75,8 @@ sync; echo 1 > /proc/sys/vm/drop_caches
 
 
 ### Run YAGO Docker Container
-container=QSE_REIFICATION_yago_wd_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_yago_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wd-max-card/yagoConfig.properties
+container=QSE_RDFSTAR_yago_wd_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_yago_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wd-max-card/yagoConfig.properties
 
 docker ps
 
@@ -108,8 +108,8 @@ echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run LUBM Docker Container
-container=QSE_REIFICATION_lubm_wo_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_lubm_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx17g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wo-max-card/lubmConfig.properties
+container=QSE_RDFSTAR_lubm_wo_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_lubm_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx17g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wo-max-card/lubmConfig.properties
 
 ### Check the status of docker containers
 docker ps
@@ -141,8 +141,8 @@ echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run DBpedia Docker Container
-container=QSE_REIFICATION_dbpedia_wo_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_dbpedia_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wo-max-card/dbpediaConfig.properties
+container=QSE_RDFSTAR_dbpedia_wo_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_dbpedia_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wo-max-card/dbpediaConfig.properties
 
 docker ps
 
@@ -171,8 +171,8 @@ echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
 ### Run YAGO Docker Container
-container=QSE_REIFICATION_yago_wo_maxCard
-docker run -m 32GB -d --name QSE_REIFICATION_yago_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-Reification /app/local/config/wo-max-card/yagoConfig.properties
+container=QSE_RDFSTAR_yago_wo_maxCard
+docker run -m 32GB -d --name QSE_RDFSTAR_yago_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-RDF-Star /app/local/config/wo-max-card/yagoConfig.properties
 
 docker ps
 
