@@ -93,8 +93,8 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //this.writeModelToFileInRdfStar("DEFAULT");
-        this.writeModelToFile("DEFAULT");
+        //this.writeModelToFileInRdfStar("RDF_STAR_SUPP_CONF");
+        this.writeModelToFile("REIFIED_SUPP_CONF");
     }
     
     private Model constructShapesWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
