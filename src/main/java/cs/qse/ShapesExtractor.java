@@ -93,8 +93,8 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFileInRdfStar("RDF_STAR_SUPP_CONF");
-        //this.writeModelToFile("REIFIED_SUPP_CONF");
+        //this.writeModelToFileInRdfStar("RDF_STAR_SUPP_CONF");
+        this.writeModelToFile("REIFIED_SUPP_CONF");
     }
     
     private Model constructShapesWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
@@ -248,17 +248,17 @@ public class ShapesExtractor {
                             IRI objectTypeIRI = Values.iri(objectType);
                             //RDF-Star Approach
                             
-                            Triple triple = Values.triple(propShape, SHACL.DATATYPE, objectTypeIri);
+                            /*Triple triple = Values.triple(propShape, SHACL.DATATYPE, objectTypeIri);
                             b.add(triple, confidenceIRI, confidenceValue);
-                            b.add(triple, supportIRI,supportValue);
+                            b.add(triple, supportIRI,supportValue);*/
                             
                             //TODO: Test Reification Approach
-                            /*IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
+                            IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
                             b.add(localReificationIRI, RDF.SUBJECT, propShape);
                             b.add(localReificationIRI, RDF.PREDICATE, SHACL.DATATYPE);
                             b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
                             b.add(localReificationIRI, confidenceIRI, confidenceValue);
-                            b.add(localReificationIRI, supportIRI, supportValue);*/
+                            b.add(localReificationIRI, supportIRI, supportValue);
                         }
                         
                     } else {
@@ -276,18 +276,18 @@ public class ShapesExtractor {
                                 
                                 //RDF-Star Approach
                                 
-                                Triple triple = Values.triple(propShape, SHACL.CLASS, objectTypeIri);
+                                /*Triple triple = Values.triple(propShape, SHACL.CLASS, objectTypeIri);
                                 b.add(triple, confidenceIRI, confidenceValue);
-                                b.add(triple, supportIRI, supportValue);
+                                b.add(triple, supportIRI, supportValue);*/
                                 
                                 
                                 //TODO: Test Reification Approach
-                                /*IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
+                                IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
                                 b.add(localReificationIRI, RDF.SUBJECT, propShape);
                                 b.add(localReificationIRI, RDF.PREDICATE, SHACL.CLASS);
                                 b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
                                 b.add(localReificationIRI, confidenceIRI, confidenceValue);
-                                b.add(localReificationIRI, supportIRI, supportValue);*/
+                                b.add(localReificationIRI, supportIRI, supportValue);
                                 
                             }
                             
