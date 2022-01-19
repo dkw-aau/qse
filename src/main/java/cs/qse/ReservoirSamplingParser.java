@@ -35,9 +35,9 @@ public class ReservoirSamplingParser extends Parser {
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Integer, EntityData> entityDataMapReservoir; // Size == N For every entity (encoded as integer) we save a number of summary information
+    Map<Integer, EntityData> entityDataMapContainer; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
-    Map<Integer, List<Integer>> classSampledEntityContainer; // Size == O(T*entityThreshold)
+    Map<Integer, List<Integer>> classSampledEntityReservoir; // Size == O(T*entityThreshold)
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
@@ -48,9 +48,9 @@ public class ReservoirSamplingParser extends Parser {
         this.expNoOfInstances = expNoOfInstances;
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.classSampledEntityContainer = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classSampledEntityReservoir = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.entityDataMapReservoir = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.entityThreshold = entitySamplingThreshold;
@@ -63,6 +63,7 @@ public class ReservoirSamplingParser extends Parser {
     private void runParser() {
         System.out.println("Entity Sampling Threshold : " + entityThreshold);
         firstPass();
+        //firstPassBullyApproach();
         secondPass();
         computeSupportConfidence();
         extractSHACLShapes(false);
@@ -73,6 +74,7 @@ public class ReservoirSamplingParser extends Parser {
     
     @Override
     protected void firstPass() {
+        System.out.println("FirstPass");
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -84,29 +86,29 @@ public class ReservoirSamplingParser extends Parser {
                     Node[] nodes = NxParser.parseNodes(line);
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
-                        classSampledEntityContainer.putIfAbsent(objID, new ArrayList<>(entityThreshold));
-                        int numberOfSampledEntities = classSampledEntityContainer.get(objID).size();
-                        // Initializing entityDataMapReservoir with first k = entityThreshold elements for each class
+                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(entityThreshold));
+                        int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
+                        // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
                         if (numberOfSampledEntities < entityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
-                            EntityData entityData = entityDataMapReservoir.get(subjID); // Track classes per entity
+                            EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
                                 entityData = new EntityData();
                             }
                             entityData.getClassTypes().add(objID);
-                            entityDataMapReservoir.put(subjID, entityData);
-                            classSampledEntityContainer.get(objID).add(subjID);
+                            entityDataMapContainer.put(subjID, entityData);
+                            classSampledEntityReservoir.get(objID).add(subjID);
                         }
                         // once the reservoir (entityDataMap) is filled with entities upto the defined entityThreshold for specific classes, we enter the else block
                         //  Now one by one consider all items from (k+1)th item to nth item.
                         //      a) Generate a random number from 0 to i where i is the index of the current item in stream, i.e., lineCounter.
                         //      Let the generated random number is candidateIndex.
-                        //	    b) If candidateIndex is in range 0 to number of entities sampled for the current class (obtained from classSampledEntityContainer)
-                        //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityContainer
+                        //	    b) If candidateIndex is in range 0 to number of entities sampled for the current class (obtained from classSampledEntityReservoir)
+                        //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityReservoir
                         
                         else {
                             int candidateIndex = random.nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                            int currSize = classSampledEntityContainer.get(objID).size();
+                            int currSize = classSampledEntityReservoir.get(objID).size();
                             
                             //Rolling the dice again by generating another random number
                             if (candidateIndex > currSize) {
@@ -114,33 +116,33 @@ public class ReservoirSamplingParser extends Parser {
                             }
                             
                             if (candidateIndex < currSize) {
-                                int candidateNode = classSampledEntityContainer.get(objID).get(candidateIndex); // get the candidate node at the candidate index
+                                int candidateNode = classSampledEntityReservoir.get(objID).get(candidateIndex); // get the candidate node at the candidate index
                                 
-                                if (entityDataMapReservoir.get(candidateNode) != null) {
-                                    //Remove the candidate node from the classSampledEntityContainer
-                                    entityDataMapReservoir.get(candidateNode).getClassTypes().forEach(obj -> {
-                                        if (classSampledEntityContainer.containsKey(obj)) {
-                                            classSampledEntityContainer.get(obj).remove(Integer.valueOf(candidateNode));
+                                if (entityDataMapContainer.get(candidateNode) != null) {
+                                    //Remove the candidate node from the classSampledEntityReservoir
+                                    entityDataMapContainer.get(candidateNode).getClassTypes().forEach(obj -> {
+                                        if (classSampledEntityReservoir.containsKey(obj)) {
+                                            classSampledEntityReservoir.get(obj).remove(Integer.valueOf(candidateNode));
                                         }
                                     });
                                     
-                                    entityDataMapReservoir.remove(candidateNode); // Remove the candidate node from the entityDataMapReservoir
+                                    entityDataMapContainer.remove(candidateNode); // Remove the candidate node from the entityDataMapContainer
                                     boolean status = nodeEncoder.remove(candidateNode);
                                     if (!status)
                                         System.out.println("WARNING::Failed to remove the candidateNode: " + candidateNode);
                                     
                                     //Update the reservoir and container with the current focus node
                                     int subjID = nodeEncoder.encode(nodes[0]); // Encode the current focus node
-                                    EntityData entityData = entityDataMapReservoir.get(subjID);
+                                    EntityData entityData = entityDataMapContainer.get(subjID);
                                     if (entityData == null) {
                                         entityData = new EntityData();
                                     }
                                     entityData.getClassTypes().add(objID);
-                                    entityDataMapReservoir.put(subjID, entityData); // Add the focus node in the reservoir
-                                    classSampledEntityContainer.get(objID).add(subjID); // Update the classSampledEntityContainer with the current focus node for current class
+                                    entityDataMapContainer.put(subjID, entityData); // Add the focus node in the reservoir
+                                    classSampledEntityReservoir.get(objID).add(subjID); // Update the classSampledEntityReservoir with the current focus node for current class
                                 } else {
                                     System.out.println("WARNING::It's null for candidateNode " + candidateNode);
-                                    classSampledEntityContainer.forEach((k, v) -> {
+                                    classSampledEntityReservoir.forEach((k, v) -> {
                                         if (v.contains(candidateNode))
                                             System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
                                     });
@@ -161,7 +163,125 @@ public class ReservoirSamplingParser extends Parser {
         Utils.logTime("firstPass:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         
         //Printing some statistics
-        System.out.println("entityDataMapReservoir.size(): " + NumberFormat.getInstance().format(entityDataMapReservoir.size()));
+        System.out.println("entityDataMapContainer.size(): " + NumberFormat.getInstance().format(entityDataMapContainer.size()));
+        System.out.println("nodeEncoder.getTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getTable().size()));
+        System.out.println("nodeEncoder.getReverseTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getReverseTable().size()));
+        System.out.println("nodeEncoder.counter: " + NumberFormat.getInstance().format(nodeEncoder.counter));
+    }
+    
+    private void firstPassBullyApproach() {
+        System.out.println("FirstPass: Bully Approach");
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Random random = new Random(100);
+        AtomicInteger lineCounter = new AtomicInteger();
+        try {
+            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
+                try {
+                    // Get [S,P,O] as Node from triple
+                    Node[] nodes = NxParser.parseNodes(line);
+                    if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
+                        int objID = encoder.encode(nodes[2].getLabel());
+                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(entityThreshold));
+                        int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
+                        // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
+                        if (numberOfSampledEntities < entityThreshold) {
+                            int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
+                            EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
+                            if (entityData == null) {
+                                entityData = new EntityData();
+                            }
+                            entityData.getClassTypes().add(objID);
+                            entityDataMapContainer.put(subjID, entityData);
+                            classSampledEntityReservoir.get(objID).add(subjID);
+                        }
+                        // once the reservoir (entityDataMap) is filled with entities upto the defined entityThreshold for specific classes, we enter the else block
+                        //  Now one by one consider all items from (k+1)th item to nth item.
+                        //      a) Generate a random number from 0 to i where i is the index of the current item in stream, i.e., lineCounter.
+                        //      Let the generated random number is candidateIndex.
+                        //	    b) If candidateIndex is in range 0 to number of entities sampled for the current class (obtained from classSampledEntityReservoir)
+                        //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityReservoir
+                        
+                        else {
+                            int candidateIndex = random.nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
+                            int currSize = classSampledEntityReservoir.get(objID).size();
+                            
+                            if (candidateIndex < currSize) {
+                                int candidateNodeLeft = -1, candidateNodeRight = -1, scopeCandidateNodeLeft = 999999999, scopeCandidateNodeRight = 999999999;
+                                
+                                if (candidateIndex != 0) {
+                                    candidateNodeLeft = classSampledEntityReservoir.get(objID).get(candidateIndex - 1); // get the candidate node at the left of candidate index
+                                    if (entityDataMapContainer.get(candidateNodeLeft) != null) {
+                                        scopeCandidateNodeLeft = entityDataMapContainer.get(candidateNodeLeft).getClassTypes().size();
+                                    }
+                                }
+                                if (candidateIndex != currSize - 1) {
+                                    candidateNodeRight = classSampledEntityReservoir.get(objID).get(candidateIndex + 1); // get the candidate node at the right of candidate index
+                                    if (entityDataMapContainer.get(candidateNodeRight) != null) {
+                                        scopeCandidateNodeRight = entityDataMapContainer.get(candidateNodeRight).getClassTypes().size();
+                                    }
+                                }
+                                
+                                int candidateNode = classSampledEntityReservoir.get(objID).get(candidateIndex); // get the candidate node at the candidate index
+                                
+                                if (entityDataMapContainer.get(candidateNode) != null) {
+                                    int scopeCandidateNode = entityDataMapContainer.get(candidateNode).getClassTypes().size();
+                                    
+                                    BinaryNode node = new BinaryNode(candidateNode, scopeCandidateNode);
+                                    node.left = new BinaryNode(candidateNodeLeft, scopeCandidateNodeLeft);
+                                    node.right = new BinaryNode(candidateNodeRight, scopeCandidateNodeRight);
+                                    
+                                    BinaryNode min = nodeWithMinimumScope(node, node.left, node.right);
+                                    //System.out.println(min.id + " - " + min.scope);
+                                    candidateNode = min.id;
+                                    
+                                    //Remove the candidate node from the classSampledEntityReservoir
+                                    for (Integer obj : entityDataMapContainer.get(candidateNode).getClassTypes()) {
+                                        if (classSampledEntityReservoir.containsKey(obj)) {
+                                            classSampledEntityReservoir.get(obj).remove(Integer.valueOf(candidateNode));
+                                        }
+                                    }
+                                    
+                                    entityDataMapContainer.remove(candidateNode); // Remove the candidate node from the entityDataMapContainer
+                                    boolean status = nodeEncoder.remove(candidateNode);
+                                    if (!status)
+                                        System.out.println("WARNING::Failed to remove the candidateNode: " + candidateNode);
+                                    
+                                    //Update the reservoir and container with the current focus node
+                                    int subjID = nodeEncoder.encode(nodes[0]); // Encode the current focus node
+                                    EntityData entityData = entityDataMapContainer.get(subjID);
+                                    if (entityData == null) {
+                                        entityData = new EntityData();
+                                    }
+                                    entityData.getClassTypes().add(objID);
+                                    entityDataMapContainer.put(subjID, entityData); // Add the focus node in the reservoir
+                                    classSampledEntityReservoir.get(objID).add(subjID); // Update the classSampledEntityReservoir with the current focus node for current class
+                                } else {
+                                    System.out.println("WARNING::It's null for candidateNode " + candidateNode);
+                                    for (Map.Entry<Integer, List<Integer>> entry : classSampledEntityReservoir.entrySet()) {
+                                        Integer k = entry.getKey();
+                                        List<Integer> v = entry.getValue();
+                                        if (v.contains(candidateNode))
+                                            System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
+                                    }
+                                }
+                            }
+                        }
+                        classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
+                    }
+                    lineCounter.getAndIncrement(); // increment the line counter
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("firstPass:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        
+        //Printing some statistics
+        System.out.println("entityDataMapContainer.size(): " + NumberFormat.getInstance().format(entityDataMapContainer.size()));
         System.out.println("nodeEncoder.getTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getTable().size()));
         System.out.println("nodeEncoder.getReverseTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getReverseTable().size()));
         System.out.println("nodeEncoder.counter: " + NumberFormat.getInstance().format(nodeEncoder.counter));
@@ -182,11 +302,11 @@ public class ReservoirSamplingParser extends Parser {
                     //Node subject = nodes[0];
                     int subjID = nodeEncoder.encode(nodes[0]);
                     // if the entity is in the Reservoir, we go for it
-                    if (entityDataMapReservoir.get(subjID) != null) {
+                    if (entityDataMapContainer.get(subjID) != null) {
                         String objectType = extractObjectType(nodes[2].toString());
                         int propID = encoder.encode(nodes[1].getLabel());
                         if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                            EntityData currEntityData = entityDataMapReservoir.get(nodeEncoder.encode(nodes[2]));
+                            EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(nodes[2]));
                             if (currEntityData != null) {
                                 objTypes = currEntityData.getClassTypes();
                                 for (Integer node : objTypes) { // get classes of node2
@@ -203,7 +323,7 @@ public class ReservoirSamplingParser extends Parser {
                             addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
                         }
                         
-                        EntityData entityData = entityDataMapReservoir.get(subjID);
+                        EntityData entityData = entityDataMapContainer.get(subjID);
                         if (entityData != null) {
                             for (Integer entityClass : entityData.getClassTypes()) {
                                 Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
@@ -241,7 +361,7 @@ public class ReservoirSamplingParser extends Parser {
      * @param subject
      */
     private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Integer subject) {
-        EntityData currentEntityData = entityDataMapReservoir.get(subject);
+        EntityData currentEntityData = entityDataMapContainer.get(subject);
         if (currentEntityData == null) {
             currentEntityData = new EntityData();
         }
@@ -253,7 +373,7 @@ public class ReservoirSamplingParser extends Parser {
             }
         }
         //Add entity data into the map
-        entityDataMapReservoir.put(subject, currentEntityData);
+        entityDataMapContainer.put(subject, currentEntityData);
     }
     
     /**
@@ -266,7 +386,7 @@ public class ReservoirSamplingParser extends Parser {
         shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.statsComputer = new StatsComputer();
         statsComputer.setShapeTripletSupport(shapeTripletSupport);
-        statsComputer.computeSupportConfidenceWithEncodedEntities(entityDataMapReservoir, classEntityCount);
+        statsComputer.computeSupportConfidenceWithEncodedEntities(entityDataMapContainer, classEntityCount);
         watch.stop();
         Utils.logTime("computeSupportConfidence:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         
@@ -293,5 +413,37 @@ public class ReservoirSamplingParser extends Parser {
         watch.stop();
         
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    
+    public BinaryNode nodeWithMinimumScope(BinaryNode a, BinaryNode b, BinaryNode c) {
+        BinaryNode smallest;
+        if (a.scope < b.scope) {
+            if (c.scope < a.scope) {
+                smallest = c;
+            } else {
+                smallest = a;
+            }
+        } else {
+            if (b.scope < c.scope) {
+                smallest = b;
+            } else {
+                smallest = c;
+            }
+        }
+        return smallest;
+    }
+}
+
+class BinaryNode {
+    int id;
+    int scope;
+    BinaryNode left, right;
+    
+    BinaryNode(int id, int scope) {
+        this.id = id;
+        this.scope = scope;
+        left = null;
+        right = null;
     }
 }
