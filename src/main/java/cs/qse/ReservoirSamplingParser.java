@@ -62,8 +62,8 @@ public class ReservoirSamplingParser extends Parser {
     
     private void runParser() {
         System.out.println("Entity Sampling Threshold : " + entityThreshold);
-        firstPass();
-        //firstPassBullyApproach();
+        //firstPass();
+        firstPassBullyApproach();
         secondPass();
         computeSupportConfidence();
         extractSHACLShapes(false);
