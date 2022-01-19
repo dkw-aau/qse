@@ -75,6 +75,7 @@ public class ReservoirSamplingParser extends Parser {
     protected void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
+        Random random = new Random(100);
         AtomicInteger lineCounter = new AtomicInteger();
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
@@ -104,8 +105,15 @@ public class ReservoirSamplingParser extends Parser {
                         //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityContainer
                         
                         else {
-                            int candidateIndex = new Random().nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                            if (candidateIndex < classSampledEntityContainer.get(objID).size()) {
+                            int candidateIndex = random.nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
+                            int currSize = classSampledEntityContainer.get(objID).size();
+                            
+                            //Rolling the dice again by generating another random number
+                            if (candidateIndex > currSize) {
+                                candidateIndex = random.nextInt(lineCounter.get());
+                            }
+                            
+                            if (candidateIndex < currSize) {
                                 int candidateNode = classSampledEntityContainer.get(objID).get(candidateIndex); // get the candidate node at the candidate index
                                 
                                 if (entityDataMapReservoir.get(candidateNode) != null) {

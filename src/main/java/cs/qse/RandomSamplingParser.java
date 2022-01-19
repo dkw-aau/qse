@@ -40,6 +40,7 @@ public class RandomSamplingParser extends Parser {
     protected void firstPass() {
         StopWatch watch = new StopWatch();
         watch.start();
+        Random random = new Random(100);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
@@ -47,7 +48,7 @@ public class RandomSamplingParser extends Parser {
                     Node[] nodes = NxParser.parseNodes(line); // how much time is spent parsing?
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         
-                        int randomNumber = new Random().nextInt(100); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
+                        int randomNumber = random.nextInt(100); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
                         int objID = encoder.encode(nodes[2].getLabel());
                         //If the generated random number is less than randomSamplingThreshold, then we sample the entity
                         if (randomNumber < randomSamplingThreshold) {
