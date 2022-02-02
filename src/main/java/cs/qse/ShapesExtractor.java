@@ -4,13 +4,19 @@ import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
 import cs.utils.*;
 import cs.utils.encoders.Encoder;
+import de.atextor.turtle.formatter.FormattingStyle;
+import de.atextor.turtle.formatter.TurtleFormatter;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.riot.RDFDataMgr;
 import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
+import org.eclipse.rdf4j.model.vocabulary.VOID;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -21,13 +27,14 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static org.eclipse.rdf4j.model.util.Values.bnode;
 
 /**
  * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
@@ -94,7 +101,8 @@ public class ShapesExtractor {
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         //this.writeModelToFileInRdfStar("RDF_STAR_SUPP_CONF");
-        this.writeModelToFile("REIFIED_SUPP_CONF");
+        //this.writeModelToFile("REIFIED_SUPP_CONF");
+        this.writeModelToFileWithPrettyFormatting("LATEST");
     }
     
     private Model constructShapesWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
@@ -134,7 +142,7 @@ public class ShapesExtractor {
                 b.subject(nodeShape)
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
-                        .add(Constants.SHACL_SUPPORT, classInstanceCount.get(encodedClassIRI))
+                        .add(VOID.ENTITIES, classInstanceCount.get(encodedClassIRI))
                         //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                         .add(SHACL.CLOSED, false);
                 
@@ -210,14 +218,16 @@ public class ShapesExtractor {
             
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
             reificationIRI = factory.createIRI(Constants.SHAPES_NAMESPACE + subj.getLocalName() + "/" + property.getLocalName());
-            b.subject(nodeShape)
-                    .add(SHACL.PROPERTY, propShape);
-            b.subject(propShape)
-                    .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
-                    .add(SHACL.PATH, property);
+            b.subject(nodeShape).add(SHACL.PROPERTY, propShape);
+            b.subject(propShape).add(RDF.TYPE, SHACL.PROPERTY_SHAPE).add(SHACL.PATH, property);
             
+            int numberOfObjectTypes = propObjectTypes.size();
             
-            propObjectTypes.forEach(encodedObjectType -> {
+            if (numberOfObjectTypes == 1) {
+                int encodedObjectType = propObjectTypes.iterator().next();
+                String objectType = encoder.decode(encodedObjectType);
+                
+                //Adding Cardinality Constraints
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
@@ -229,9 +239,7 @@ public class ShapesExtractor {
                         }
                     }
                 }
-                
-                //Model model = Rio.parse(new FileInputStream("/path/to/file.ttls"), "", RDFFormat.TURTLESTAR);
-                String objectType = encoder.decode(encodedObjectType);
+                // Adding other constraints
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
                         if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
@@ -239,57 +247,12 @@ public class ShapesExtractor {
                         b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
                         b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                         
-                        //Adding Confidence and Support
-                        if (shapeTripletSupport.containsKey(tuple3)) {
-                            //Statement confStatement = Statements.statement(triple, confidence, Values.literal(10), null); //just another way of creating a statement triple
-                            //RDF-Star Approach
-                            Literal confidenceValue = Values.literal(shapeTripletSupport.get(tuple3).getConfidence().floatValue());
-                            Literal supportValue = Values.literal(shapeTripletSupport.get(tuple3).getSupport());
-                            IRI objectTypeIRI = Values.iri(objectType);
-                            //RDF-Star Approach
-                            
-                            /*Triple triple = Values.triple(propShape, SHACL.DATATYPE, objectTypeIri);
-                            b.add(triple, confidenceIRI, confidenceValue);
-                            b.add(triple, supportIRI,supportValue);*/
-                            
-                            //TODO: Test Reification Approach
-                            IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
-                            b.add(localReificationIRI, RDF.SUBJECT, propShape);
-                            b.add(localReificationIRI, RDF.PREDICATE, SHACL.DATATYPE);
-                            b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
-                            b.add(localReificationIRI, confidenceIRI, confidenceValue);
-                            b.add(localReificationIRI, supportIRI, supportValue);
-                        }
-                        
                     } else {
                         //objectType = objectType.replace("<", "").replace(">", "");
                         if (Utils.isValidIRI(objectType)) {
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
-                            
-                            //Adding Confidence and Support
-                            if (shapeTripletSupport.containsKey(tuple3)) {
-                                Literal confidenceValue = Values.literal(shapeTripletSupport.get(tuple3).getConfidence().floatValue());
-                                Literal supportValue = Values.literal(shapeTripletSupport.get(tuple3).getSupport());
-                                IRI objectTypeIRI = Values.iri(objectType.replace("<", "").replace(">", ""));
-                                
-                                //RDF-Star Approach
-                                
-                                /*Triple triple = Values.triple(propShape, SHACL.CLASS, objectTypeIri);
-                                b.add(triple, confidenceIRI, confidenceValue);
-                                b.add(triple, supportIRI, supportValue);*/
-                                
-                                
-                                //TODO: Test Reification Approach
-                                IRI localReificationIRI = Values.iri(reificationIRI.stringValue() + "/" + objectTypeIRI.getLocalName());
-                                b.add(localReificationIRI, RDF.SUBJECT, propShape);
-                                b.add(localReificationIRI, RDF.PREDICATE, SHACL.CLASS);
-                                b.add(localReificationIRI, RDF.OBJECT, objectTypeIri);
-                                b.add(localReificationIRI, confidenceIRI, confidenceValue);
-                                b.add(localReificationIRI, supportIRI, supportValue);
-                                
-                            }
                             
                         } else {
                             //IRI objectTypeIri = factory.createIRI(objectType);
@@ -302,7 +265,68 @@ public class ShapesExtractor {
                     // in case the type is null, we set it default as string
                     b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
                 }
-            });
+            }
+            
+            if (numberOfObjectTypes > 1) {
+                List<Resource> members = new ArrayList<>();
+                Resource headMember = bnode();
+                ModelBuilder localBuilder = new ModelBuilder();
+                
+                for (Integer encodedObjectType : propObjectTypes) {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                    String objectType = encoder.decode(encodedObjectType);
+                    Resource currentMember = bnode();
+                    //Cardinality Constraints
+                    if (shapeTripletSupport.containsKey(tuple3)) {
+                        if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                            b.subject(propShape).add(SHACL.MIN_COUNT, 1);
+                        }
+                        if (Main.extractMaxCardConstraints) {
+                            if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                                b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+                            }
+                        }
+                    }
+                    
+                    if (objectType != null) {
+                        if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
+                            if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            
+                            localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
+                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            
+                            if (shapeTripletSupport.containsKey(tuple3)) {
+                                Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
+                                localBuilder.subject(currentMember).add(VOID.ENTITIES, entities);
+                            }
+                            
+                        } else {
+                            if (Utils.isValidIRI(objectType)) {
+                                IRI objectTypeIri = factory.createIRI(objectType);
+                                localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                if (shapeTripletSupport.containsKey(tuple3)) {
+                                    Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
+                                    localBuilder.subject(currentMember).add(VOID.ENTITIES, entities);
+                                }
+                            } else {
+                                System.out.println("INVALID Object Type IRI: " + objectType);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                            }
+                        }
+                    } else {
+                        // in case the type is null, we set it default as string
+                        //b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                        localBuilder.subject(currentMember).add(SHACL.DATATYPE, XSD.STRING);
+                    }
+                    members.add(currentMember);
+                }
+                Model localModel = RDFCollections.asRDF(members, headMember, new LinkedHashModel());
+                localModel.add(propShape, SHACL.OR, headMember);
+                localModel.addAll(localBuilder.build());
+                b.build().addAll(localModel);
+            }
         });
     }
     
@@ -456,6 +480,37 @@ public class ShapesExtractor {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public void writeModelToFileWithPrettyFormatting(String fileIdentifier) {
+        Path path = Paths.get(Main.datasetPath);
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
+        String fileAddress = ConfigManager.getProperty("output_file_path") + fileName;
+        System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
+        try {
+            FileWriter fileWriter = new FileWriter(fileAddress, false);
+            Rio.write(model, fileWriter, RDFFormat.TURTLE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String prettyFileAddress = ConfigManager.getProperty("output_file_path") + FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL_PRETTY.ttl";
+        TurtleFormatter formatter = new TurtleFormatter(FormattingStyle.DEFAULT);
+        // Build or load a Jena Model
+        org.apache.jena.rdf.model.Model model = RDFDataMgr.loadModel(fileAddress);
+        System.out.println(model.size());
+        // Either create a string...
+        String prettyPrintedModel = formatter.apply(model);
+        // ...or write directly to an OutputStream
+        //formatter.accept(model, System.out);
+        
+        try {
+            formatter.accept(model, new FileOutputStream(prettyFileAddress));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        //System.out.println(prettyPrintedModel);
+        
+        
     }
     
     private Value executeQuery(TupleQuery query, String bindingName) {

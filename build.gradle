@@ -9,8 +9,8 @@ plugins {
 }
 apply plugin: "com.github.johnrengelman.shadow"
 
-sourceCompatibility = 11
-targetCompatibility = "11"
+sourceCompatibility = 17
+targetCompatibility = "17"
 
 group 'org.example'
 version '1.0-SNAPSHOT'
@@ -108,6 +108,13 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.roaringbitmap/RoaringBitmap
     implementation group: 'org.roaringbitmap', name: 'RoaringBitmap', version: '0.9.17'
+
+
+    // https://mvnrepository.com/artifact/org.apache.jena/jena-arq
+    implementation group: 'org.apache.jena', name: 'jena-arq', version: '4.3.2'
+
+    // https://mvnrepository.com/artifact/de.atextor/turtle-formatter
+    implementation group: 'de.atextor', name: 'turtle-formatter', version: '1.2.3'
 
 
     //implementation files('address/file.jar')
