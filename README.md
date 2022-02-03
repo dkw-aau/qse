@@ -113,7 +113,8 @@ docker stats
 
         sdk list java
         sdk install java 11.0.10.fx-zulu 
-        sdk use java 11.0.10.fx-zulu 
+        sdk use java 11.0.10.fx-zulu
+    To make it compatible with Java 17, you need to use Gradle version: `Gradle 7.4-rc-1` and Java version `java 17.0.2-open`
 
 2. Install gradle
 
