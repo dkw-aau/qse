@@ -1,4 +1,4 @@
-FROM gradle:6.9.1-jdk11-alpine AS builder
+FROM gradle:7.3.3-jdk17-alpine AS builder
 RUN mkdir -p /app/shacl
 COPY . /app/shacl
 WORKDIR /app/shacl
