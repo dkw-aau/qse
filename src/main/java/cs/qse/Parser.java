@@ -62,7 +62,7 @@ public class Parser {
         computeSupportConfidence();
         extractSHACLShapes();
         //assignCardinalityConstraints();
-        System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
+        //System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
     /**
@@ -221,7 +221,7 @@ public class Parser {
         statsComputer.setShapeTripletSupport(shapeTripletSupport);
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
         watch.stop();
-        Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("computeStatistics", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         
     }
     
@@ -242,7 +242,7 @@ public class Parser {
             });
         });
         */
-        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        //ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         Utils.logTime("extractSHACLShapes", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }

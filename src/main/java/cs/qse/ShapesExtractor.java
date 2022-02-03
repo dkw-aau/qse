@@ -68,7 +68,7 @@ public class ShapesExtractor {
         this.builder = new ModelBuilder();
         this.model = builder.build();
         this.model.addAll(constructShapesWithoutPruning(classToPropWithObjTypes));
-        System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
+        //System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
         //System.out.println(currentShapesModelStats);
         StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
@@ -88,21 +88,21 @@ public class ShapesExtractor {
         this.builder = new ModelBuilder();
         this.model = builder.build();
         this.model.addAll(constructShapesWithoutPruningWithSupportConfidence(classToPropWithObjTypes));
-        System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
-        HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        //System.out.println(currentShapesModelStats);
-        StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
-        for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
-            String v = entry.getValue();
-            log = new StringBuilder(log.append(v) + ",");
-            header = new StringBuilder(header.append(entry.getKey()) + ",");
-        }
-        FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
-        FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
+        //System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
+//        HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
+//        //System.out.println(currentShapesModelStats);
+//        StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
+//        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
+//        for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
+//            String v = entry.getValue();
+//            log = new StringBuilder(log.append(v) + ",");
+//            header = new StringBuilder(header.append(entry.getKey()) + ",");
+//        }
+        //FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
+        //FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         //this.writeModelToFileInRdfStar("RDF_STAR_SUPP_CONF");
         //this.writeModelToFile("REIFIED_SUPP_CONF");
-        this.writeModelToFileWithPrettyFormatting("LATEST");
+        this.writeModelToFileWithPrettyFormatting("");
     }
     
     private Model constructShapesWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
@@ -484,7 +484,7 @@ public class ShapesExtractor {
     
     public void writeModelToFileWithPrettyFormatting(String fileIdentifier) {
         Path path = Paths.get(Main.datasetPath);
-        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_SHACL.ttl";
         String fileAddress = ConfigManager.getProperty("output_file_path") + fileName;
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
         try {
@@ -493,11 +493,10 @@ public class ShapesExtractor {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String prettyFileAddress = ConfigManager.getProperty("output_file_path") + FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL_PRETTY.ttl";
+        String prettyFileAddress = ConfigManager.getProperty("output_file_path") + FilenameUtils.removeExtension(path.getFileName().toString()) + "_SHACL_PRETTY.ttl";
         TurtleFormatter formatter = new TurtleFormatter(FormattingStyle.DEFAULT);
         // Build or load a Jena Model
         org.apache.jena.rdf.model.Model model = RDFDataMgr.loadModel(fileAddress);
-        System.out.println(model.size());
         // Either create a string...
         String prettyPrintedModel = formatter.apply(model);
         // ...or write directly to an OutputStream
