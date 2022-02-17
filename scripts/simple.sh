@@ -2,17 +2,18 @@
 
 ### Build Docker Image
 cd ..
-docker build . -t shacl:QSE-WIKIDATA-MeasureMemory
+docker build . -t shacl:QSE-MemoryMeasuring-WIKIDATA
 
+echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_WikiData_MeasuringHashMapMemorySize
+container=QSE_WIKIDATA_MemoryMeasuring_wo_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WikiData_MeasuringHashMapMemorySize -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-WIKIDATA-MeasureMemory /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 200GB -d --name QSE_WIKIDATA_MemoryMeasuring_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx160g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-MemoryMeasuring-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
@@ -36,10 +37,4 @@ done
 status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
-
-
-### Clear Cache
-echo "Clearing cache"
-sync; echo 1 > /proc/sys/vm/drop_caches
-
 
