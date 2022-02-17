@@ -8,14 +8,11 @@ import cs.utils.Tuple3;
 import cs.utils.Utils;
 import cs.utils.encoders.Encoder;
 import cs.utils.encoders.NodeEncoder;
-import orestes.bloomfilter.BloomFilter;
-import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -38,8 +35,6 @@ public class ReservoirSamplingParser extends Parser {
     // T = number of distinct types
     // P = number of distinct predicates
     
-    //Map<Integer, BloomFilterWrapper> entityToPropBloomFilter;
-    
     Map<Integer, EntityData> entityDataMapContainer; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, List<Integer>> classSampledEntityReservoir; // Size == O(T*entityThreshold)
@@ -56,7 +51,6 @@ public class ReservoirSamplingParser extends Parser {
         this.classSampledEntityReservoir = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
-        //this.entityToPropBloomFilter = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.entityThreshold = entitySamplingThreshold;
@@ -68,54 +62,19 @@ public class ReservoirSamplingParser extends Parser {
     
     private void runParser() {
         System.out.println("Entity Sampling Threshold : " + entityThreshold);
-        //preFirstPass();
-        firstPass();
-        //firstPassBullyApproach();
+        //firstPass();
+        firstPassBullyApproach();
         secondPass();
-        classSampledEntityReservoir.forEach((k, v) -> {
+        /*classSampledEntityReservoir.forEach((k, v) -> {
             if (classToPropWithObjTypes.get(k) != null)
                 System.out.println(k + "," + encoder.decode(k) + "," + classEntityCount.get(k) + "," + v.size() + "," + classToPropWithObjTypes.get(k).size());
-        });
+        });*/
         computeSupportConfidence();
-        extractSHACLShapes(false);
+        extractSHACLShapes(true);
         //assignCardinalityConstraints();
         System.out.println("No. of Classes: Total: " + classEntityCount.size());
         
     }
-    
-   /* protected void preFirstPass() {
-        System.out.println("preFirstPass");
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
-                try {
-                    Node[] nodes = NxParser.parseNodes(line);
-                    int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
-                    int propID = encoder.encode(nodes[1].getLabel());
-                    if (entityToPropBloomFilter.get(subjID) == null) {
-                        BloomFilterWrapper bfw = new BloomFilterWrapper();
-                        bfw.bf.add(propID);
-                        bfw.count++;
-                        entityToPropBloomFilter.put(subjID, bfw);
-                    } else {
-                        BloomFilterWrapper bfw = entityToPropBloomFilter.get(subjID);
-                        bfw.bf.add(propID);
-                        bfw.count++;
-                    }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (
-                Exception e) {
-            e.printStackTrace();
-        }
-        
-        watch.stop();
-        Utils.logTime("preFirstPass:ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        
-    }*/
     
     @Override
     protected void firstPass() {
@@ -153,30 +112,13 @@ public class ReservoirSamplingParser extends Parser {
                         //	    replace the candidateNode at candidateIndex in the reservoir with current node , additionally remove the candidate node from classSampledEntityReservoir
                         
                         else {
-                            ///int candidateIndex = random.nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                            //int currSize = classSampledEntityReservoir.get(objID).size();
-                            
-                            // Here, choose the entity having the lowest property count
-                            /*List<Integer> sampledEntities = classSampledEntityReservoir.get(objID);
-                            int count = 0;
-                            int entity = 0;
-                            for (int i = 0; i < sampledEntities.size(); i++) {
-                                if (i == 0) {
-                                    count = entityToPropBloomFilter.get(sampledEntities.get(i)).count;
-                                    entity = i;
-                                }
-                                int currCount = entityToPropBloomFilter.get(sampledEntities.get(i)).count;
-                                if (currCount < count) {
-                                    currCount = count;
-                                    entity = i;
-                                }
-                            }
-                            int candidateIndex = entity;*/
+                            int candidateIndex = random.nextInt(lineCounter.get()); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
+                            int currSize = classSampledEntityReservoir.get(objID).size();
                             
                             //Rolling the dice again by generating another random number
                             //if (candidateIndex > currSize) {candidateIndex = random.nextInt(lineCounter.get());}
                             
-                            //if (candidateIndex < currSize) {
+                            if (candidateIndex < currSize) {
                             int candidateNode = classSampledEntityReservoir.get(objID).get(candidateIndex); // get the candidate node at the candidate index
                             
                             if (entityDataMapContainer.get(candidateNode) != null) {
@@ -208,7 +150,7 @@ public class ReservoirSamplingParser extends Parser {
                                         System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
                                 });
                             }
-                            //}
+                            }
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
                     }
@@ -507,13 +449,4 @@ class BinaryNode {
         left = null;
         right = null;
     }
-}
-
-/**
- * Bloom Filter Wrapper Class to count the insertions in bloom filters
- */
-class BloomFilterWrapper {
-    //Create a Bloom filter that has a false positive rate of 0.1 when containing 1000 elements
-    BloomFilter<Integer> bf = new FilterBuilder(1000, 0.1).buildBloomFilter();
-    int count = 0; // number of insertions
 }

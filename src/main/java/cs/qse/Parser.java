@@ -64,8 +64,11 @@ public class Parser {
     private void runParser() {
         firstPass();
         secondPass();
+        /*classEntityCount.forEach((k,v) -> {
+            System.out.println(k + "," + encoder.decode(k) + "," + v + "," + classToPropWithObjTypes.get(k).size());
+        });*/
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(false);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -258,7 +261,7 @@ public class Parser {
     /**
      * Assigning cardinality constraints  using various values for support and confidence thresholds
      */
-    private void assignCardinalityConstraints() {
+    protected void assignCardinalityConstraints() {
         StopWatch watch = new StopWatch();
         watch.start();
         MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classEntityCount);
