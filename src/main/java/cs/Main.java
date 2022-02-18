@@ -1,5 +1,6 @@
 package cs;
 
+import cs.qse.MemoryTest;
 import cs.qse.RandomSamplingParser;
 import cs.qse.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
@@ -33,13 +34,14 @@ public class Main {
         try {
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
-                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
-                //parser.run();
+                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                parser.run();
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //rsp.run();
-                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
-                reservoirSamplingParser.run();
+                
+                //entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                //ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
+                //reservoirSamplingParser.run();
             }
             
             if (isActivated("QSE_Endpoint")) {
@@ -51,10 +53,13 @@ public class Main {
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
                 
-                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                //parser.run();
+    
+                MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();
                 
-                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                //entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 //Random Sampling
                 /*RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
                 rsp.run();*/

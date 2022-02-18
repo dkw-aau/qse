@@ -12,7 +12,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
-import org.ehcache.sizeof.SizeOf;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -45,7 +44,7 @@ public class Parser {
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
-    public Parser(){}
+    public Parser() {}
     
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
@@ -64,13 +63,12 @@ public class Parser {
     
     private void runParser() {
         firstPass();
-        measureMemoryUsage();
-        //secondPass();
+        secondPass();
         /*classEntityCount.forEach((k,v) -> {
             System.out.println(k + "," + encoder.decode(k) + "," + v + "," + classToPropWithObjTypes.get(k).size());
         });*/
-        //computeSupportConfidence();
-        //extractSHACLShapes(false);
+        computeSupportConfidence();
+        extractSHACLShapes(false);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -251,7 +249,7 @@ public class Parser {
                     se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
                 });
             });
-            methodName =  "extractSHACLShapes";
+            methodName = "extractSHACLShapes";
         }
         
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
@@ -276,14 +274,4 @@ public class Parser {
         watch.stop();
         Utils.logTime("assignCardinalityConstraints", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
-    
-    private void measureMemoryUsage() {
-        SizeOf sizeOf = SizeOf.newInstance();
-        System.out.println("Size - Map<Node, EntityData> entityDataHashMap: " + sizeOf.deepSizeOf(entityDataHashMap));
-        System.out.println("Size - Map<Integer, Integer> classEntityCount: " + sizeOf.deepSizeOf(classEntityCount));
-        System.out.println("Size - Encoder.getTable(): " + sizeOf.deepSizeOf(this.encoder.getTable()));
-        System.out.println("Size - Encoder.getRevTable(): " + sizeOf.deepSizeOf(this.encoder.getRevTable()));
-    }
-    
 }
