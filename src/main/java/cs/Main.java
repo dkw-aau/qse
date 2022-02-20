@@ -53,11 +53,11 @@ public class Main {
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
                 
-                //Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                //parser.run();
-    
-                MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();
+    
+                /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                parser.run();*/
                 
                 //entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 //Random Sampling

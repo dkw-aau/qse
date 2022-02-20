@@ -2,7 +2,7 @@
 
 ### Build Docker Image
 cd ..
-docker build . -t shacl:QSE-LATEST-WIKIDATA
+docker build . -t shacl:QSE-WIKIDATA-CLEAN
 
 echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
 ### Clear Cache
@@ -13,7 +13,7 @@ container=QSE_WIKIDATA_wo_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WIKIDATA_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_wo_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-WIKIDATA-CLEAN /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
@@ -39,7 +39,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 echo "Status of the ${container} is ${status}" ### Container exited
 
 
-echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
+echo "------------------ WIKIDATA WITH MAX CARDINALITY CONSTRAINTS ------------------"
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
@@ -49,7 +49,7 @@ container=QSE_WIKIDATA_wd_maxCard
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WIKIDATA_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-LATEST-WIKIDATA /app/local/config/wd-max-card/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx700g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-WIKIDATA-CLEAN /app/local/config/wd-max-card/wikiDataConfig.properties
 
 docker ps
 

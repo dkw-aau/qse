@@ -68,7 +68,7 @@ public class Parser {
             System.out.println(k + "," + encoder.decode(k) + "," + v + "," + classToPropWithObjTypes.get(k).size());
         });*/
         computeSupportConfidence();
-        extractSHACLShapes(false);
+        extractSHACLShapes(true);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
