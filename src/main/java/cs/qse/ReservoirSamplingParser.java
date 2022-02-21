@@ -28,7 +28,8 @@ public class ReservoirSamplingParser extends Parser {
     StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
-    Integer entityThreshold;
+    Integer minEntityThreshold = 20;
+    Integer maxEntityThreshold;
     
     // In the following the size of each data structure
     // N = number of distinct nodes in the graph
@@ -53,7 +54,7 @@ public class ReservoirSamplingParser extends Parser {
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
-        this.entityThreshold = entitySamplingThreshold;
+        this.maxEntityThreshold = entitySamplingThreshold;
     }
     
     public void run() {
@@ -61,16 +62,16 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     private void runParser() {
-        System.out.println("Entity Sampling Threshold : " + entityThreshold);
-        //firstPass();
-        firstPassBullyApproach();
+        System.out.println("Max Entity Sampling Threshold : " + maxEntityThreshold);
+        firstPass();
+        //firstPassBullyApproach();
         secondPass();
         /*classSampledEntityReservoir.forEach((k, v) -> {
             if (classToPropWithObjTypes.get(k) != null)
                 System.out.println(k + "," + encoder.decode(k) + "," + classEntityCount.get(k) + "," + v.size() + "," + classToPropWithObjTypes.get(k).size());
         });*/
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(false);
         //assignCardinalityConstraints();
         System.out.println("No. of Classes: Total: " + classEntityCount.size());
         
@@ -90,11 +91,13 @@ public class ReservoirSamplingParser extends Parser {
                     Node[] nodes = NxParser.parseNodes(line);
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
-                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(entityThreshold));
+                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
                         
+                        
+                        
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < entityThreshold) {
+                        if (numberOfSampledEntities < minEntityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
@@ -104,6 +107,9 @@ public class ReservoirSamplingParser extends Parser {
                             entityDataMapContainer.put(subjID, entityData);
                             classSampledEntityReservoir.get(objID).add(subjID);
                         }
+                        
+                      
+                        
                         // once the reservoirs are filled with entities upto the defined entityThreshold for specific classes, we enter the else block
                         //  Now one by one consider all items from (k+1)th item to nth item.
                         //      a) Generate a random number from 0 to i where i is the index of the current item in stream, i.e., lineCounter.
@@ -119,37 +125,42 @@ public class ReservoirSamplingParser extends Parser {
                             //if (candidateIndex > currSize) {candidateIndex = random.nextInt(lineCounter.get());}
                             
                             if (candidateIndex < currSize) {
-                            int candidateNode = classSampledEntityReservoir.get(objID).get(candidateIndex); // get the candidate node at the candidate index
-                            
-                            if (entityDataMapContainer.get(candidateNode) != null) {
-                                //Remove the candidate node from the classSampledEntityReservoir
-                                entityDataMapContainer.get(candidateNode).getClassTypes().forEach(obj -> {
-                                    if (classSampledEntityReservoir.containsKey(obj)) {
-                                        classSampledEntityReservoir.get(obj).remove(Integer.valueOf(candidateNode));
+                                int candidateNode = classSampledEntityReservoir.get(objID).get(candidateIndex); // get the candidate node at the candidate index
+                                
+                                if (entityDataMapContainer.get(candidateNode) != null) {
+                                    //Remove the candidate node from the classSampledEntityReservoir
+                                    entityDataMapContainer.get(candidateNode).getClassTypes().forEach(obj -> {
+                                        if (classSampledEntityReservoir.containsKey(obj)) {
+                                            classSampledEntityReservoir.get(obj).remove(Integer.valueOf(candidateNode));
+                                        }
+                                    });
+                                    
+                                    entityDataMapContainer.remove(candidateNode); // Remove the candidate node from the entityDataMapContainer
+                                    boolean status = nodeEncoder.remove(candidateNode);
+                                    if (!status)
+                                        System.out.println("WARNING::Failed to remove the candidateNode: " + candidateNode);
+                                    
+                                    //Update the reservoir and container with the current focus node
+                                    int subjID = nodeEncoder.encode(nodes[0]); // Encode the current focus node
+                                    EntityData entityData = entityDataMapContainer.get(subjID);
+                                    if (entityData == null) {
+                                        entityData = new EntityData();
                                     }
-                                });
-                                
-                                entityDataMapContainer.remove(candidateNode); // Remove the candidate node from the entityDataMapContainer
-                                boolean status = nodeEncoder.remove(candidateNode);
-                                if (!status)
-                                    System.out.println("WARNING::Failed to remove the candidateNode: " + candidateNode);
-                                
-                                //Update the reservoir and container with the current focus node
-                                int subjID = nodeEncoder.encode(nodes[0]); // Encode the current focus node
-                                EntityData entityData = entityDataMapContainer.get(subjID);
-                                if (entityData == null) {
-                                    entityData = new EntityData();
+                                    entityData.getClassTypes().add(objID);
+                                    entityDataMapContainer.put(subjID, entityData); // Add the focus node in the reservoir
+                                    classSampledEntityReservoir.get(objID).add(subjID); // Update the classSampledEntityReservoir with the current focus node for current class
+                                } else {
+                                    System.out.println("WARNING::It's null for candidateNode " + candidateNode);
+                                    classSampledEntityReservoir.forEach((k, v) -> {
+                                        if (v.contains(candidateNode))
+                                            System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
+                                    });
                                 }
-                                entityData.getClassTypes().add(objID);
-                                entityDataMapContainer.put(subjID, entityData); // Add the focus node in the reservoir
-                                classSampledEntityReservoir.get(objID).add(subjID); // Update the classSampledEntityReservoir with the current focus node for current class
-                            } else {
-                                System.out.println("WARNING::It's null for candidateNode " + candidateNode);
-                                classSampledEntityReservoir.forEach((k, v) -> {
-                                    if (v.contains(candidateNode))
-                                        System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
-                                });
                             }
+    
+                            //If the current line is even, increase the size of the reservoir
+                            if (lineCounter.get() % 2 == 0 && !Objects.equals(minEntityThreshold, maxEntityThreshold)) {
+                                minEntityThreshold++;
                             }
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
@@ -185,10 +196,10 @@ public class ReservoirSamplingParser extends Parser {
                     Node[] nodes = NxParser.parseNodes(line);
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
-                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(entityThreshold));
+                        classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < entityThreshold) {
+                        if (numberOfSampledEntities < maxEntityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
