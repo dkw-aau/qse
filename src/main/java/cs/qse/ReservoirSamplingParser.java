@@ -13,6 +13,7 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.lang.Math;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -39,6 +40,8 @@ public class ReservoirSamplingParser extends Parser {
     Map<Integer, EntityData> entityDataMapContainer; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, List<Integer>> classSampledEntityReservoir; // Size == O(T*entityThreshold)
+    Map<Integer, Integer> classSampledEntityReservoirSize; // Size == T
+    
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
@@ -50,6 +53,8 @@ public class ReservoirSamplingParser extends Parser {
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classSampledEntityReservoir = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classSampledEntityReservoirSize = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.encoder = new Encoder();
@@ -63,15 +68,15 @@ public class ReservoirSamplingParser extends Parser {
     
     private void runParser() {
         System.out.println("Max Entity Sampling Threshold : " + maxEntityThreshold);
-        firstPass();
-        //firstPassBullyApproach();
+        //firstPass();
+        firstPassBullyApproach();
         secondPass();
         /*classSampledEntityReservoir.forEach((k, v) -> {
             if (classToPropWithObjTypes.get(k) != null)
                 System.out.println(k + "," + encoder.decode(k) + "," + classEntityCount.get(k) + "," + v.size() + "," + classToPropWithObjTypes.get(k).size());
         });*/
         computeSupportConfidence();
-        extractSHACLShapes(false);
+        extractSHACLShapes(true);
         //assignCardinalityConstraints();
         System.out.println("No. of Classes: Total: " + classEntityCount.size());
         
@@ -92,12 +97,13 @@ public class ReservoirSamplingParser extends Parser {
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
                         classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
+                        
+                        classSampledEntityReservoirSize.putIfAbsent(objID, minEntityThreshold);
+                        int reservoirSize = classSampledEntityReservoirSize.get(objID);
                         int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
                         
-                        
-                        
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < minEntityThreshold) {
+                        if (numberOfSampledEntities < reservoirSize) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
@@ -107,8 +113,6 @@ public class ReservoirSamplingParser extends Parser {
                             entityDataMapContainer.put(subjID, entityData);
                             classSampledEntityReservoir.get(objID).add(subjID);
                         }
-                        
-                      
                         
                         // once the reservoirs are filled with entities upto the defined entityThreshold for specific classes, we enter the else block
                         //  Now one by one consider all items from (k+1)th item to nth item.
@@ -157,10 +161,11 @@ public class ReservoirSamplingParser extends Parser {
                                     });
                                 }
                             }
-    
-                            //If the current line is even, increase the size of the reservoir
-                            if (lineCounter.get() % 2 == 0 && !Objects.equals(minEntityThreshold, maxEntityThreshold)) {
-                                minEntityThreshold++;
+                            
+                            int currentReservoirSize = classSampledEntityReservoirSize.get(objID);
+                            int incrementedSize = currentReservoirSize + log(classEntityCount.get(objID) + currentReservoirSize);
+                            if (incrementedSize < maxEntityThreshold && lineCounter.get() % 2 == 0) {
+                                classSampledEntityReservoirSize.put(objID, incrementedSize);
                             }
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
@@ -197,9 +202,14 @@ public class ReservoirSamplingParser extends Parser {
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
                         classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
+                        
+                        classSampledEntityReservoirSize.putIfAbsent(objID, minEntityThreshold);
+                        int reservoirSize = classSampledEntityReservoirSize.get(objID);
                         int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
+                        
+                        
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < maxEntityThreshold) {
+                        if (numberOfSampledEntities < reservoirSize) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
@@ -279,6 +289,12 @@ public class ReservoirSamplingParser extends Parser {
                                             System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
                                     }
                                 }
+                            }
+                            
+                            int currentReservoirSize = classSampledEntityReservoirSize.get(objID);
+                            int incrementedSize = currentReservoirSize + log(classEntityCount.get(objID) + currentReservoirSize);
+                            if (incrementedSize < maxEntityThreshold && lineCounter.get() % 10 == 0) {
+                                classSampledEntityReservoirSize.put(objID, incrementedSize);
                             }
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
@@ -446,6 +462,10 @@ public class ReservoirSamplingParser extends Parser {
             }
         }
         return smallest;
+    }
+    
+    public static int log(int x) {
+        return (int) (Math.log(x) / Math.log(2) + 1e-10);
     }
 }
 

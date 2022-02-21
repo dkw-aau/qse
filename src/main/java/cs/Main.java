@@ -39,13 +39,13 @@ public class Main {
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //rsp.run();
                 
-                /*entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
-                reservoirSamplingParser.run();*/
+                reservoirSamplingParser.run();
                 
                 
-                MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
-                parser.run();
+                /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                parser.run();*/
             }
             
             if (isActivated("QSE_Endpoint")) {
@@ -63,17 +63,17 @@ public class Main {
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
                 
-                //entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 //Random Sampling
                 /*RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
                 rsp.run();*/
                 
                 //Reservoir Sampling
-                //ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
-                //reservoirSamplingParser.run();
+                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
+                reservoirSamplingParser.run();
     
-                MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                parser.run();
+                /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                parser.run();*/
             }
             
         } catch (Exception e) {
