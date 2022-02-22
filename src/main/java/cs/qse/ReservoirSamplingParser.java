@@ -40,7 +40,7 @@ public class ReservoirSamplingParser extends Parser {
     Map<Integer, EntityData> entityDataMapContainer; // Size == N For every entity (encoded as integer) we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, List<Integer>> classSampledEntityReservoir; // Size == O(T*entityThreshold)
-    Map<Integer, Integer> classSampledEntityReservoirSize; // Size == T
+    //Map<Integer, Integer> classSampledEntityReservoirSize; // Size == T
     
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
@@ -53,7 +53,7 @@ public class ReservoirSamplingParser extends Parser {
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classSampledEntityReservoir = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        this.classSampledEntityReservoirSize = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        //this.classSampledEntityReservoirSize = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
@@ -82,7 +82,7 @@ public class ReservoirSamplingParser extends Parser {
         
     }
     
-    @Override
+/*    @Override
     protected void firstPass() {
         System.out.println("FirstPass");
         StopWatch watch = new StopWatch();
@@ -186,7 +186,7 @@ public class ReservoirSamplingParser extends Parser {
         System.out.println("nodeEncoder.getTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getTable().size()));
         System.out.println("nodeEncoder.getReverseTable().size(): " + NumberFormat.getInstance().format(nodeEncoder.getReverseTable().size()));
         System.out.println("nodeEncoder.counter: " + NumberFormat.getInstance().format(nodeEncoder.counter));
-    }
+    }*/
     
     private void firstPassBullyApproach() {
         System.out.println("FirstPass: Bully Approach");
@@ -203,13 +203,13 @@ public class ReservoirSamplingParser extends Parser {
                         int objID = encoder.encode(nodes[2].getLabel());
                         classSampledEntityReservoir.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         
-                        classSampledEntityReservoirSize.putIfAbsent(objID, minEntityThreshold);
-                        int reservoirSize = classSampledEntityReservoirSize.get(objID);
+                        //classSampledEntityReservoirSize.putIfAbsent(objID, minEntityThreshold);
+                        //int reservoirSize = classSampledEntityReservoirSize.get(objID);
                         int numberOfSampledEntities = classSampledEntityReservoir.get(objID).size();
                         
                         
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < reservoirSize) {
+                        if (numberOfSampledEntities < maxEntityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
@@ -291,11 +291,11 @@ public class ReservoirSamplingParser extends Parser {
                                 }
                             }
                             
-                            int currentReservoirSize = classSampledEntityReservoirSize.get(objID);
+                            /*int currentReservoirSize = classSampledEntityReservoirSize.get(objID);
                             int incrementedSize = currentReservoirSize + log(classEntityCount.get(objID) + currentReservoirSize);
                             if (incrementedSize < maxEntityThreshold && lineCounter.get() % 10 == 0) {
                                 classSampledEntityReservoirSize.put(objID, incrementedSize);
-                            }
+                            }*/
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
                     }
