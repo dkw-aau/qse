@@ -209,7 +209,7 @@ public class ReservoirSamplingParser extends Parser {
                         
                         
                         // Initializing entityDataMapContainer with first k = entityThreshold elements for each class
-                        if (numberOfSampledEntities < maxEntityThreshold) {
+                        if (numberOfSampledEntities < minEntityThreshold) {
                             int subjID = nodeEncoder.encode(nodes[0]); // encoding subject
                             EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
                             if (entityData == null) {
@@ -298,6 +298,9 @@ public class ReservoirSamplingParser extends Parser {
                             }*/
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
+                    }
+                    if (lineCounter.get() % 2 == 0 && minEntityThreshold <= maxEntityThreshold) {
+                        minEntityThreshold++;
                     }
                     lineCounter.getAndIncrement(); // increment the line counter
                 } catch (ParseException e) {
