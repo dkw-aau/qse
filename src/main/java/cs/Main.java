@@ -1,10 +1,7 @@
 package cs;
 
-import cs.qse.MemoryTest;
-import cs.qse.RandomSamplingParser;
-import cs.qse.ReservoirSamplingParser;
+import cs.qse.sampling.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
-import cs.qse.Parser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.Utils;

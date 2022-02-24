@@ -1,6 +1,7 @@
 package cs.utils;
 
 import cs.Main;
+import cs.qse.sampling.BinaryNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -67,14 +68,50 @@ public class Utils {
         System.out.println("Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min");
     }
     
+    public static void logSamplingStats(String samplingType, int samplingPercentage, int samplingMinThreshold, int samplingMaxThreshold, int entityDataMapContainerSize) {
+        String log = samplingType + "," + samplingPercentage + "," + samplingMinThreshold + "," + samplingMaxThreshold + "," + entityDataMapContainerSize;
+        System.out.println(log);
+        try {
+            FileWriter fileWriter = new FileWriter(Constants.SAMPLING_LOGS, true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            printWriter.println(log);
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static void simpleTest() {
         ValueFactory factory = SimpleValueFactory.getInstance();
         String iri = "http://www.wikidata.org/entity/Q829554";
         IRI subj = factory.createIRI(iri);
-        if(Utils.isValidIRI(iri)){
+        if (Utils.isValidIRI(iri)) {
             System.out.println("True");
         } else {
             System.out.println("False");
         }
+    }
+    
+    public static BinaryNode getNodeWithMinimumScope(BinaryNode a, BinaryNode b, BinaryNode c) {
+        BinaryNode smallest;
+        if (a.scope < b.scope) {
+            if (c.scope < a.scope) {
+                smallest = c;
+            } else {
+                smallest = a;
+            }
+        } else {
+            if (b.scope < c.scope) {
+                smallest = b;
+            } else {
+                smallest = c;
+            }
+        }
+        return smallest;
+    }
+    
+    
+    public static int logWithBase2(int x) {
+        return (int) (Math.log(x) / Math.log(2) + 1e-10);
     }
 }

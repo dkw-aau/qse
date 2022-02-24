@@ -11,7 +11,7 @@ public class EntityData {
     Set<Integer> classTypes; // O(T) number of types of this node
     Map<Integer, PropertyData> propertyConstraintsMap; // Map from PropertyID -> PropertyData which consists of property's object types and count
     
-    EntityData() {
+    public EntityData() {
         this.classTypes = new HashSet<>();
         this.propertyConstraintsMap = new HashMap<>();
     }
