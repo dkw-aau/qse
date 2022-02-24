@@ -24,10 +24,7 @@ import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
@@ -41,6 +38,8 @@ public class ShapesExtractor {
     Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
+    
+    Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
@@ -118,7 +117,14 @@ public class ShapesExtractor {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                 //NODE SHAPES PRUNING
-                if (classInstanceCount.get(encoder.encode(subj.stringValue())) > support) {
+                //FIXME: compute Relative Support
+                int encClass = encoder.encode(subj.stringValue());
+                int relativeSupport = (sampledEntitiesPerClass.get(encClass).size() * support) / 100;
+                //System.out.println("LOGS:: " + subj.getLocalName() + "," + support + ","+ relativeSupport +"," + sampledEntitiesPerClass.get(encClass).size() + "," + classInstanceCount.get(encClass));
+                if (relativeSupport < 1)
+                    relativeSupport = support;
+                
+                if (classInstanceCount.get(encClass) >= relativeSupport) {
                     String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
                             .add(RDF.TYPE, SHACL.NODE_SHAPE)
@@ -127,7 +133,7 @@ public class ShapesExtractor {
                             .add(SHACL.CLOSED, false);
                     
                     if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, relativeSupport);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
                 }
@@ -295,5 +301,9 @@ public class ShapesExtractor {
     
     public void setPropWithClassesHavingMaxCountOne(Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne) {
         this.propWithClassesHavingMaxCountOne = propWithClassesHavingMaxCountOne;
+    }
+    
+    public void setSampledEntitiesPerClass(Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+        this.sampledEntitiesPerClass = sampledEntitiesPerClass;
     }
 }
