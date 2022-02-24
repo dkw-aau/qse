@@ -292,7 +292,7 @@ public class ReservoirSamplingParser extends Parser {
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         
         se.setSampledEntitiesPerClass(sampledEntitiesPerClass);
-        
+        se.setSamplingOn(true);
         if (performPruning) {
             ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
                 supportRange.forEach(supp -> {

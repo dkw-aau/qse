@@ -38,6 +38,7 @@ public class ShapesExtractor {
     Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
+    Boolean isSamplingOn = false;
     
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     
@@ -109,21 +110,28 @@ public class ShapesExtractor {
         m = b.build();
         return m;
     }
+    
     //Also include computation of relative support
     private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
-        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
+        for (Map.Entry<Integer, Map<Integer, Set<Integer>>> entry : classToPropWithObjTypes.entrySet()) {
+            Integer encodedClassIRI = entry.getKey();
+            Map<Integer, Set<Integer>> propToObjectType = entry.getValue();
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                //NODE SHAPES PRUNING
-                //FIXME: compute Relative Support
-                int encClass = encoder.encode(subj.stringValue());
-                int relativeSupport = (sampledEntitiesPerClass.get(encClass).size() * support) / 100;
-                //System.out.println("LOGS:: " + subj.getLocalName() + "," + support + ","+ relativeSupport +"," + sampledEntitiesPerClass.get(encClass).size() + "," + classInstanceCount.get(encClass));
-                if (relativeSupport < 1)
-                    relativeSupport = support;
-                if (classInstanceCount.get(encClass) >= relativeSupport) {
+                int classId = encoder.encode(subj.stringValue());
+                
+                if (isSamplingOn) {
+                    int relativeSupport = (sampledEntitiesPerClass.get(classId).size() * support) / 100;
+                    if (relativeSupport < 1) {
+                        relativeSupport = support;
+                    }
+                    support = relativeSupport;
+                }
+                
+                //NODE SHAPES PRUNING based on support
+                if (classInstanceCount.get(classId) >= support) {
                     String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
                             .add(RDF.TYPE, SHACL.NODE_SHAPE)
@@ -132,14 +140,14 @@ public class ShapesExtractor {
                             .add(SHACL.CLOSED, false);
                     
                     if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, relativeSupport);
+                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
                 }
             } else {
                 System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
-        });
+        }
         m = b.build();
         return m;
     }
@@ -305,4 +313,14 @@ public class ShapesExtractor {
     public void setSampledEntitiesPerClass(Map<Integer, List<Integer>> sampledEntitiesPerClass) {
         this.sampledEntitiesPerClass = sampledEntitiesPerClass;
     }
+    
+    
+    public Boolean isSamplingOn() {
+        return isSamplingOn;
+    }
+    
+    public void setSamplingOn(Boolean samplingOn) {
+        isSamplingOn = samplingOn;
+    }
+    
 }
