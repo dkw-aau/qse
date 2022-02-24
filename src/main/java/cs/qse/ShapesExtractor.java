@@ -111,7 +111,7 @@ public class ShapesExtractor {
         return m;
     }
     
-    //Also include computation of relative support
+    //Also include computation of relative support if isSampling is true
     private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
@@ -132,7 +132,7 @@ public class ShapesExtractor {
                 
                 //NODE SHAPES PRUNING based on support
                 if (classInstanceCount.get(classId) >= support) {
-                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    /*String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
                             .add(RDF.TYPE, SHACL.NODE_SHAPE)
                             .add(SHACL.TARGET_CLASS, subj)
@@ -142,8 +142,22 @@ public class ShapesExtractor {
                     if (propToObjectType != null) {
                         Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+                    }*/
+                }
+                else {
+                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+                    b.subject(nodeShape)
+                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                            .add(SHACL.TARGET_CLASS, subj)
+                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                            .add(SHACL.CLOSED, false);
+                    
+                    if (propToObjectType != null) {
+                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruningReverse(encodedClassIRI, propToObjectType, confidence, support);
+                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
                 }
+                
             } else {
                 System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
@@ -222,6 +236,39 @@ public class ShapesExtractor {
                     }
                     
                 }
+            });
+            if (objTypesSet.size() != 0) {
+                propToObjectTypesLocal.put(prop, objTypesSet);
+            }
+        });
+        return propToObjectTypesLocal;
+    }
+    
+    //Reverse
+    private Map<Integer, Set<Integer>> performNodeShapePropPruningReverse(Integer classEncodedLabel, Map<Integer, Set<Integer>> propToObjectType, Double confidence, Integer support) {
+        Map<Integer, Set<Integer>> propToObjectTypesLocal = new HashMap<>();
+        propToObjectType.forEach((prop, propObjectTypes) -> {
+            HashSet<Integer> objTypesSet = new HashSet<>();
+            propObjectTypes.forEach(encodedObjectType -> {
+                //Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
+                objTypesSet.add(encodedObjectType);
+                /*if (shapeTripletSupport.containsKey(tuple3)) {
+                    SupportConfidence sc = shapeTripletSupport.get(tuple3);
+                    if (support == 1) {
+                        if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
+                            //objTypesSet.add(encodedObjectType);
+                        } else {
+                            objTypesSet.add(encodedObjectType);
+                        }
+                    } else {
+                        if (sc.getConfidence() > confidence && sc.getSupport() > support) {
+                            //objTypesSet.add(encodedObjectType);
+                        } else {
+                            objTypesSet.add(encodedObjectType);
+                        }
+                    }
+                    
+                }*/
             });
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);

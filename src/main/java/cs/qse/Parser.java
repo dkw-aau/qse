@@ -64,9 +64,6 @@ public class Parser {
     private void runParser() {
         firstPass();
         secondPass();
-        /*classEntityCount.forEach((k,v) -> {
-            System.out.println(k + "," + encoder.decode(k) + "," + v + "," + classToPropWithObjTypes.get(k).size());
-        });*/
         computeSupportConfidence();
         extractSHACLShapes(true);
         //assignCardinalityConstraints();
@@ -82,8 +79,7 @@ public class Parser {
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
-                    // Get [S,P,O] as Node from triple
-                    Node[] nodes = NxParser.parseNodes(line); // how much time is spent parsing?
+                    Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         // Track classes per entity
                         int objID = encoder.encode(nodes[2].getLabel());
