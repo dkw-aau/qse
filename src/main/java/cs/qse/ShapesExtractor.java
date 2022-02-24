@@ -109,7 +109,7 @@ public class ShapesExtractor {
         m = b.build();
         return m;
     }
-    
+    //Also include computation of relative support
     private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
@@ -123,7 +123,6 @@ public class ShapesExtractor {
                 //System.out.println("LOGS:: " + subj.getLocalName() + "," + support + ","+ relativeSupport +"," + sampledEntitiesPerClass.get(encClass).size() + "," + classInstanceCount.get(encClass));
                 if (relativeSupport < 1)
                     relativeSupport = support;
-                
                 if (classInstanceCount.get(encClass) >= relativeSupport) {
                     String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
