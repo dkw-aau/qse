@@ -9,11 +9,11 @@ echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ----------
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_WIKIDATA_DynamicBullyResSampling_WoMax_1_300
+container=QSE_WIKIDATA_DynamicBullyResSampling_WoMax_1_500
 
 echo "About to run docker container: ${container}"
 
-docker run -m 150GB -d --name QSE_WIKIDATA_DynamicBullyResSampling_WoMax_1_300 -e "JAVA_TOOL_OPTIONS=-Xmx125g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-DynamicReservoirSampling-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 150GB -d --name QSE_WIKIDATA_DynamicBullyResSampling_WoMax_1_500 -e "JAVA_TOOL_OPTIONS=-Xmx125g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-DynamicReservoirSampling-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 

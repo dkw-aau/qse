@@ -35,6 +35,16 @@ public class NodeEncoder {
         }
     }
     
+    public int getEncodedNode(Node val) {
+        int toReturn;
+        if (reverseTable.get(val) == null) {
+            toReturn = -9999;
+        } else {
+            toReturn = reverseTable.get(val);
+        }
+        return toReturn;
+    }
+    
     public boolean remove(int val) {
         boolean returnVal = true;
         if (table.containsKey(val)) {
@@ -68,5 +78,9 @@ public class NodeEncoder {
     
     public void setReverseTable(HashMap<Node, Integer> reverseTable) {
         this.reverseTable = reverseTable;
+    }
+    
+    public boolean isNodeExists(Node node) {
+        return reverseTable.get(node) != null;
     }
 }

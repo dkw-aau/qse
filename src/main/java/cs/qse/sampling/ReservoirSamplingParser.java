@@ -64,10 +64,12 @@ public class ReservoirSamplingParser extends Parser {
     private void runParser() {
         //standardReservoirSampling();
         //bullyReservoirSampling();
-        dynamicByllyReservoirSampling();
+        dynamicBullyReservoirSampling();
+        printSampledEntitiesLogs();
         secondPass();
+        printSampledEntitiesLogs();
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(false);
     }
     
     protected void standardReservoirSampling() {
@@ -106,7 +108,6 @@ public class ReservoirSamplingParser extends Parser {
         Utils.logTime("firstPass:StandardReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    
     private void bullyReservoirSampling() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -142,7 +143,7 @@ public class ReservoirSamplingParser extends Parser {
         Utils.logTime("firstPass:bullyReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void dynamicByllyReservoirSampling() {
+    private void dynamicBullyReservoirSampling() {
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -166,7 +167,6 @@ public class ReservoirSamplingParser extends Parser {
                             drs.replace(random.nextInt(lineCounter.get()), nodes);
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
-                        
                         drs.resizeReservoir(classEntityCount.get(objID), sampledEntitiesPerClass.get(objID).size(), maxEntityThreshold, samplingPercentage, objID);
                     }
                     lineCounter.getAndIncrement(); // increment the line counter
@@ -195,48 +195,50 @@ public class ReservoirSamplingParser extends Parser {
                     
                     Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     //Node subject = nodes[0];
-                    int subjID = nodeEncoder.encode(nodes[0]);
-                    // if the entity is in the Reservoir, we go for it
-                    if (entityDataMapContainer.get(subjID) != null) {
-                        String objectType = extractObjectType(nodes[2].toString());
-                        int propID = encoder.encode(nodes[1].getLabel());
-                        if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                            EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(nodes[2]));
-                            if (currEntityData != null) {
-                                objTypes = currEntityData.getClassTypes();
-                                for (Integer node : objTypes) { // get classes of node2
-                                    prop2objTypeTuples.add(new Tuple2<>(propID, node));
+                    if (nodeEncoder.isNodeExists(nodes[0])) {
+                        int subjID = nodeEncoder.getEncodedNode(nodes[0]);
+                        // if the entity is in the Reservoir, we go for it
+                        if (entityDataMapContainer.get(subjID) != null) {
+                            String objectType = extractObjectType(nodes[2].toString());
+                            int propID = encoder.encode(nodes[1].getLabel());
+                            if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                                EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(nodes[2]));
+                                if (currEntityData != null) {
+                                    objTypes = currEntityData.getClassTypes();
+                                    for (Integer node : objTypes) { // get classes of node2
+                                        prop2objTypeTuples.add(new Tuple2<>(propID, node));
+                                    }
+                                    addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
                                 }
+                                /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                                
+                            } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+                                int objID = encoder.encode(objectType);
+                                objTypes.add(objID);
+                                prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
                                 addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
                             }
-                            /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
                             
-                        } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                            int objID = encoder.encode(objectType);
-                            objTypes.add(objID);
-                            prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
-                            addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
-                        }
-                        
-                        EntityData entityData = entityDataMapContainer.get(subjID);
-                        if (entityData != null) {
-                            for (Integer entityClass : entityData.getClassTypes()) {
-                                Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
-                                if (propToObjTypes == null) {
-                                    propToObjTypes = new HashMap<>();
-                                    classToPropWithObjTypes.put(entityClass, propToObjTypes);
+                            EntityData entityData = entityDataMapContainer.get(subjID);
+                            if (entityData != null) {
+                                for (Integer entityClass : entityData.getClassTypes()) {
+                                    Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
+                                    if (propToObjTypes == null) {
+                                        propToObjTypes = new HashMap<>();
+                                        classToPropWithObjTypes.put(entityClass, propToObjTypes);
+                                    }
+                                    
+                                    Set<Integer> classObjTypes = propToObjTypes.get(propID);
+                                    if (classObjTypes == null) {
+                                        classObjTypes = new HashSet<>();
+                                        propToObjTypes.put(propID, classObjTypes);
+                                    }
+                                    
+                                    classObjTypes.addAll(objTypes);
                                 }
-                                
-                                Set<Integer> classObjTypes = propToObjTypes.get(propID);
-                                if (classObjTypes == null) {
-                                    classObjTypes = new HashSet<>();
-                                    propToObjTypes.put(propID, classObjTypes);
-                                }
-                                
-                                classObjTypes.addAll(objTypes);
                             }
-                        }
-                    } // if condition for presence of node in the reservoir ends here
+                        } // if condition for presence of node in the reservoir ends here
+                    }
                     
                 } catch (ParseException e) {
                     e.printStackTrace();
