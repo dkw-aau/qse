@@ -13,7 +13,7 @@ container=QSE_WIKIDATA_full_wo_maxCard_reverse_no_prop_pruning
 
 echo "About to run docker container: ${container}"
 
-docker run -m 240GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverse_no_prop_pruning -e "JAVA_TOOL_OPTIONS=-Xmx220g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverse_no_prop_pruning -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
@@ -52,7 +52,7 @@ container=QSE_WIKIDATA_full_wo_maxCard_reverse_with_prop_pruning
 
 echo "About to run docker container: ${container}"
 
-docker run -m 240GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverse_with_prop_pruning -e "JAVA_TOOL_OPTIONS=-Xmx220g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-Reverse /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverse_with_prop_pruning -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-Reverse /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
