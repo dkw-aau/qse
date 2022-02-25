@@ -250,8 +250,9 @@ public class ShapesExtractor {
         propToObjectType.forEach((prop, propObjectTypes) -> {
             HashSet<Integer> objTypesSet = new HashSet<>();
             propObjectTypes.forEach(encodedObjectType -> {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
-                if (shapeTripletSupport.containsKey(tuple3)) {
+                //Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
+                objTypesSet.add(encodedObjectType);
+                /*if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
@@ -267,7 +268,7 @@ public class ShapesExtractor {
                         }
                     }
                     
-                }
+                }*/
             });
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);
