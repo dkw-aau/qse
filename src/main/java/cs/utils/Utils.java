@@ -58,6 +58,17 @@ public class Utils {
         }
     }
     
+    public static void writeLineToFile(String line, String fileAddress) {
+        try {
+            FileWriter fileWriter = new FileWriter(fileAddress, true);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            printWriter.println(line);
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static void logTime(String method, long seconds, long minutes) {
         secondsTotal += seconds;
         minutesTotal += minutes;

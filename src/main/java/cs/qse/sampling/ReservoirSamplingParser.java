@@ -43,6 +43,8 @@ public class ReservoirSamplingParser extends Parser {
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
+    Map<Integer, Integer> propCount;
+    
     public ReservoirSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
         this.rdfFilePath = filePath;
         this.expectedNumberOfClasses = expNoOfClasses;
@@ -52,6 +54,7 @@ public class ReservoirSamplingParser extends Parser {
         this.sampledEntitiesPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
+        this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
@@ -65,9 +68,10 @@ public class ReservoirSamplingParser extends Parser {
         //standardReservoirSampling();
         //bullyReservoirSampling();
         dynamicBullyReservoirSampling();
-        printSampledEntitiesLogs();
+        //prepareStatistics();
+        //printSampledEntitiesLogs();
         secondPass();
-        printSampledEntitiesLogs();
+        //printSampledEntitiesLogs();
         computeSupportConfidence();
         extractSHACLShapes(true);
     }
@@ -156,6 +160,7 @@ public class ReservoirSamplingParser extends Parser {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
+                   
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         int objID = encoder.encode(nodes[2].getLabel());
                         sampledEntitiesPerClass.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
@@ -168,6 +173,8 @@ public class ReservoirSamplingParser extends Parser {
                         }
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
                         drs.resizeReservoir(classEntityCount.get(objID), sampledEntitiesPerClass.get(objID).size(), maxEntityThreshold, samplingPercentage, objID);
+                    } else {
+                        propCount.merge(encoder.encode(nodes[1].getLabel()), 1, Integer::sum); // Get the
                     }
                     lineCounter.getAndIncrement(); // increment the line counter
                 } catch (ParseException e) {
@@ -180,6 +187,13 @@ public class ReservoirSamplingParser extends Parser {
         watch.stop();
         Utils.logTime("firstPass:dynamicBullyReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         Utils.logSamplingStats("dynamicBullyReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
+    }
+    
+    private void prepareStatistics() {
+        classEntityCount.forEach((classIRI, entityCount) -> {
+            String log = "LOG:: " + classIRI + "," + encoder.decode(classIRI) + "," + entityCount + "," + sampledEntitiesPerClass.get(classIRI).size() + "," + reservoirCapacityPerClass.get(classIRI);
+            Utils.writeLineToFile(log, Constants.THE_LOGS);
+        });
     }
     
     @Override
@@ -276,6 +290,8 @@ public class ReservoirSamplingParser extends Parser {
         shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.statsComputer = new StatsComputer();
         statsComputer.setShapeTripletSupport(shapeTripletSupport);
+        statsComputer.setSampledEntityCount(sampledEntitiesPerClass);
+        statsComputer.setSamplingOn(true);
         statsComputer.computeSupportConfidenceWithEncodedEntities(entityDataMapContainer, classEntityCount);
         watch.stop();
         Utils.logTime("computeSupportConfidence:cs.qse.sampling.ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
@@ -290,7 +306,7 @@ public class ReservoirSamplingParser extends Parser {
         ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        
+        se.setPropCount(propCount);
         se.setSampledEntitiesPerClass(sampledEntitiesPerClass);
         se.setSamplingOn(true);
         if (performPruning) {

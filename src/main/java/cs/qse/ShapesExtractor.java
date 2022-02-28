@@ -39,6 +39,7 @@ public class ShapesExtractor {
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
     Boolean isSamplingOn = false;
+    Map<Integer, Integer> propCount;
     
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     
@@ -57,17 +58,18 @@ public class ShapesExtractor {
         this.model.addAll(constructShapeWithoutPruning(classToPropWithObjTypes));
         System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        //System.out.println(currentShapesModelStats);
+        
         StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
         StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
-            log = new StringBuilder(log.append(v) + ",");
+            log = new StringBuilder(log.append(v).append(","));
             header = new StringBuilder(header.append(entry.getKey()) + ",");
         }
+        
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("DEFAULT");
+        //this.writeModelToFile("DEFAULT");
     }
     
     public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
@@ -81,11 +83,12 @@ public class ShapesExtractor {
         StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
-            log = new StringBuilder(log.append(v) + ",");
+            log = new StringBuilder(log.append(v).append(","));
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        //this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
+    
     
     private Model constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
         Model m = null;
@@ -113,6 +116,7 @@ public class ShapesExtractor {
     
     //Also include computation of relative support if isSampling is true
     private Model constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+        System.out.println("Invoked::constructShapesWithPruning()");
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         for (Map.Entry<Integer, Map<Integer, Set<Integer>>> entry : classToPropWithObjTypes.entrySet()) {
@@ -121,30 +125,30 @@ public class ShapesExtractor {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                 int classId = encoder.encode(subj.stringValue());
+                int classInstances = classInstanceCount.get(classId);
                 
-                if (isSamplingOn) {
-                    int relativeSupport = (sampledEntitiesPerClass.get(classId).size() * support) / 100;
+                /*if (isSamplingOn) {
+                    int percentageOfSampledEntities = (sampledEntitiesPerClass.get(classId).size() / classInstances) * 100;
+                    int relativeSupport = (support * percentageOfSampledEntities) / 100;
                     if (relativeSupport < 1) {
                         relativeSupport = support;
                     }
                     support = relativeSupport;
-                }
+                }*/
                 
                 //NODE SHAPES PRUNING based on support
-                if (classInstanceCount.get(classId) >= support) {
-                    /*String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                    b.subject(nodeShape)
-                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                            .add(SHACL.TARGET_CLASS, subj)
-                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                            .add(SHACL.CLOSED, false);
-                    
-                    if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
-                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
-                    }*/
+                
+                if (support == 1) {
+                    if (classInstances >= support) {
+                        prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    }
+                } else {
+                    if (classInstances > support) {
+                        prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    }
                 }
-                else {
+                
+               /* else {
                     String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
                             .add(RDF.TYPE, SHACL.NODE_SHAPE)
@@ -156,7 +160,7 @@ public class ShapesExtractor {
                         Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruningReverse(encodedClassIRI, propToObjectType, confidence, support);
                         constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
                     }
-                }
+                }*/
                 
             } else {
                 System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
@@ -164,6 +168,20 @@ public class ShapesExtractor {
         }
         m = b.build();
         return m;
+    }
+    
+    private void prepareNodePlusPropertyShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, IRI subj) {
+        String nodeShape = "shape:" + subj.getLocalName() + "Shape";
+        b.subject(nodeShape)
+                .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                .add(SHACL.TARGET_CLASS, subj)
+                .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                .add(SHACL.CLOSED, false);
+        
+        if (propToObjectType != null) {
+            Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
+            constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
+        }
     }
     
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
@@ -219,12 +237,21 @@ public class ShapesExtractor {
     
     private Map<Integer, Set<Integer>> performNodeShapePropPruning(Integer classEncodedLabel, Map<Integer, Set<Integer>> propToObjectType, Double confidence, Integer support) {
         Map<Integer, Set<Integer>> propToObjectTypesLocal = new HashMap<>();
-        propToObjectType.forEach((prop, propObjectTypes) -> {
+        for (Map.Entry<Integer, Set<Integer>> entry : propToObjectType.entrySet()) {
+            Integer prop = entry.getKey();
+            Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
-            propObjectTypes.forEach(encodedObjectType -> {
+            for (Integer encodedObjectType : propObjectTypes) {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
+                    
+                    if (isSamplingOn && support != 1) {
+                        //compute relative support for this property
+                        double perSupp = ((double) sc.getSupport() / propCount.get(prop)) * 100;
+                        //support = support - (int) percentage;
+                        support = (support * (int) perSupp) / 100;
+                    }
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
                             objTypesSet.add(encodedObjectType);
@@ -234,13 +261,12 @@ public class ShapesExtractor {
                             objTypesSet.add(encodedObjectType);
                         }
                     }
-                    
                 }
-            });
+            }
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);
             }
-        });
+        }
         return propToObjectTypesLocal;
     }
     
@@ -301,6 +327,8 @@ public class ShapesExtractor {
                 if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getAverageHeader().get(i), literalCount.stringValue());
+                } else {
+                    shapesStats.put(ExperimentsUtil.getAverageHeader().get(i), "-999");
                 }
                 //MAX STATS
                 type = "max";
@@ -309,6 +337,8 @@ public class ShapesExtractor {
                 if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
+                } else {
+                    shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), "-999");
                 }
                 //MIN STATS
                 type = "min";
@@ -317,6 +347,8 @@ public class ShapesExtractor {
                 if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
+                } else {
+                    shapesStats.put(ExperimentsUtil.getMinHeader().get(i), "-999");
                 }
             }
         } finally {
@@ -369,4 +401,7 @@ public class ShapesExtractor {
         isSamplingOn = samplingOn;
     }
     
+    public void setPropCount(Map<Integer, Integer> propCount) {
+        this.propCount = propCount;
+    }
 }

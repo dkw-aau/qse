@@ -14,6 +14,8 @@ import java.util.*;
 public class StatsComputer {
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T)
     Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne; // Size O(P*T)
+    Map<Integer, List<Integer>> sampledEntitiesPerClass;
+    Boolean isSamplingOn = false;
     
     public StatsComputer() {this.propWithClassesHavingMaxCountOne = new HashMap<>();}
     
@@ -102,7 +104,12 @@ public class StatsComputer {
         //Compute Confidence
         for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
             SupportConfidence value = entry.getValue();
-            double confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
+            double confidence;
+            if (isSamplingOn) {
+                confidence = (double) value.getSupport() / sampledEntitiesPerClass.get(entry.getKey()._1).size();
+            } else {
+                confidence = (double) value.getSupport() / classEntityCount.get(entry.getKey()._1);
+            }
             value.setConfidence(confidence);
         }
     }
@@ -157,4 +164,12 @@ public class StatsComputer {
         }
     }
     
+    public void setSampledEntityCount(Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+        this.sampledEntitiesPerClass = sampledEntitiesPerClass;
+    }
+    
+    
+    public void setSamplingOn(Boolean samplingOn) {
+        isSamplingOn = samplingOn;
+    }
 }

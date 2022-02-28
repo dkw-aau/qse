@@ -28,4 +28,7 @@ public class Constants {
     
     public static String RUNTIME_LOGS = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_RUNTIME_LOGS.csv";
     public static String SAMPLING_LOGS = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_SAMPLING_LOGS.csv";
+    
+    
+    public static String THE_LOGS = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + "_THE_LOGS.csv";
 }
