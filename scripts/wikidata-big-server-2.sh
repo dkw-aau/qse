@@ -13,7 +13,7 @@ container=QSE_WIKIDATA_full_wo_maxCard_reverseStats
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverseStats -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git2/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-ReverseStats /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 600GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverseStats -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git2/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-ReverseStats /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
