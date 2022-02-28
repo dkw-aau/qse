@@ -80,7 +80,7 @@ public class ShapesExtractor {
         System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
         
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", < " + confidence * 100 + "%, < " + support + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
             log = new StringBuilder(log.append(v).append(","));
@@ -140,10 +140,14 @@ public class ShapesExtractor {
                 
                 if (support == 1) {
                     if (classInstances >= support) {
+                        //prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    } else {
                         prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 } else {
                     if (classInstances > support) {
+                        //prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    } else {
                         prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 }
@@ -242,7 +246,8 @@ public class ShapesExtractor {
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
             for (Integer encodedObjectType : propObjectTypes) {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
+                objTypesSet.add(encodedObjectType);
+                /*Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
                     
@@ -261,7 +266,7 @@ public class ShapesExtractor {
                             objTypesSet.add(encodedObjectType);
                         }
                     }
-                }
+                }*/
             }
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);
