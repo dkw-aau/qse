@@ -69,7 +69,7 @@ public class ShapesExtractor {
         
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //this.writeModelToFile("DEFAULT");
+        this.writeModelToFile("DEFAULT");
     }
     
     public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
@@ -80,13 +80,13 @@ public class ShapesExtractor {
         System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
         
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", < " + confidence * 100 + "%, < " + support + ",");
+        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
             log = new StringBuilder(log.append(v).append(","));
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        //this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
     }
     
     
@@ -137,35 +137,15 @@ public class ShapesExtractor {
                 }*/
                 
                 //NODE SHAPES PRUNING based on support
-                
                 if (support == 1) {
                     if (classInstances >= support) {
-                        //prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
-                    } else {
                         prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 } else {
                     if (classInstances > support) {
-                        //prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
-                    } else {
                         prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 }
-                
-               /* else {
-                    String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                    b.subject(nodeShape)
-                            .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                            .add(SHACL.TARGET_CLASS, subj)
-                            .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                            .add(SHACL.CLOSED, false);
-                    
-                    if (propToObjectType != null) {
-                        Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruningReverse(encodedClassIRI, propToObjectType, confidence, support);
-                        constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocal);
-                    }
-                }*/
-                
             } else {
                 System.out.println("constructShapesWithPruning:: INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
@@ -246,8 +226,7 @@ public class ShapesExtractor {
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
             for (Integer encodedObjectType : propObjectTypes) {
-                objTypesSet.add(encodedObjectType);
-                /*Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
+                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
                     
@@ -266,44 +245,12 @@ public class ShapesExtractor {
                             objTypesSet.add(encodedObjectType);
                         }
                     }
-                }*/
+                }
             }
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);
             }
         }
-        return propToObjectTypesLocal;
-    }
-    
-    //Reverse
-    private Map<Integer, Set<Integer>> performNodeShapePropPruningReverse(Integer classEncodedLabel, Map<Integer, Set<Integer>> propToObjectType, Double confidence, Integer support) {
-        Map<Integer, Set<Integer>> propToObjectTypesLocal = new HashMap<>();
-        propToObjectType.forEach((prop, propObjectTypes) -> {
-            HashSet<Integer> objTypesSet = new HashSet<>();
-            propObjectTypes.forEach(encodedObjectType -> {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
-                if (shapeTripletSupport.containsKey(tuple3)) {
-                    SupportConfidence sc = shapeTripletSupport.get(tuple3);
-                    if (support == 1) {
-                        if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
-                            //objTypesSet.add(encodedObjectType);
-                        } else {
-                            objTypesSet.add(encodedObjectType);
-                        }
-                    } else {
-                        if (sc.getConfidence() > confidence && sc.getSupport() > support) {
-                            //objTypesSet.add(encodedObjectType);
-                        } else {
-                            objTypesSet.add(encodedObjectType);
-                        }
-                    }
-                    
-                }
-            });
-            if (objTypesSet.size() != 0) {
-                propToObjectTypesLocal.put(prop, objTypesSet);
-            }
-        });
         return propToObjectTypesLocal;
     }
     
