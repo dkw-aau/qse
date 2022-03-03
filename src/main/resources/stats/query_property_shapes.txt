@@ -1,0 +1,6 @@
+#Get all Property Shapes of a given node shape
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX shape: <http://shaclshapes.org/>
+SELECT  distinct ?propertyShape  where {
+    <NODE_SHAPE> a sh:NodeShape ; sh:property ?propertyShape .
+}
