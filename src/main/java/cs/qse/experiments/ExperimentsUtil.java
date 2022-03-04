@@ -41,7 +41,7 @@ public class ExperimentsUtil {
     public static HashMap<Integer, String> getCsvHeader() {
         HashMap<Integer, String> header = new HashMap<>();
         header.put(1, "COUNT_NS");
-        header.put(2, "COUNT_NSP");
+        header.put(2, "COUNT_PS");
         header.put(3, "COUNT_CC");
         header.put(4, "COUNT_LC");
         header.put(5, "COUNT_MCC");
@@ -51,7 +51,7 @@ public class ExperimentsUtil {
     
     public static HashMap<Integer, String> getAverageHeader() {
         HashMap<Integer, String> avgHeader = new HashMap<>();
-        avgHeader.put(1, "AVG_NSP");
+        avgHeader.put(1, "AVG_PS");
         avgHeader.put(2, "AVG_CC");
         avgHeader.put(3, "AVG_LC");
         avgHeader.put(4, "AVG_MCC");
@@ -60,7 +60,7 @@ public class ExperimentsUtil {
     
     public static HashMap<Integer, String> getMinHeader() {
         HashMap<Integer, String> minHeader = new HashMap<>();
-        minHeader.put(1, "MIN_NSP");
+        minHeader.put(1, "MIN_PS");
         minHeader.put(2, "MIN_CC");
         minHeader.put(3, "MIN_LC");
         minHeader.put(4, "MIN_MCC");
@@ -69,7 +69,7 @@ public class ExperimentsUtil {
     
     public static HashMap<Integer, String> getMaxHeader() {
         HashMap<Integer, String> maxHeader = new HashMap<>();
-        maxHeader.put(1, "MAX_NSP");
+        maxHeader.put(1, "MAX_PS");
         maxHeader.put(2, "MAX_CC");
         maxHeader.put(3, "MAX_LC");
         maxHeader.put(4, "MAX_MCC");
