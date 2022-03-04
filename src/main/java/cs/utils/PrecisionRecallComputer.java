@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
@@ -43,7 +44,10 @@ public class PrecisionRecallComputer {
         prepareCsvHeader();
         computePrecisionRecallForDefaultModels();
         computePrecisionRecallForPrunedModels();
-        precisionRecallCSV.forEach(System.out::println);
+        precisionRecallCSV.forEach(line -> {
+            String fileAddress = outputFilePath + ConfigManager.getProperty("sampled_directory") + ConfigManager.getProperty("dataset_name") + "_PrecisionRecall.csv";
+            Utils.writeLineToFile(line, fileAddress);
+        });
     }
     
     private void getBaseAddress() {
@@ -54,7 +58,7 @@ public class PrecisionRecallComputer {
     }
     
     private void prepareCsvHeader() {
-        String header = "File_A, File_B, Confidence, Support, NS, PS, NS_Samp, PS_Samp, Precision_NS, Recall_NS, Precision_PS, Recall_PS";
+        String header = "File_A, File_B, Confidence, Support, NS, PS, NS_Samp, PS_Samp, Precision_NS, Recall_NS, Precision_PS, Recall_PS, MaxReservoirSize, TargetPercentage";
         precisionRecallCSV.add(header);
     }
     
@@ -64,11 +68,13 @@ public class PrecisionRecallComputer {
         columnsCSV = new ArrayList<>();
         columnsCSV.add(fileA.split(outputFilePath)[1]);
         columnsCSV.add(fileB.split(outputFilePath)[1]);
-        columnsCSV.add("STANDARD_CONF");
-        columnsCSV.add("STANDARD_SUPP");
+        columnsCSV.add("-");
+        columnsCSV.add("-");
         processNsAndPs(fileA, fileB);
         computePrecisionRecall();
-        precisionRecallCSV.add(columnsCSV.toString());
+        columnsCSV.add(String.valueOf(Main.entitySamplingThreshold));
+        columnsCSV.add(String.valueOf(Main.entitySamplingTargetPercentage));
+        precisionRecallCSV.add(StringUtils.join(columnsCSV, ","));
     }
     
     private void computePrecisionRecallForPrunedModels() {
@@ -78,14 +84,18 @@ public class PrecisionRecallComputer {
             for (Integer supp : supportRange) {
                 String fileA = baseAddressA + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
                 String fileB = baseAddressB + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
+                
                 columnsCSV = new ArrayList<>();
                 columnsCSV.add(fileA.split(outputFilePath)[1]);
                 columnsCSV.add(fileB.split(outputFilePath)[1]);
                 columnsCSV.add(String.valueOf(conf));
                 columnsCSV.add(String.valueOf(supp));
+                
                 processNsAndPs(fileA, fileB);
                 computePrecisionRecall();
-                precisionRecallCSV.add(columnsCSV.toString());
+                columnsCSV.add(String.valueOf(Main.entitySamplingThreshold));
+                columnsCSV.add(String.valueOf(Main.entitySamplingTargetPercentage));
+                precisionRecallCSV.add(StringUtils.join(columnsCSV, ","));
             }
         }
     }
