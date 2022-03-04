@@ -1,7 +1,9 @@
 package cs.utils;
 
 import com.google.common.collect.Sets;
+import cs.Main;
 import cs.qse.experiments.ExperimentsUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
@@ -18,7 +20,9 @@ import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class PrecisionRecallComputer {
@@ -26,48 +30,68 @@ public class PrecisionRecallComputer {
     Set<Value> psB;
     Map<Value, Set<Value>> npsA;
     Map<Value, Set<Value>> npsB;
-    List<String> logsPrecisionRecall = new ArrayList<>();
+    String baseAddressA;
+    String baseAddressB;
+    String outputFilePath;
+    
+    List<String> columnsCSV;
+    List<String> precisionRecallCSV = new ArrayList<>();
     List<String> logsWronglyPrunedShapes = new ArrayList<>();
     
     public PrecisionRecallComputer() {
-        String file1 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_DEFAULT_SHACL.ttl";
-        String file2 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_CUSTOM_0.5_50_SHACL.ttl";
-        
-        //readFiles();
-        processFiles(file1, file2);
-        computePrecisionRecall();
-        //computeStatisticsOfWronglyPrunedShapes();
-        System.out.println();
-        
+        getBaseAddress();
+        prepareCsvHeader();
+        computePrecisionRecallForDefaultModels();
+        computePrecisionRecallForPrunedModels();
+        precisionRecallCSV.forEach(System.out::println);
     }
     
-    private void readFiles() {
-        //compare default models
-        String fileA = ConfigManager.getProperty("output_file_path") + "/sampled/" + ConfigManager.getProperty("dataset_name") + "_DEFAULT_SHACL.ttl";
-        String fileB = ConfigManager.getProperty("output_file_path") + "/default/" + ConfigManager.getProperty("dataset_name") + "_DEFAULT_SHACL.ttl";
-        logsPrecisionRecall.add(fileA);
-        logsPrecisionRecall.add(fileB);
-        logsPrecisionRecall.add("STANDARD_CONF");
-        logsPrecisionRecall.add("STANDARD_SUPP");
-        processFiles(fileA, fileB);
-        
-        //compare pruned models
+    private void getBaseAddress() {
+        Path path = Paths.get(Main.datasetPath);
+        outputFilePath = ConfigManager.getProperty("output_file_path");
+        baseAddressA = outputFilePath + ConfigManager.getProperty("default_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
+        baseAddressB = outputFilePath + ConfigManager.getProperty("sampled_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
+    }
+    
+    private void prepareCsvHeader() {
+        String header = "File_A, File_B, Confidence, Support, NS, PS, NS_Samp, PS_Samp, Precision_NS, Recall_NS, Precision_PS, Recall_PS";
+        precisionRecallCSV.add(header);
+    }
+    
+    private void computePrecisionRecallForDefaultModels() {
+        String fileA = baseAddressA + "_DEFAULT_SHACL.ttl";
+        String fileB = baseAddressB + "_DEFAULT_SHACL.ttl";
+        columnsCSV = new ArrayList<>();
+        columnsCSV.add(fileA.split(outputFilePath)[1]);
+        columnsCSV.add(fileB.split(outputFilePath)[1]);
+        columnsCSV.add("STANDARD_CONF");
+        columnsCSV.add("STANDARD_SUPP");
+        processNsAndPs(fileA, fileB);
+        computePrecisionRecall();
+        precisionRecallCSV.add(columnsCSV.toString());
+    }
+    
+    private void computePrecisionRecallForPrunedModels() {
         for (Map.Entry<Double, List<Integer>> entry : ExperimentsUtil.getSupportConfRange().entrySet()) {
             Double conf = entry.getKey();
             List<Integer> supportRange = entry.getValue();
-            for (Integer supp : supportRange) {//se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
-                fileA = ConfigManager.getProperty("output_file_path") + "/sampled/" + ConfigManager.getProperty("dataset_name") + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
-                fileB = ConfigManager.getProperty("output_file_path") + "/default/" + ConfigManager.getProperty("dataset_name") + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
-                logsPrecisionRecall.add(fileA);
-                logsPrecisionRecall.add(fileB);
-                logsPrecisionRecall.add(String.valueOf(conf));
-                logsPrecisionRecall.add(String.valueOf(supp));
-                processFiles(fileA, fileB);
+            for (Integer supp : supportRange) {
+                String fileA = baseAddressA + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
+                String fileB = baseAddressB + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
+                columnsCSV = new ArrayList<>();
+                columnsCSV.add(fileA.split(outputFilePath)[1]);
+                columnsCSV.add(fileB.split(outputFilePath)[1]);
+                columnsCSV.add(String.valueOf(conf));
+                columnsCSV.add(String.valueOf(supp));
+                processNsAndPs(fileA, fileB);
+                computePrecisionRecall();
+                precisionRecallCSV.add(columnsCSV.toString());
             }
         }
     }
     
-    private void processFiles(String fileA, String fileB) {
+    
+    private void processNsAndPs(String fileA, String fileB) {
         Model modelA = createModel(fileA);
         Model modelB = createModel(fileB);
         
@@ -80,27 +104,29 @@ public class PrecisionRecallComputer {
         npsA.values().forEach(psA::addAll);
         npsB.values().forEach(psB::addAll);
         
-        logsPrecisionRecall.add(String.valueOf(npsA.keySet().size()));
-        logsPrecisionRecall.add(String.valueOf(psA.size()));
+        columnsCSV.add(String.valueOf(npsA.keySet().size()));
+        columnsCSV.add(String.valueOf(psA.size()));
         
-        logsPrecisionRecall.add(String.valueOf(npsB.keySet().size()));
-        logsPrecisionRecall.add(String.valueOf(psB.size()));
+        columnsCSV.add(String.valueOf(npsB.keySet().size()));
+        columnsCSV.add(String.valueOf(psB.size()));
     }
     
     private void computePrecisionRecall() {
         Set<Value> commonNs = Sets.intersection(npsA.keySet(), npsB.keySet());
         Set<Value> commonPs = Sets.intersection(psA, psB);
         
-        double precision_ns = compute(commonNs.size(), npsB.keySet().size());
-        double recall_ns = compute(commonNs.size(), npsA.keySet().size());
+        double precision_ns = divide(commonNs.size(), npsB.keySet().size());
+        double recall_ns = divide(commonNs.size(), npsA.keySet().size());
         
-        double precision_ps = compute(commonPs.size(), psB.size());
-        double recall_ps = compute(commonPs.size(), npsA.keySet().size());
+        double precision_ps = divide(commonPs.size(), psB.size());
+        double recall_ps = divide(commonPs.size(), psA.size());
         
-        logsPrecisionRecall.add(String.valueOf(precision_ns));
-        logsPrecisionRecall.add(String.valueOf(recall_ns));
-        logsPrecisionRecall.add(String.valueOf(precision_ps));
-        logsPrecisionRecall.add(String.valueOf(recall_ps));
+        DecimalFormat df = new DecimalFormat("0.00");
+        
+        columnsCSV.add(df.format(precision_ns));
+        columnsCSV.add(df.format(recall_ns));
+        columnsCSV.add(df.format(precision_ps));
+        columnsCSV.add(df.format(recall_ps));
     }
     
     private void computeStatisticsOfWronglyPrunedShapes() {
@@ -167,8 +193,10 @@ public class PrecisionRecallComputer {
         return q;
     }
     
-    private double compute(int nominator, int denominator) {
+    private double divide(int nominator, int denominator) {
         return (double) nominator / (double) denominator;
     }
-    
 }
+
+/*String file1 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_DEFAULT_SHACL.ttl";
+String file2 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_CUSTOM_0.5_50_SHACL.ttl";*/
