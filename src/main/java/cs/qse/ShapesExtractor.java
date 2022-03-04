@@ -232,9 +232,16 @@ public class ShapesExtractor {
                     
                     if (isSamplingOn && support != 1) {
                         //compute relative support for this property
-                        double perSupp = ((double) sc.getSupport() / propCount.get(prop)) * 100;
+                        // option 0: Percentage based
+                        //double perSupp = ((double) sc.getSupport() / propCount.get(prop)) * 100;
                         //support = support - (int) percentage;
-                        support = (support * (int) perSupp) / 100;
+                        //support = (support * (int) perSupp) / 100;
+                        
+                        // option 1:  S*(|T_r|/|T|)
+                        double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
+                        support = (int) newSupport;
+                        
+                        //option 2: S * min((|P_r*|/|P|);(|T_r|/|T|))
                     }
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
