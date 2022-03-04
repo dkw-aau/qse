@@ -154,7 +154,7 @@ public class ReservoirSamplingParser extends Parser {
         AtomicInteger lineCounter = new AtomicInteger();
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
-        int samplingPercentage = 25;
+        int samplingPercentage = Main.entitySamplingTargetPercentage;
         DynamicBullyReservoirSampling drs = new DynamicBullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
