@@ -5,6 +5,7 @@ import cs.qse.sampling.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
+import cs.utils.PrecisionRecallComputer;
 import cs.utils.Utils;
 
 
@@ -14,6 +15,7 @@ public class Main {
     public static int numberOfClasses;
     public static int numberOfInstances;
     public static int entitySamplingThreshold;
+    public static int entitySamplingTargetPercentage;
     public static boolean extractMaxCardConstraints;
     
     public static void main(String[] args) throws Exception {
@@ -22,7 +24,10 @@ public class Main {
         numberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes")); // expected or estimated numberOfClasses
         numberOfInstances = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
         extractMaxCardConstraints = isActivated("EXTRACT_MAX_CARDINALITY");
+        entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
+        entitySamplingTargetPercentage = Integer.parseInt(ConfigManager.getProperty("entitySamplingTargetPercentage"));
         benchmark();
+        new PrecisionRecallComputer();
     }
     
     private static void benchmark() {
@@ -32,12 +37,13 @@ public class Main {
         try {
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
+                
                 /*Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 parser.run();*/
+                
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //rsp.run();
                 
-                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
                 reservoirSamplingParser.run();
                 
@@ -66,7 +72,6 @@ public class Main {
                 rsp.run();*/
                 
                 //Reservoir Sampling
-                entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
                 ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
                 reservoirSamplingParser.run();
     

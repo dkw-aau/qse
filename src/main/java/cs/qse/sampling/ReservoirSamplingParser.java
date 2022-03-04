@@ -61,6 +61,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     public void run() {
+        System.out.println("initiated:ReservoirSamplingParser");
         runParser();
     }
     
@@ -148,6 +149,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     private void dynamicBullyReservoirSampling() {
+        System.out.println("invoked:dynamicBullyReservoirSampling()");
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);

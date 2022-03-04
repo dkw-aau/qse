@@ -44,8 +44,9 @@ public class PrecisionRecallComputer {
         prepareCsvHeader();
         computePrecisionRecallForDefaultModels();
         computePrecisionRecallForPrunedModels();
+        
         precisionRecallCSV.forEach(line -> {
-            String fileAddress = outputFilePath + ConfigManager.getProperty("sampled_directory") + ConfigManager.getProperty("dataset_name") + "_PrecisionRecall.csv";
+            String fileAddress = outputFilePath + ConfigManager.getProperty("dataset_name") + "_PrecisionRecall.csv";
             Utils.writeLineToFile(line, fileAddress);
         });
     }
@@ -53,8 +54,8 @@ public class PrecisionRecallComputer {
     private void getBaseAddress() {
         Path path = Paths.get(Main.datasetPath);
         outputFilePath = ConfigManager.getProperty("output_file_path");
-        baseAddressA = outputFilePath + ConfigManager.getProperty("default_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
-        baseAddressB = outputFilePath + ConfigManager.getProperty("sampled_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
+        baseAddressA = ConfigManager.getProperty("default_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
+        baseAddressB = outputFilePath + FilenameUtils.removeExtension(path.getFileName().toString());
     }
     
     private void prepareCsvHeader() {
@@ -66,8 +67,8 @@ public class PrecisionRecallComputer {
         String fileA = baseAddressA + "_DEFAULT_SHACL.ttl";
         String fileB = baseAddressB + "_DEFAULT_SHACL.ttl";
         columnsCSV = new ArrayList<>();
-        columnsCSV.add(fileA.split(outputFilePath)[1]);
-        columnsCSV.add(fileB.split(outputFilePath)[1]);
+        columnsCSV.add(fileA);
+        columnsCSV.add(fileB);
         columnsCSV.add("-");
         columnsCSV.add("-");
         processNsAndPs(fileA, fileB);
@@ -86,8 +87,8 @@ public class PrecisionRecallComputer {
                 String fileB = baseAddressB + "_CUSTOM_" + conf + "_" + supp + "_SHACL.ttl";
                 
                 columnsCSV = new ArrayList<>();
-                columnsCSV.add(fileA.split(outputFilePath)[1]);
-                columnsCSV.add(fileB.split(outputFilePath)[1]);
+                columnsCSV.add(fileA);
+                columnsCSV.add(fileB);
                 columnsCSV.add(String.valueOf(conf));
                 columnsCSV.add(String.valueOf(supp));
                 
@@ -207,6 +208,3 @@ public class PrecisionRecallComputer {
         return (double) nominator / (double) denominator;
     }
 }
-
-/*String file1 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_DEFAULT_SHACL.ttl";
-String file2 = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/WWW/dbpedia/models/dbpedia_ml_CUSTOM_0.5_50_SHACL.ttl";*/
