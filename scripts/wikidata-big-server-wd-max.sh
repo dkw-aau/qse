@@ -2,18 +2,18 @@
 
 ### Build Docker Image
 cd ..
-docker build . -t shacl:QSE-Full-WIKIDATA-ReverseStats
+docker build . -t shacl:QSE-Full-WIKIDATA-Default-wd-max
 
-echo "------------------ WIKIDATA WITHOUT MAX CARDINALITY FULL ------------------"
+echo "------------------ WIKIDATA WITH MAX CARDINALITY FULL ------------------"
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_WIKIDATA_full_wo_maxCard_reverseStats
+container=QSE_WIKIDATA_full_wd_maxCard_default
 
 echo "About to run docker container: ${container}"
 
-docker run -m 600GB -d --name QSE_WIKIDATA_full_wo_maxCard_reverseStats -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git2/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-ReverseStats /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 750GB -d --name QSE_WIKIDATA_full_wd_maxCard_default -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-Default-wd-max /app/local/config/wd-max-card/wikiDataConfig.properties
 
 docker ps
 
