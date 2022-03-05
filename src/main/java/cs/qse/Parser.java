@@ -242,7 +242,11 @@ public class Parser {
         if (performPruning) {
             ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
                 supportRange.forEach(supp -> {
+                    StopWatch innerWatch = new StopWatch();
+                    innerWatch.start();
                     se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    innerWatch.stop();
+                    Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
                 });
             });
             methodName = "extractSHACLShapes";

@@ -27,7 +27,7 @@ public class Main {
         entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
         entitySamplingTargetPercentage = Integer.parseInt(ConfigManager.getProperty("entitySamplingTargetPercentage"));
         benchmark();
-        new PrecisionRecallComputer();
+        //new PrecisionRecallComputer();
     }
     
     private static void benchmark() {
@@ -38,14 +38,14 @@ public class Main {
             if (isActivated("QSE_File")) {
                 System.out.println("QSE over File");
                 
-                /*Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
-                parser.run();*/
+                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
+                parser.run();
                 
                 //RandomSamplingParser rsp = new RandomSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 //rsp.run();
                 
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
-                reservoirSamplingParser.run();
+                /*ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE, entitySamplingThreshold);
+                reservoirSamplingParser.run();*/
                 
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.RDF_TYPE);
                 parser.run();*/
@@ -60,8 +60,8 @@ public class Main {
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
                 
-                /*Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                parser.run();*/
+                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                parser.run();
     
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
@@ -72,8 +72,8 @@ public class Main {
                 rsp.run();*/
                 
                 //Reservoir Sampling
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
-                reservoirSamplingParser.run();
+               /* ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
+                reservoirSamplingParser.run();*/
     
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
