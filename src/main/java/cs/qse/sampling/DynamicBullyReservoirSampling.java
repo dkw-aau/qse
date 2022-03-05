@@ -108,13 +108,13 @@ public class DynamicBullyReservoirSampling implements ReservoirSampling {
         //B
         //double newCapacityB = targetSamplingPercentage * entitiesInReservoir;
         //C
-        double newCapacityC = Utils.logWithBase2(entitiesSeen);
+        //double newCapacityC = Utils.logWithBase2(entitiesSeen);
         //D
-        //double newCapacityD = ((targetSamplingPercentage*entitiesSeen) - entitiesInReservoir) + 1;
+        double newCapacityD = ((targetSamplingPercentage*entitiesSeen) - entitiesInReservoir) + 1;
         
         double currentRatio = ((double) entitiesInReservoir / (double) entitiesSeen) * 100;
-        if ((int) newCapacityC < maxEntityThreshold && currentRatio <= targetSamplingPercentage) {
-            reservoirCapacityPerClass.put(objID, (int) newCapacityC);
+        if ((int) newCapacityD < maxEntityThreshold && currentRatio <= targetSamplingPercentage) {
+            reservoirCapacityPerClass.put(objID, (int) newCapacityD);
         }
     }
 }
