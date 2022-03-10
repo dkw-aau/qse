@@ -40,8 +40,9 @@ public class ShapesExtractor {
     String logfileAddress = Constants.EXPERIMENTS_RESULT;
     Boolean isSamplingOn = false;
     Map<Integer, Integer> propCount;
-    
+    Map<Integer, Integer> sampledPropCount;
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
+    
     
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
@@ -127,23 +128,14 @@ public class ShapesExtractor {
                 int classId = encoder.encode(subj.stringValue());
                 int classInstances = classInstanceCount.get(classId);
                 
-                /*if (isSamplingOn) {
-                    int percentageOfSampledEntities = (sampledEntitiesPerClass.get(classId).size() / classInstances) * 100;
-                    int relativeSupport = (support * percentageOfSampledEntities) / 100;
-                    if (relativeSupport < 1) {
-                        relativeSupport = support;
-                    }
-                    support = relativeSupport;
-                }*/
-                
                 //NODE SHAPES PRUNING based on support
                 if (support == 1) {
                     if (classInstances >= support) {
-                        prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                        prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 } else {
                     if (classInstances > support) {
-                        prepareNodePlusPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                        prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
                     }
                 }
             } else {
@@ -154,7 +146,7 @@ public class ShapesExtractor {
         return m;
     }
     
-    private void prepareNodePlusPropertyShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, IRI subj) {
+    private void prepareNodeAndPropertyShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, IRI subj) {
         String nodeShape = "shape:" + subj.getLocalName() + "Shape";
         b.subject(nodeShape)
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
@@ -229,19 +221,22 @@ public class ShapesExtractor {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
-                    
+                    //TODO: Working Block to compute relative support
                     if (isSamplingOn && support != 1) {
-                        //compute relative support for this property
                         // option 0: Percentage based
                         //double perSupp = ((double) sc.getSupport() / propCount.get(prop)) * 100;
                         //support = support - (int) percentage;
                         //support = (support * (int) perSupp) / 100;
                         
                         // option 1:  S*(|T_r|/|T|)
-                        double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
-                        support = (int) newSupport;
+                        /*double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
+                        support = (int) newSupport;*/
                         
                         //option 2: S * min((|P_r*|/|P|);(|T_r|/|T|))
+                        // |P_r*| sampledPropCount.get(prop);
+                        // |P| propCount.get(prop);
+                        double newSupport = (support * Math.min(((double) sampledPropCount.get(prop) / (double) propCount.get(prop)), ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel))));
+                        support = (int) newSupport;
                     }
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
@@ -362,5 +357,9 @@ public class ShapesExtractor {
     
     public void setPropCount(Map<Integer, Integer> propCount) {
         this.propCount = propCount;
+    }
+    
+    public void setSampledPropCount(Map<Integer, Integer> sampledPropCount) {
+        this.sampledPropCount = propCount;
     }
 }

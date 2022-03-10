@@ -43,7 +43,8 @@ public class ReservoirSamplingParser extends Parser {
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
-    Map<Integer, Integer> propCount;
+    Map<Integer, Integer> propCount; // real count of *all (entire graph)* triples having predicate P   // |P| =  |< _, P , _ >| in G
+    Map<Integer, Integer> sampledPropCount; // count of triples having predicate P across all entities in all reservoirs  |< _ , P , _ >| (the sampled entities)
     
     public ReservoirSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
         this.rdfFilePath = filePath;
@@ -55,6 +56,7 @@ public class ReservoirSamplingParser extends Parser {
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
+        this.sampledPropCount = new HashMap<>((int) ((10000) / 0.75 + 1));
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
@@ -253,6 +255,7 @@ public class ReservoirSamplingParser extends Parser {
                                     classObjTypes.addAll(objTypes);
                                 }
                             }
+                            sampledPropCount.merge(propID, 1, Integer::sum); // Get the
                         } // if condition for presence of node in the reservoir ends here
                     }
                     
@@ -309,6 +312,7 @@ public class ReservoirSamplingParser extends Parser {
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         se.setPropCount(propCount);
+        se.setSampledPropCount(sampledPropCount);
         se.setSampledEntitiesPerClass(sampledEntitiesPerClass);
         se.setSamplingOn(true);
         if (performPruning) {
