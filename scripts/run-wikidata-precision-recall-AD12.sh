@@ -48,8 +48,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## A2 ############
@@ -98,8 +97,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## B1 ############
@@ -148,8 +146,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## B2 ############
@@ -198,8 +195,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## C1 ############
@@ -248,8 +244,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## C2 ############
@@ -298,8 +293,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## D1 ############
@@ -348,8 +342,7 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
 ##############################
 ############## D2 ############
@@ -398,6 +391,5 @@ status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
 
-# Remove Docker
-docker rm $container
+
 
