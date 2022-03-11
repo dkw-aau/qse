@@ -229,14 +229,14 @@ public class ShapesExtractor {
                         //support = (support * (int) perSupp) / 100;
                         
                         // option 1:  S*(|T_r|/|T|)
-                        /*double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
-                        support = (int) newSupport;*/
+                        double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
+                        support = (int) newSupport;
                         
                         //option 2: S * min((|P_r*|/|P|);(|T_r|/|T|))
                         // |P_r*| sampledPropCount.get(prop);
                         // |P| propCount.get(prop);
-                        double newSupport = (support * Math.min(((double) sampledPropCount.get(prop) / (double) propCount.get(prop)), ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel))));
-                        support = (int) newSupport;
+                       /* double newSupport = (support * Math.min(((double) sampledPropCount.get(prop) / (double) propCount.get(prop)), ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel))));
+                        support = (int) newSupport;*/
                     }
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
