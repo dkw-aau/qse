@@ -1,0 +1,5 @@
+#Get all Node Shapes
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT  distinct ?nodeShape  where {
+    ?nodeShape a sh:NodeShape .
+}
