@@ -6,6 +6,7 @@ import cs.utils.*;
 import cs.utils.encoders.Encoder;
 import cs.utils.tries.Trie;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -14,6 +15,7 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -24,13 +26,16 @@ public class MemoryTest {
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
     Encoder encoder;
-    StatsComputer statsComputer;
+    int prefixCounter = 0;
+    Map<String, Integer> prefix;
+    
+    //StatsComputer statsComputer;
     String typePredicate;
-    Map<Integer, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
-    Trie trie;
+    Map<Pair<Integer, String>, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
+    //Trie trie;
     Map<Integer, Integer> classEntityCount; // Size == T
-    Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
-    Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
+    //Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
+    //Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     
     public MemoryTest(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
@@ -39,9 +44,10 @@ public class MemoryTest {
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
-        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        //this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.encoder = new Encoder();
-        this.trie = new Trie();
+        //this.trie = new Trie();
+        this.prefix = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
     }
     
     public void run() {
@@ -51,9 +57,9 @@ public class MemoryTest {
     
     private void runParser() {
         firstPass();
-        secondPass();
-        computeSupportConfidence();
-        extractSHACLShapes(false);
+        //secondPass();
+        //computeSupportConfidence();
+        //extractSHACLShapes(false);
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
@@ -68,13 +74,25 @@ public class MemoryTest {
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         // Track classes per entity
                         int objID = encoder.encode(nodes[2].getLabel());
-                        int subjID = trie.encode(nodes[0].getLabel());
-                        EntityData entityData = entityDataHashMap.get(subjID);
+                        String entity = nodes[0].getLabel();
+                        String prefixIRI = entity.substring(0, entity.lastIndexOf("/"));
+                        int prefixIRIid;
+                        if (prefix.get(prefixIRI) != null) {
+                            prefixIRIid = prefix.get(prefixIRI);
+                        } else {
+                            prefix.put(prefixIRI, prefixCounter);
+                            prefixIRIid = prefixCounter;
+                            prefixCounter++;
+                        }
+                        
+                        Pair<Integer, String> pair = new ImmutablePair<>(prefixIRIid, entity.substring(entity.lastIndexOf("/")));
+                        
+                        EntityData entityData = entityDataHashMap.get(pair);
                         if (entityData == null) {
                             entityData = new EntityData();
                         }
                         entityData.getClassTypes().add(objID);
-                        entityDataHashMap.put(subjID, entityData);
+                        entityDataHashMap.put(pair, entityData);
                         classEntityCount.merge(objID, 1, Integer::sum);
                     }
                 } catch (ParseException e) {
@@ -87,11 +105,11 @@ public class MemoryTest {
         watch.stop();
         Utils.logTime("firstPass", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
-    /**
+    /*
+     *//**
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to collect the constraints and the metadata required
      * to compute the support and confidence of each candidate shape.
-     */
+     *//*
     protected void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -104,9 +122,9 @@ public class MemoryTest {
                     
                     Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     int subject = trie.getEncodedInteger(nodes[0].getLabel());
-                    /*if(subject == -99999){
+                    *//*if(subject == -99999){
                         System.out.println("WARNING:: STOP");
-                    }*/
+                    }*//*
                     String objectType = extractObjectType(nodes[2].toString());
                     int propID = encoder.encode(nodes[1].getLabel());
                     
@@ -119,7 +137,7 @@ public class MemoryTest {
                             }
                             addEntityToPropertyConstraints(prop2objTypeTuples, subject);
                         }
-                        /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                        *//*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*//*
                         
                     } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
                         int objID = encoder.encode(objectType);
@@ -158,12 +176,12 @@ public class MemoryTest {
         Utils.logTime("secondPass", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    /**
+    *//**
      * A utility method to add property constraints of each entity in the 2nd pass
      *
      * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
      * @param subject            : Subject entity such as :Paris
-     */
+     *//*
     protected void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Integer subject) {
         EntityData currentEntityData = entityDataHashMap.get(subject);
         if (currentEntityData == null) {
@@ -180,12 +198,12 @@ public class MemoryTest {
         entityDataHashMap.put(subject, currentEntityData);
     }
     
-    /**
+    *//**
      * A utility method to extract the literal object type
      *
      * @param literalIri : IRI for the literal object
      * @return String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
-     */
+     *//*
     protected String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
         String type = null;
@@ -204,9 +222,9 @@ public class MemoryTest {
         return type;
     }
     
-    /**
+    *//**
      * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
-     */
+     *//*
     public void computeSupportConfidence() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -219,9 +237,9 @@ public class MemoryTest {
         
     }
     
-    /**
+    *//**
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
-     */
+     *//*
     protected void extractSHACLShapes(Boolean performPruning) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -242,5 +260,5 @@ public class MemoryTest {
         watch.stop();
         
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
+    }*/
 }
