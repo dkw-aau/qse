@@ -1,5 +1,6 @@
 package cs;
 
+import cs.others.parsers.mg.MgSchemaExtractor;
 import cs.qse.Parser;
 import cs.qse.sampling.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
@@ -27,7 +28,7 @@ public class Main {
         entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
         entitySamplingTargetPercentage = Integer.parseInt(ConfigManager.getProperty("entitySamplingTargetPercentage"));
         benchmark();
-        new PrecisionRecallComputer();
+        //new PrecisionRecallComputer();
     }
     
     private static void benchmark() {
@@ -60,8 +61,8 @@ public class Main {
             if (isActivated("QSE_Wikidata")) {
                 System.out.println("QSE over File -specific to WikiData");
                 
-                /*Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
-                parser.run();*/
+                Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
+                parser.run();
     
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
@@ -72,8 +73,8 @@ public class Main {
                 rsp.run();*/
                 
                 //Reservoir Sampling
-                ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
-                reservoirSamplingParser.run();
+                /*ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF, entitySamplingThreshold);
+                reservoirSamplingParser.run();*/
     
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
