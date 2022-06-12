@@ -316,12 +316,16 @@ public class ReservoirSamplingParser extends Parser {
         se.setSampledEntitiesPerClass(sampledEntitiesPerClass);
         se.setSamplingOn(true);
         if (performPruning) {
+            StopWatch watchForPruning = new StopWatch();
+            watchForPruning.start();
             ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
                 supportRange.forEach(supp -> {
                     se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
                 });
             });
             methodName = "extractSHACLShapes:cs.qse.sampling.ReservoirSampling";
+            watchForPruning.stop();
+            Utils.logTime(methodName+"-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }
         
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
