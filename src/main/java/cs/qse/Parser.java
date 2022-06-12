@@ -74,6 +74,7 @@ public class Parser {
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
      */
     protected void firstPass() {
+        System.out.println("invoked::firstPass()");
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -240,6 +241,8 @@ public class Parser {
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
+            StopWatch watchForPruning = new StopWatch();
+            watchForPruning.start();
             ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
                 supportRange.forEach(supp -> {
                     StopWatch innerWatch = new StopWatch();
@@ -250,6 +253,8 @@ public class Parser {
                 });
             });
             methodName = "extractSHACLShapes";
+            watchForPruning.stop();
+            Utils.logTime(methodName+"-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }
         
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);

@@ -1,14 +1,16 @@
 #!/bin/bash
 cd ..
 
+### Clear Cache
+echo "Clearing cache"
+sync; echo 1 > /proc/sys/vm/drop_caches
+
+
 ### Build Docker Image
 image=shacl:QSE-Exact
 docker build . -t $image
 
-echo "------------------ A3: WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------"
-### Clear Cache
-echo "Clearing cache"
-sync; echo 1 > /proc/sys/vm/drop_caches
+echo "------------------ A3: WIKIDATA WITH MAX CARDINALITY CONSTRAINTS ------------------"
 
 container=QSE_WIKIDATA_Exact_With_Max_Cardinality
 
