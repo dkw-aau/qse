@@ -15,7 +15,7 @@ echo "------------------ wikiData-sp-100-rs-250.properties: WIKIDATA WITHOUT MAX
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-250
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-250
 
 echo "About to run docker container: ${container}"
 
@@ -50,7 +50,7 @@ echo "------------------ wikiData-sp-100-rs-500.properties: WIKIDATA WITHOUT MAX
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-500
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-500
 
 echo "About to run docker container: ${container}"
 
@@ -85,7 +85,7 @@ echo "------------------ wikiData-sp-100-rs-750.properties: WIKIDATA WITHOUT MAX
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-750
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-750
 
 echo "About to run docker container: ${container}"
 
@@ -120,7 +120,7 @@ echo "------------------ wikiData-sp-100-rs-1000.properties: WIKIDATA WITHOUT MA
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-1000
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-1000
 
 echo "About to run docker container: ${container}"
 
@@ -155,7 +155,7 @@ echo "------------------ wikiData-sp-100-rs-1250.properties: WIKIDATA WITHOUT MA
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-1250
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-1250
 
 echo "About to run docker container: ${container}"
 
@@ -190,7 +190,7 @@ echo "------------------ wikiData-sp-100-rs-1500.properties: WIKIDATA WITHOUT MA
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_wikiData-sp-100-rs-1500
+container=QSE_Approximate_wikiData-precisionRecall-sp-100-rs-1500
 
 echo "About to run docker container: ${container}"
 

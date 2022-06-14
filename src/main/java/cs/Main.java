@@ -27,8 +27,8 @@ public class Main {
         extractMaxCardConstraints = isActivated("EXTRACT_MAX_CARDINALITY");
         entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
         entitySamplingTargetPercentage = Integer.parseInt(ConfigManager.getProperty("entitySamplingTargetPercentage"));
-        benchmark();
-        //new PrecisionRecallComputer();
+        //benchmark();
+        new PrecisionRecallComputer();
     }
     
     private static void benchmark() {
