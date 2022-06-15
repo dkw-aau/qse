@@ -87,28 +87,37 @@ public class EndpointParser {
                 if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
                     String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, "query6");
                     List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject);
-                    if(results !=null){
+                    if (results != null) {
                         results.forEach(row -> {
-                            String objectType = row.getValue("objDataType").stringValue();
-                            objectTypes.add(objectType);
-                            //FIXME: It should run for all object types
-                            String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
-                            computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
+                            if (row.getValue("objDataType") != null) {
+                                String objectType = row.getValue("objDataType").stringValue();
+                                objectTypes.add(objectType);
+                                //FIXME: It should run for all object types
+                                String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
+                                computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
+                            } else {
+                                System.out.println("WARNING:: it's null for literal type object .. " + classIri + " - " + property);
+                            }
                         });
                     }
-                   
+                    
                 }
                 //Non-Literal Type Object
                 else {
                     String queryToGetDataTypeOfNonLiteralObjects = buildQuery(classIri, property, "query7");
                     List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects);
-                    if(results!=null){
+                    if (results != null) {
                         results.forEach(row -> {
-                            String objectType = row.getValue("objDataType").stringValue();
-                            objectTypes.add(objectType);
-                            //FIXME: It should run for all object types
-                            String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
-                            computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
+                            if(row.getValue("objDataType")!=null) {
+                                String objectType = row.getValue("objDataType").stringValue();
+                                objectTypes.add(objectType);
+                                //FIXME: It should run for all object types
+                                String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
+                                computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
+                            } else {
+                                System.out.println("WARNING:: it's null for Non-Literal type object .. " + classIri + " - " + property);
+                            }
+                           
                         });
                     }
                 }
