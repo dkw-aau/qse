@@ -5,6 +5,7 @@ import cs.utils.encoders.Encoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.query.BindingSet;
 import org.jetbrains.annotations.NotNull;
 import org.semanticweb.yars.nx.Node;
 
@@ -12,10 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -88,24 +86,31 @@ public class EndpointParser {
                 //Literal Type Object
                 if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
                     String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, "query6");
-                    graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject).forEach(row -> {
-                        String objectType = row.getValue("objDataType").stringValue();
-                        objectTypes.add(objectType);
-                        //FIXME: It should run for all object types
-                        String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
-                        computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
-                    });
+                    List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject);
+                    if(results !=null){
+                        results.forEach(row -> {
+                            String objectType = row.getValue("objDataType").stringValue();
+                            objectTypes.add(objectType);
+                            //FIXME: It should run for all object types
+                            String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
+                            computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
+                        });
+                    }
+                   
                 }
                 //Non-Literal Type Object
                 else {
                     String queryToGetDataTypeOfNonLiteralObjects = buildQuery(classIri, property, "query7");
-                    graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects).forEach(row -> {
-                        String objectType = row.getValue("objDataType").stringValue();
-                        objectTypes.add(objectType);
-                        //FIXME: It should run for all object types
-                        String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
-                        computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
-                    });
+                    List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects);
+                    if(results!=null){
+                        results.forEach(row -> {
+                            String objectType = row.getValue("objDataType").stringValue();
+                            objectTypes.add(objectType);
+                            //FIXME: It should run for all object types
+                            String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
+                            computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
+                        });
+                    }
                 }
                 propToObjTypes.put(Utils.IriToNode(property), objectTypes);
             }
