@@ -65,6 +65,7 @@ public class EndpointParser {
         });
         watch.stop();
         System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("getNumberOfInstancesOfEachClass ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void getDistinctClasses() {
@@ -108,7 +109,7 @@ public class EndpointParser {
                     List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects);
                     if (results != null) {
                         results.forEach(row -> {
-                            if(row.getValue("objDataType")!=null) {
+                            if (row.getValue("objDataType") != null) {
                                 String objectType = row.getValue("objDataType").stringValue();
                                 objectTypes.add(objectType);
                                 //FIXME: It should run for all object types
@@ -117,7 +118,7 @@ public class EndpointParser {
                             } else {
                                 System.out.println("WARNING:: it's null for Non-Literal type object .. " + classIri + " - " + property);
                             }
-                           
+                            
                         });
                     }
                 }
@@ -127,6 +128,7 @@ public class EndpointParser {
         }
         watch.stop();
         System.out.println("Time Elapsed getShapesInfoAndComputeSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("getShapesInfoAndComputeSupport ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
@@ -151,6 +153,7 @@ public class EndpointParser {
         shacler.writeModelToFile();
         watch.stop();
         System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("populateShapes ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     public void writeSupportToFile() {

@@ -2,7 +2,7 @@ PREFIX onto: <http://www.ontotext.com/>
 PREFIX : <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 ASK FROM onto:explicit where {
-	?s a  :Class  .
+	?s <http://www.wikidata.org/prop/direct/P31>  :Class  .
     ?s :Prop ?obj.
     FILTER(isLiteral(?obj))
 }
