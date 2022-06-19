@@ -42,7 +42,7 @@ public class ShapesExtractor {
     Map<Integer, Integer> propCount;
     Map<Integer, Integer> sampledPropCount;
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
-    
+    Map<Integer, List<Double>> supportToRelativeSupport = new HashMap<>();
     
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
@@ -88,6 +88,8 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        System.out.println("RelativeSupportMap::");
+        supportToRelativeSupport.forEach((k, v) -> {System.out.println(k + " -> " + v);});
     }
     
     
@@ -217,34 +219,34 @@ public class ShapesExtractor {
             Integer prop = entry.getKey();
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
+    
+            //compute Relative Support if sampling is on
+            double relativeSupport = 0;
+            if (isSamplingOn) {
+                relativeSupport = (support * Math.min(((double) sampledPropCount.get(prop) / (double) propCount.get(prop)), ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel))));
+                if (supportToRelativeSupport.get(support) != null) {
+                    supportToRelativeSupport.get(support).add(relativeSupport);
+                } else {
+                    List<Double> list = new ArrayList<>();
+                    list.add(relativeSupport);
+                    supportToRelativeSupport.put(support, list);
+                }
+            }
+            
             for (Integer encodedObjectType : propObjectTypes) {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
-                    //TODO: Working Block to compute relative support
-                    if (isSamplingOn && support != 1) {
-                        // option 0: Percentage based
-                        //double perSupp = ((double) sc.getSupport() / propCount.get(prop)) * 100;
-                        //support = support - (int) percentage;
-                        //support = (support * (int) perSupp) / 100;
-                        
-                        // option 1:  S*(|T_r|/|T|)
-                        /*double newSupport = (support * ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel)));
-                        support = (int) newSupport;*/
-                        
-                        //option 2: S * min((|P_r*|/|P|);(|T_r|/|T|))
-                        // |P_r*| sampledPropCount.get(prop);
-                        // |P| propCount.get(prop);
-                        double newSupport = (support * Math.min(((double) sampledPropCount.get(prop) / (double) propCount.get(prop)), ((double) sampledEntitiesPerClass.get(classEncodedLabel).size() / (double) classInstanceCount.get(classEncodedLabel))));
-                        support = (int) newSupport;
-                        
-                        //option 3:  S*( |P_r*| / |P|)
-                        /*double newSupport = (support * ((double) sampledPropCount.get(prop) / (double) propCount.get(prop)));
-                        support = (int) newSupport;*/
-                        
-                    }
+                    
                     if (support == 1) {
                         if (sc.getConfidence() > confidence && sc.getSupport() >= support) {
+                            objTypesSet.add(encodedObjectType);
+                        }
+                    }
+                    
+                    if (isSamplingOn && support != 1) {
+                        //support = (int) relativeSupport;
+                        if (sc.getConfidence() > confidence && sc.getSupport() > relativeSupport) {
                             objTypesSet.add(encodedObjectType);
                         }
                     } else {
