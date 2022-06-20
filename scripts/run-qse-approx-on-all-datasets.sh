@@ -16,7 +16,7 @@ echo "------------------ LUBM ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_LUBM_1000_100
+container=QSE_Approximate_LowMem_LUBM_1000_100
 
 echo "About to run docker container: ${container}"
 
@@ -52,7 +52,7 @@ echo "------------------ DBpedia ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_DBpedia_1000_100
+container=QSE_Approximate_LowMem_DBpedia_1000_100
 
 echo "About to run docker container: ${container}"
 
@@ -87,7 +87,7 @@ echo "------------------ YAGO-4 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_YAGO_1000_100
+container=QSE_Approximate_LowMem_YAGO_1000_100
 
 echo "About to run docker container: ${container}"
 
@@ -123,7 +123,7 @@ echo "------------------ WIKIDATA - SHEXER------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approximate_WikiData_SHEXER_1000_100
+container=QSE_Approximate_LowMem_WikiData_SHEXER_1000_100
 
 echo "About to run docker container: ${container}"
 
@@ -160,7 +160,7 @@ echo "Status of the ${container} is ${status}" ### Container exited
 #echo "Clearing cache"
 #sync; echo 1 > /proc/sys/vm/drop_caches
 #
-#container=QSE_Approximate_WikiData_1000_100
+#container=QSE_Approximate_LowMem_WikiData_1000_100
 #
 #echo "About to run docker container: ${container}"
 #
