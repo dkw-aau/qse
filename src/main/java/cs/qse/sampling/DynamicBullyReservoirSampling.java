@@ -59,15 +59,15 @@ public class DynamicBullyReservoirSampling implements ReservoirSampling {
             int candidateNode = sampledEntitiesPerClass.get(objID).get(candidateIndex); // get the candidate node at the candidate index
             
             if (entityDataMapContainer.get(candidateNode) != null) {
-                int scopeCandidateNode = entityDataMapContainer.get(candidateNode).getClassTypes().size();
+                //int scopeCandidateNode = entityDataMapContainer.get(candidateNode).getClassTypes().size();
                 
-                BinaryNode node = new BinaryNode(candidateNode, scopeCandidateNode);
-                node.left = new BinaryNode(candidateNodeLeft, scopeCandidateNodeLeft);
-                node.right = new BinaryNode(candidateNodeRight, scopeCandidateNodeRight);
+                //BinaryNode node = new BinaryNode(candidateNode, scopeCandidateNode);
+                //node.left = new BinaryNode(candidateNodeLeft, scopeCandidateNodeLeft);
+                //node.right = new BinaryNode(candidateNodeRight, scopeCandidateNodeRight);
                 
-                BinaryNode min = Utils.getNodeWithMinimumScope(node, node.left, node.right);
+                //BinaryNode min = Utils.getNodeWithMinimumScope(node, node.left, node.right);
                 //System.out.println(min.id + " - " + min.scope);
-                candidateNode = min.id;
+                //candidateNode = min.id;
                 
                 //Remove the candidate node from the classSampledEntityReservoir
                 for (Integer obj : entityDataMapContainer.get(candidateNode).getClassTypes()) {
