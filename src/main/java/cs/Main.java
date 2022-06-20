@@ -78,7 +78,7 @@ public class Main {
     
                 /*MemoryTest parser = new MemoryTest(datasetPath, numberOfClasses, numberOfInstances, Constants.INSTANCE_OF);
                 parser.run();*/
-            } 
+            }
             
         } catch (Exception e) {
             e.printStackTrace();
