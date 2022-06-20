@@ -20,7 +20,7 @@ container=QSE_Approximate_LUBM_1000_100
 
 echo "About to run docker container: ${container}"
 
-docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/lubmConfig.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/lubmConfig.properties
 
 docker ps
 
@@ -56,7 +56,7 @@ container=QSE_Approximate_DBpedia_1000_100
 
 echo "About to run docker container: ${container}"
 
-docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/dbpediaConfig.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/dbpediaConfig.properties
 
 docker ps
 
@@ -91,7 +91,7 @@ container=QSE_Approximate_YAGO_1000_100
 
 echo "About to run docker container: ${container}"
 
-docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/yagoConfig.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/yagoConfig.properties
 
 docker ps
 
@@ -127,7 +127,7 @@ container=QSE_Approximate_WikiData_SHEXER_1000_100
 
 echo "About to run docker container: ${container}"
 
-docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx32g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataSheXerConfig.properties
+docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataSheXerConfig.properties
 
 docker ps
 
