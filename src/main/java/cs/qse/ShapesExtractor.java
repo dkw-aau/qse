@@ -88,8 +88,8 @@ public class ShapesExtractor {
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
         this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
-        System.out.println("RelativeSupportMap::");
-        supportToRelativeSupport.forEach((k, v) -> {System.out.println(k + " -> " + v);});
+        //System.out.println("RelativeSupportMap::");
+        //supportToRelativeSupport.forEach((k, v) -> {System.out.println(k + " -> " + v);});
     }
     
     
