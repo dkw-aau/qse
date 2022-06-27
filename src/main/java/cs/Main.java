@@ -28,7 +28,7 @@ public class Main {
         entitySamplingThreshold = Integer.parseInt(ConfigManager.getProperty("entitySamplingThreshold"));
         entitySamplingTargetPercentage = Integer.parseInt(ConfigManager.getProperty("entitySamplingTargetPercentage"));
         benchmark();
-        //new PrecisionRecallComputer();
+        new PrecisionRecallComputer();
     }
     
     private static void benchmark() {
