@@ -1,6 +1,6 @@
 # Quality Shapes Extractor
 
-**This repository contains the code for the following paper under submission in WWW-2022:**
+**This repository contains the code for the following paper under submission in VLDB:**
 > **Extracting Validating Shapes from very large Knowledge Graphs with Quality Guarantees**
 
 
