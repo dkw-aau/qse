@@ -76,7 +76,7 @@ public class ReservoirSamplingParser extends Parser {
         secondPass();
         //printSampledEntitiesLogs();
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(false);
     }
     
     protected void standardReservoirSampling() {
