@@ -207,7 +207,7 @@ container=QSE_Approximate_wikiData_30_June-sp-100-rs-5000_xmx_50g
 
 echo "About to run docker container: ${container}"
 
-docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx50g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/wiki/wikiData-sp-100-rs-5000.properties
+docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx70g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/wiki/wikiData-sp-100-rs-5000.properties
 
 docker ps
 
@@ -234,7 +234,7 @@ echo "Status of the ${container} is ${status}" ### Container exited
 docker logs $container &> "docker_logs_${container}.txt"
 
 
-echo "------------------ wikiData-sp-100-rs-5000.properties: WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------ xmx 50"
+echo "------------------ wikiData-sp-100-rs-5000.properties: WIKIDATA WITHOUT MAX CARDINALITY CONSTRAINTS ------------------ xmx 40"
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
