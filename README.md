@@ -1,4 +1,4 @@
-# Quality Shapes Extractor
+# Quality Shapes Extraction (QSE)
 
 **This repository contains the code for the following paper under submission in VLDB:**
 > **Extraction of Validating Shapes from very large Knowledge Graphs [Scalable Data Science]**
