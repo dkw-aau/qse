@@ -1,20 +1,19 @@
 # Quality Shapes Extractor
 
 **This repository contains the code for the following paper under submission in VLDB:**
-> **Extracting Validating Shapes from very large Knowledge Graphs with Quality Guarantees**
+> **Extraction of Validating Shapes from very large Knowledge Graphs [Scalable Data Science]**
 
+## Abstract
 
-In this paper, we propose a **Quality Shapes Extraction Approach (QSE)** to extract validating shapes from very large
-RDF graphs with quality guarantees. QSE is a support-based shapes-extraction approach which supports shapes extraction
-from knowledge graphs available as datafiles or in a triplestore as an endpoint denoted as **QSE-File** and **QSE-Endpoint**.
-
+Knowledge Graphs (KGs) represent heterogeneous domain knowledge on the Web and within organizations. There exist shapes constraint languages to define validating shapes to ensure the quality of the data in KGs. Existing techniques to extract validating shapes often fail to extract complete shapes, are not scalable, and are prone to produce spurious shapes. To address these shortcomings, we propose the Quality Shapes Extraction (QSE) approach to extract validating shapes in very large graphs, for which we devise both an exact and an approximate solution. QSE provides information about the reliability of shape constraints by computing their confidence and support within a KG and in doing so allows to identify shapes that are most informative and less likely to be affected by incomplete or incorrect data.
+To the best of our knowledge, QSE is the first approach to extract a complete set of validating shapes from WikiData. Moreover, QSE provides a 12x reduction in extraction time compared to existing approaches, while managing to filter out up to 93% of the invalid and spurious shapes, resulting in a reduction of up to 2 orders of magnitude in the number of constraints presented to the user, e.g., from 11,916 to 809 on DBpedia.
 
 ## Reproducibility Instructions
 
 The following instructions are for reproducing the experiments we presented in our paper. To reproduce and extend the experiments you should clone the branch `master` on the Github repository as follows:
 
 ```
-git clone https://github.com/Kashif-Rabbani/shacl.git
+git clone https://github.com/dkw-aau/qse.git
 ```
 The repository contains all code, and instructions. Dataset should be downloaded separately as explained below.
 
@@ -25,10 +24,9 @@ The experiments run on a _single machine_. To reproduce the experiments the sugg
    - A GNU/Linux distribution (with git, bash, make, and wget)
    - Java version 15.0.2.fx-zulu
 
-- **Hardware used in the experiments (and minimum required):**
-   - RAM: 256 GB (minimum 16GB)
+- **Hardware used in the experiments :**
+   - RAM: 256 GB (minimum required 16GB)
    - CPU: 16 cores (minimum 1)
-   - Disk space: ~100 GB free
 
 
 ## Getting the data
