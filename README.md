@@ -28,7 +28,7 @@ We provide a copy of some of these  datasets in a [single archive](http://130.22
 You should download these datasets in `data` directory. You can check the size and number of lines (triples) with the commands:
 ``` cd data; du -sh yago.n3; wc -l yago.n3 ```, etc.
 
----------
+
 
 ### 3. Running the experiments (with Docker)
 We used Docker and shell scripts to build and run the code on different datasets. We allow users to specify the configuration parameters in the config files depending on the dataset and user's requirement.
@@ -40,7 +40,7 @@ having a machine with 256 GB (minimum required 16GB) and CPU with 16 cores (mini
 
 We have prepared shell scripts and configuration files for each dataset to make the process of running experiments as much easy as possible.
 
-##### 3.2. Configuration Parameters
+#### 3.2. Configuration Parameters
 Please update the configuration file for each dataset available in the [config](https://github.com/dkw/qse/tree/main/config) directory, i.e., `dbpediaConfig`, `yagoConfig`, `lubmConfig`, `wdt15Config`, and `wdt21Config` to set the correct paths for your machine.
 You have to choose from one of these options to either extract shapes using QSE-Exact (file or query-based) or QSE-Approximate.  
 
@@ -70,7 +70,7 @@ Depending on the approach you have chosen from one of the above, you have to set
 
 
 
-##### 3.3. Shell Scripts
+#### 3.3. Shell Scripts
 Assuming that you are in the project's directory, you have updated the configuration file(s), and docker is installed on your machine, move into [scripts](https://github.com/dkw/qse/tree/main/scripts) directory using the command ``` cd scripts ``` and then execute one of the following shell scripts files:
 ``` ./dbpedia.sh ``` ,
 ``` ./yago.sh ``` , 
