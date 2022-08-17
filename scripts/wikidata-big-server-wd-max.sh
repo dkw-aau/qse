@@ -2,7 +2,7 @@
 
 ### Build Docker Image
 cd ..
-docker build . -t shacl:QSE-Full-WIKIDATA-Default-wd-max
+docker build . -t shacl:QSE_WikiData_WithMax_17AugustPolystore
 
 echo "------------------ WIKIDATA WITH MAX CARDINALITY FULL ------------------"
 ### Clear Cache
@@ -13,7 +13,7 @@ container=QSE_WIKIDATA_full_wd_maxCard_default
 
 echo "About to run docker container: ${container}"
 
-docker run -m 750GB -d --name QSE_WIKIDATA_full_wd_maxCard_default -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/shacl/,target=/app/local shacl:QSE-Full-WIKIDATA-Default-wd-max /app/local/config/wd-max-card/wikiDataConfig.properties
+docker run -m 1000GB -d --name QSE_WIKIDATA_full_wd_maxCard_default -e "JAVA_TOOL_OPTIONS=-Xmx800g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git2/shacl/,target=/app/local shacl:QSE_WikiData_WithMax_17AugustPolystore /app/local/config/wd-max-card/wikiDataConfig.properties
 
 docker ps
 

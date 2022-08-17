@@ -56,6 +56,7 @@ public class ShapesExtractor {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
+        this.model.setNamespace("shape", Constants.SHAPES_NAMESPACE);
         this.model.addAll(constructShapeWithoutPruning(classToPropWithObjTypes));
         System.out.println("MODEL:: DEFAULT - SIZE: " + this.model.size());
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
@@ -77,6 +78,7 @@ public class ShapesExtractor {
         this.model = null;
         this.builder = new ModelBuilder();
         this.model = builder.build();
+        this.model.setNamespace("shape", Constants.SHAPES_NAMESPACE);
         this.model.addAll(constructShapesWithPruning(classToPropWithObjTypes, confidence, support));
         System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
         
