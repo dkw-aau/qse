@@ -27,14 +27,17 @@ public class EndpointParser {
     HashMap<Tuple3<Integer, Integer, Integer>, Integer> shapeTripletSupport;
     Set<Integer> classes;
     Encoder encoder;
+    String instantiationProperty;
+    long globalComputeSupportMethodTime = 0L;
     
-    public EndpointParser() {
+    public EndpointParser(String typeProperty) {
         this.graphDBUtils = new GraphDBUtils();
         int expectedNumberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
         this.classInstanceCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.encoder = new Encoder();
+        this.instantiationProperty = typeProperty;
     }
     
     public void run() {
@@ -45,6 +48,7 @@ public class EndpointParser {
         getNumberOfInstancesOfEachClass();
         getDistinctClasses();
         getShapesInfoAndComputeSupport();
+        System.out.println("globalComputeSupportMethodTime: " + globalComputeSupportMethodTime);
         populateShapes();
         writeSupportToFile();
         System.out.println("Size: classToPropWithObjTypes :: " + classToPropWithObjTypes.size() + " , Size: shapeTripletSupport :: " + shapeTripletSupport.size());
@@ -54,7 +58,7 @@ public class EndpointParser {
         StopWatch watch = new StopWatch();
         watch.start();
         //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
-        graphDBUtils.runSelectQuery(FilesUtil.readQuery("query2")).forEach(result -> {
+        graphDBUtils.runSelectQuery(setProperty(FilesUtil.readQuery("query2"))).forEach(result -> {
             String c = result.getValue("class").stringValue();
             int classCount = 0;
             if (result.getBinding("classCount").getValue().isLiteral()) {
@@ -77,13 +81,15 @@ public class EndpointParser {
         watch.start();
         for (Integer classIri : this.classes) {
             String queryToGetProperties = FilesUtil.readQuery("query4").replace(":Class", " <" + encoder.decode(classIri) + "> ");
+            queryToGetProperties = setProperty(queryToGetProperties);
             HashSet<String> props = getPropertiesOfClass(queryToGetProperties);
             
             HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+            
             for (String property : props) {
                 HashSet<String> objectTypes = new HashSet<>();
                 String queryToVerifyLiteralObjectType = buildQuery(classIri, property, "query5");
-                
+                queryToVerifyLiteralObjectType = setProperty(queryToVerifyLiteralObjectType);
                 //Literal Type Object
                 if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
                     String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, "query6");
@@ -95,6 +101,7 @@ public class EndpointParser {
                                 objectTypes.add(objectType);
                                 //FIXME: It should run for all object types
                                 String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
+                                queryToComputeSupportForLiteralTypeObjects = setProperty(queryToComputeSupportForLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
                             } else {
                                 System.out.println("WARNING:: it's null for literal type object .. " + classIri + " - " + property);
@@ -106,6 +113,7 @@ public class EndpointParser {
                 //Non-Literal Type Object
                 else {
                     String queryToGetDataTypeOfNonLiteralObjects = buildQuery(classIri, property, "query7");
+                    queryToGetDataTypeOfNonLiteralObjects = setProperty(queryToGetDataTypeOfNonLiteralObjects);
                     List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfNonLiteralObjects);
                     if (results != null) {
                         results.forEach(row -> {
@@ -114,17 +122,19 @@ public class EndpointParser {
                                 objectTypes.add(objectType);
                                 //FIXME: It should run for all object types
                                 String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
+                                queryToComputeSupportForNonLiteralTypeObjects = setProperty(queryToComputeSupportForNonLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
                             } else {
                                 System.out.println("WARNING:: it's null for Non-Literal type object .. " + classIri + " - " + property);
                             }
-                            
                         });
                     }
                 }
                 propToObjTypes.put(Utils.IriToNode(property), objectTypes);
             }
             classToPropWithObjTypes.put(encoder.decode(classIri), propToObjTypes);
+            System.out.println(".. globalComputeSupportMethodTime: " + globalComputeSupportMethodTime);
+    
         }
         watch.stop();
         System.out.println("Time Elapsed getShapesInfoAndComputeSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
@@ -132,6 +142,9 @@ public class EndpointParser {
     }
     
     private void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
+        //System.out.println(supportQuery);
+        StopWatch watcher = new StopWatch();
+        watcher.start();
         graphDBUtils.runSelectQuery(supportQuery).forEach(countRow -> {
             if (countRow.getBinding("count").getValue().isLiteral()) {
                 Literal literalCount = (Literal) countRow.getBinding("count").getValue();
@@ -139,6 +152,9 @@ public class EndpointParser {
                 shapeTripletSupport.put(new Tuple3<>(classIri, encoder.encode(property), encoder.encode(objectType)), count);
             }
         });
+        watcher.stop();
+        long time = watcher.getTime();
+        globalComputeSupportMethodTime = globalComputeSupportMethodTime + time;
     }
     
     private void populateShapes() {
@@ -157,7 +173,7 @@ public class EndpointParser {
     }
     
     public void writeSupportToFile() {
-        System.out.println("Writing Support to File ...");
+        //System.out.println("Writing Support to File ...");
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
@@ -199,5 +215,9 @@ public class EndpointParser {
             props.add(propIri);
         });
         return props;
+    }
+    
+    private String setProperty(String query) {
+        return query.replace(":instantiationProperty", instantiationProperty);
     }
 }

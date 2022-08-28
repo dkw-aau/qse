@@ -1,5 +1,5 @@
 PREFIX onto: <http://www.ontotext.com/>
 SELECT DISTINCT ?class (COUNT(DISTINCT ?s) AS ?classCount) FROM onto:explicit where {
-	?s <http://www.wikidata.org/prop/direct/P31> ?class .
+	?s :instantiationProperty ?class .
 }
 Group by ?class

@@ -13,19 +13,21 @@ public class ExampleQueryExecutor {
     
     public ExampleQueryExecutor() {
         this.graphDBUtils = new GraphDBUtils();
-        sparqlQuery = "select DISTINCT * where { \n" +
-                "\t?s <http://www.wikidata.org/prop/direct/P31> ?o .\n" +
-                "} \n" +
-                "\n";
+        sparqlQuery = "select * where { \n" +
+                "\t?s ?p ?o .\n" +
+                "} ";
     }
     
     public void runQuery() {
         StopWatch watch = new StopWatch();
         watch.start();
         //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
-        graphDBUtils.runSelectQuery(sparqlQuery).forEach(row -> {
+        System.out.println("About to run query: " + sparqlQuery);
+        System.out.println("Iterating over results:");
+        //graphDBUtils.streamQuery(sparqlQuery);
+        /*graphDBUtils.runSelectQuery(sparqlQuery).forEach(row -> {
           //do nothing - just iterate
-        });
+        });*/
         watch.stop();
         System.out.println("Time Elapsed runQuery: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
