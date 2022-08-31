@@ -80,7 +80,7 @@ public class EndpointSampling {
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
         secondPassMultiThreaded(16); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        writeSupportToFile();
+        //writeSupportToFile();
         extractSHACLShapes(false);
     }
     
@@ -131,7 +131,7 @@ public class EndpointSampling {
     private void secondPassMultiThreaded(Integer numberOfThreads) {
         StopWatch watch = new StopWatch();
         watch.start();
-        System.out.println("Started secondPass()");
+        System.out.println("Started secondPassMultiThreaded()");
         ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
         try {
             List<Callable<Void>> jobs = new ArrayList<>();
@@ -230,7 +230,7 @@ public class EndpointSampling {
                     
                     //Compute Support
                     // <entityTypeID, propID, objTypesIDs
-                    objTypesIDs.forEach(objTypeID -> {
+                    /*objTypesIDs.forEach(objTypeID -> {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
                         if(shapeTripletSupport.containsKey(tuple3)){
                             Integer support = shapeTripletSupport.get(tuple3).getSupport();
@@ -239,7 +239,7 @@ public class EndpointSampling {
                         } else {
                             shapeTripletSupport.put(tuple3, new SupportConfidence(1));
                         }
-                    });
+                    });*/
                 }
                 sampledPropCount.merge(propID, 1, Integer::sum);
             }
