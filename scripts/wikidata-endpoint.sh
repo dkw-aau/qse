@@ -15,7 +15,7 @@ container=QSE_Approx_WIKIDATA_Endpoint_1000_100
 
 echo "About to run docker container: ${container}"
 
-docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx32g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 100GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx32g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git2/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
