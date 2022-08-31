@@ -25,10 +25,6 @@ public class GraphDBUtils {
         this.repositoryConnection = repository.getConnection();
     }
     
-    public ValueFactory getValueFactory() {
-        return repositoryConnection.getValueFactory();
-    }
-    
     public List<BindingSet> runSelectQuery(String query) {
         List<BindingSet> result = new ArrayList<>();
         try {
@@ -45,17 +41,18 @@ public class GraphDBUtils {
     }
     
     public TupleQueryResult evaluateSelectQuery(String query) {
-        TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        return tupleQuery.evaluate();
-    
-        //try (TupleQueryResult result = tupleQuery.evaluate()) {
-//            for (BindingSet bindingSet : result) {
-//                //Value firstValue = bindingSet.getValue(bindingNames.get(0));
-//                //Value secondValue = bindingSet.getValue(bindingNames.get(1));
-//                // do something interesting with the values here...
-//                count++;
-//            }
-        //}
+        TupleQueryResult tupleQueryResult = null;
+        try {
+            if(!repositoryConnection.isActive()){
+                this.repositoryConnection = repository.getConnection();
+            }
+            TupleQuery tq = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            tupleQueryResult = tq.evaluate();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tupleQueryResult;
     }
     
     public Boolean runAskQuery(String query) {

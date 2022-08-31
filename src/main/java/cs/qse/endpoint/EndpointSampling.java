@@ -2,13 +2,11 @@ package cs.qse.endpoint;
 
 import cs.Main;
 import cs.qse.EntityData;
-import cs.qse.StatsComputer;
+import cs.qse.ShapesExtractor;
 import cs.qse.SupportConfidence;
+import cs.qse.experiments.ExperimentsUtil;
 import cs.qse.sampling.DynamicBullyReservoirSampling;
-import cs.utils.FilesUtil;
-import cs.utils.Tuple2;
-import cs.utils.Tuple3;
-import cs.utils.Utils;
+import cs.utils.*;
 import cs.utils.encoders.Encoder;
 import cs.utils.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
@@ -17,12 +15,21 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
+import redis.clients.jedis.Tuple;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,7 +38,6 @@ public class EndpointSampling {
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
     Encoder encoder;
-    StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
     Integer maxEntityThreshold;
@@ -65,6 +71,7 @@ public class EndpointSampling {
         this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
+        this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     
@@ -72,9 +79,9 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        
-        //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        secondPass();
+        secondPassMultiThreaded(16); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        writeSupportToFile();
+        extractSHACLShapes(false);
     }
     
     private void dynamicBullyReservoirSampling() {
@@ -121,6 +128,30 @@ public class EndpointSampling {
     }
     
     
+    private void secondPassMultiThreaded(Integer numberOfThreads) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.out.println("Started secondPass()");
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+        try {
+            List<Callable<Void>> jobs = new ArrayList<>();
+            for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
+                Integer subjID = entry.getKey();
+                EntityData entityData = entry.getValue();
+                jobs.add(() -> {
+                    collectMetaData(subjID, entityData);
+                    return null;
+                });
+            }
+            executor.invokeAll(jobs);
+            executor.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -129,74 +160,90 @@ public class EndpointSampling {
             for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
                 Integer subjID = entry.getKey();
                 EntityData entityData = entry.getValue();
-                
-                Set<String> entityTypes = new HashSet<>();
-                for (Integer encodedClass : entityData.getClassTypes()) {
-                    entityTypes.add(encoder.decode(encodedClass));
-                }
-                String entity = nodeEncoder.decode(subjID).getLabel();
-                String query = buildQuery(entity, entityTypes);
-                //System.out.println(query);
-                
-                // ?p ?o are binding variables
-                for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
-                    String property = row.getValue("p").stringValue();
-                    String object = row.getValue("o").stringValue();
-                    
-                    int propID = encoder.encode(property);
-                    String objectType = extractObjectType(object);
-                    Node objectNode = Utils.IriToNode(object);
-                    
-                    Set<Integer> objTypes = new HashSet<>(10);
-                    Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
-                    
-                    // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                    if (objectType.equals("IRI")) {
-                        EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(objectNode));
-                        if (currEntityData != null) {
-                            objTypes = currEntityData.getClassTypes();
-                            for (Integer node : objTypes) { // get classes of node2
-                                prop2objTypeTuples.add(new Tuple2<>(propID, node));
-                            }
-                            addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
-    
-                            //TODO: Compute Support for class, prop, objType (for non-literal)
-                        }
-                        /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
-                        
-                    } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                        int objID = encoder.encode(objectType);
-                        objTypes.add(objID);
-                        prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
-                        addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
-    
-                        //TODO: Compute Support for class, prop, objType (for literal)
-                    }
-                    
-                    for (Integer entityClass : entityData.getClassTypes()) {
-                        Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
-                        if (propToObjTypes == null) {
-                            propToObjTypes = new HashMap<>();
-                            classToPropWithObjTypes.put(entityClass, propToObjTypes);
-                        }
-                        
-                        Set<Integer> classObjTypes = propToObjTypes.get(propID);
-                        if (classObjTypes == null) {
-                            classObjTypes = new HashSet<>();
-                            propToObjTypes.put(propID, classObjTypes);
-                        }
-                        
-                        classObjTypes.addAll(objTypes);
-                    }
-                    sampledPropCount.merge(propID, 1, Integer::sum);
-                }
+                collectMetaData(subjID, entityData);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         watch.stop();
         Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
     
+    private void collectMetaData(Integer entityID, EntityData entityData) {
+        Set<String> entityTypes = new HashSet<>();
+        for (Integer entityTypeID : entityData.getClassTypes()) {
+            entityTypes.add(encoder.decode(entityTypeID));
+        }
+        String entity = nodeEncoder.decode(entityID).getLabel();
+        String query = buildQuery(entity, entityTypes); // query to get ?p ?o of entity
+        
+        // ?p ?o are binding variables
+        for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
+            String prop = row.getValue("p").stringValue();
+            String propIri = "<" + prop + ">";
+            
+            if (!propIri.equals(typePredicate)) {
+                int propID = encoder.encode(prop);
+                
+                String obj = row.getValue("o").stringValue();
+                Node objNode = Utils.IriToNode(obj);
+                String objType = extractObjectType(obj); // find out if the object is literal or IRI
+                
+                Set<Integer> objTypesIDs = new HashSet<>(10);
+                Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
+                
+                // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                if (objType.equals("IRI")) {
+                    EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(objNode));
+                    if (currEntityData != null) {
+                        objTypesIDs = currEntityData.getClassTypes();
+                        for (Integer objTypeID : objTypesIDs) { // get classes of node2
+                            prop2objTypeTuples.add(new Tuple2<>(propID, objTypeID));
+                        }
+                        addEntityToPropertyConstraints(prop2objTypeTuples, entityID);
+                    } else {
+                        objTypesIDs.add(-1);
+                    }
+                    /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+                    int objID = encoder.encode(objType);
+                    objTypesIDs.add(objID);
+                    prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+                    addEntityToPropertyConstraints(prop2objTypeTuples, entityID);
+                }
+                
+                for (Integer entityTypeID : entityData.getClassTypes()) {
+                    Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityTypeID);
+                    if (propToObjTypes == null) {
+                        propToObjTypes = new HashMap<>();
+                        classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+                    }
+                    
+                    Set<Integer> classObjTypes = propToObjTypes.get(propID);
+                    if (classObjTypes == null) {
+                        classObjTypes = new HashSet<>();
+                        propToObjTypes.put(propID, classObjTypes);
+                    }
+                    classObjTypes.addAll(objTypesIDs);
+                    propToObjTypes.put(propID, classObjTypes);
+                    classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+                    
+                    //Compute Support
+                    // <entityTypeID, propID, objTypesIDs
+                    objTypesIDs.forEach(objTypeID -> {
+                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
+                        if(shapeTripletSupport.containsKey(tuple3)){
+                            Integer support = shapeTripletSupport.get(tuple3).getSupport();
+                            support++;
+                            shapeTripletSupport.put(tuple3, new SupportConfidence(support));
+                        } else {
+                            shapeTripletSupport.put(tuple3, new SupportConfidence(1));
+                        }
+                    });
+                }
+                sampledPropCount.merge(propID, 1, Integer::sum);
+            }
+        }
     }
     
     /**
@@ -205,6 +252,7 @@ public class EndpointSampling {
      * @param literalIri : IRI for the literal object
      * @return String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
      */
+    //todo: Handle more data types like Data etc.
     private String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
         String type = null;
@@ -240,7 +288,6 @@ public class EndpointSampling {
         entityDataMapContainer.put(subject, currentEntityData);
     }
     
-    
     //helper methods
     private String buildQuery(String entity, Set<String> types) {
         StringBuilder query = new StringBuilder("PREFIX onto: <http://www.ontotext.com/> \nSELECT * from onto:explicit WHERE { \n");
@@ -251,4 +298,67 @@ public class EndpointSampling {
         query.append("<").append(entity).append("> ").append("?p ?o . \n }\n");
         return query.toString();
     }
+    
+    private String buildQuery(String classIri, String property, String objectType, String queryFile) {
+        String query = (FilesUtil.readQuery(queryFile)
+                .replace(":Class", " <" + classIri + "> "))
+                .replace(":Prop", " <" + property + "> ")
+                .replace(":ObjectType", " " + objectType + " ");
+        query = query.replace(":instantiationProperty", typePredicate);
+        return query;
+    }
+    
+    public void writeSupportToFile() {
+        System.out.println("Started writeSupportToFile()");
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), false);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            
+            for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
+                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
+                Integer count = entry.getValue().getSupport();
+                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
+                        encoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
+                printWriter.println(log);
+            }
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("writeSupportToFile(): ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    protected void extractSHACLShapes(Boolean performPruning) {
+        System.out.println("Started extractSHACLShapes()");
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:No Pruning";
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
+        //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        if (performPruning) {
+            StopWatch watchForPruning = new StopWatch();
+            watchForPruning.start();
+            ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+                supportRange.forEach(supp -> {
+                    StopWatch innerWatch = new StopWatch();
+                    innerWatch.start();
+                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    innerWatch.stop();
+                    Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
+                });
+            });
+            methodName = "extractSHACLShapes";
+            watchForPruning.stop();
+            Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
+        }
+        
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
 }

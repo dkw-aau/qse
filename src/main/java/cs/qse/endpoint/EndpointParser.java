@@ -99,7 +99,6 @@ public class EndpointParser {
                             if (row.getValue("objDataType") != null) {
                                 String objectType = row.getValue("objDataType").stringValue();
                                 objectTypes.add(objectType);
-                                //FIXME: It should run for all object types
                                 String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
                                 queryToComputeSupportForLiteralTypeObjects = setProperty(queryToComputeSupportForLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
@@ -120,7 +119,6 @@ public class EndpointParser {
                             if (row.getValue("objDataType") != null) {
                                 String objectType = row.getValue("objDataType").stringValue();
                                 objectTypes.add(objectType);
-                                //FIXME: It should run for all object types
                                 String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
                                 queryToComputeSupportForNonLiteralTypeObjects = setProperty(queryToComputeSupportForNonLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
