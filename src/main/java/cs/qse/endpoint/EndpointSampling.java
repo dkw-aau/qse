@@ -79,8 +79,8 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        secondPassMultiThreaded(10); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        //writeSupportToFile();
+        secondPassMultiThreaded(16); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        writeSupportToFile();
         extractSHACLShapes(false);
     }
     
@@ -230,7 +230,7 @@ public class EndpointSampling {
                     
                     //Compute Support
                     // <entityTypeID, propID, objTypesIDs
-                    /*objTypesIDs.forEach(objTypeID -> {
+                    objTypesIDs.forEach(objTypeID -> {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
                         if(shapeTripletSupport.containsKey(tuple3)){
                             Integer support = shapeTripletSupport.get(tuple3).getSupport();
@@ -239,7 +239,7 @@ public class EndpointSampling {
                         } else {
                             shapeTripletSupport.put(tuple3, new SupportConfidence(1));
                         }
-                    });*/
+                    });
                 }
                 sampledPropCount.merge(propID, 1, Integer::sum);
             }
