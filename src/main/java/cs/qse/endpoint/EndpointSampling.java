@@ -79,7 +79,7 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        secondPassMultiThreaded(16); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        secondPassMultiThreaded(10); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
         //writeSupportToFile();
         extractSHACLShapes(false);
     }
