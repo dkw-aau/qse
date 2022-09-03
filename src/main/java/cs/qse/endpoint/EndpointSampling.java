@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class EndpointSampling {
-    //private final GraphDBUtils graphDBUtils;
+    private final GraphDBUtils graphDBUtils;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
     Encoder encoder;
@@ -58,7 +58,7 @@ public class EndpointSampling {
     Map<Integer, Integer> sampledPropCount; // count of triples having predicate P across all entities in all reservoirs  |< _ , P , _ >| (the sampled entities)
     
     public EndpointSampling(int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
-        //this.graphDBUtils = new GraphDBUtils();
+        this.graphDBUtils = new GraphDBUtils();
         this.expectedNumberOfClasses = expNoOfClasses;
         this.expNoOfInstances = expNoOfInstances;
         this.typePredicate = typePredicate;
@@ -79,7 +79,8 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        secondPassMultiThreaded(16); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        //secondPassMultiThreaded(5); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        secondPass();
         writeSupportToFile();
         extractSHACLShapes(false);
     }
@@ -96,9 +97,7 @@ public class EndpointSampling {
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
         DynamicBullyReservoirSampling drs = new DynamicBullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
-        
         try {
-            GraphDBUtils graphDBUtils = new GraphDBUtils();
             graphDBUtils.runConstructQuery(queryToGetWikiDataEntities).forEach(line -> {
                 try {
                     String triple = "<" + line.getSubject() + "> <" + line.getPredicate() + "> <" + line.getObject() + "> ."; // prepare triple in N3 format to avoid changing many methods using nodes of type Node
@@ -178,7 +177,7 @@ public class EndpointSampling {
         }
         String entity = nodeEncoder.decode(entityID).getLabel();
         String query = buildQuery(entity, entityTypes); // query to get ?p ?o of entity
-        GraphDBUtils graphDBUtils = new GraphDBUtils();
+        
         // ?p ?o are binding variables
         for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
             String prop = row.getValue("p").stringValue();

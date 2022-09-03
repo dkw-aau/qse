@@ -11,7 +11,7 @@ echo "------------------ WIKIDATA  WITHOUT MAX CARDINALITY CONSTRAINTS ---------
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approx_WIKIDATA_Endpoint_1000_100
+container=QSE_Approx_WIKIDATA_Endpoint_500_100
 
 echo "About to run docker container: ${container}"
 
