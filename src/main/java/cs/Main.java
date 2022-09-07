@@ -1,8 +1,7 @@
 package cs;
 
 import cs.qse.Parser;
-import cs.qse.endpoint.EndpointSampling;
-import cs.qse.endpoint.ParallelEndpointSampling;
+import cs.qse.endpoint.sampling.ParallelEndpointSampling;
 import cs.qse.sampling.ReservoirSamplingParser;
 import cs.qse.endpoint.EndpointParser;
 import cs.utils.ConfigManager;
