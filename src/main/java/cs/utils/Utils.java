@@ -75,7 +75,7 @@ public class Utils {
         //Header: "Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath"
         String line = ConfigManager.getProperty("dataset_name") + "," + method + "," + seconds + "," + minutes + "," + secondsTotal + "," + minutesTotal + "," + Main.extractMaxCardConstraints + "," + Main.datasetPath;
         log(line);
-        System.out.println("Time Elapsed Time " + method + " " + seconds + " sec , " + minutes + " min");
+        System.out.println("Time Elapsed " + method + " " + seconds + " sec , " + minutes + " min");
         System.out.println("Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min");
     }
     

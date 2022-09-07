@@ -1,4 +1,4 @@
-package cs.qse.endpoint;
+package cs.qse.endpoint.sampling;
 
 import com.google.common.collect.Lists;
 import cs.Main;
@@ -12,6 +12,7 @@ import cs.utils.encoders.Encoder;
 import cs.utils.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.eclipse.rdf4j.model.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
@@ -44,7 +45,6 @@ public class ParallelEndpointSampling {
     Map<Integer, Integer> reservoirCapacityPerClass; // Size == T
     
     
-    //FIXME: NOT BEING USED DIRECTLY
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     Map<Integer, Integer> propCount; // real count of *all (entire graph)* triples having predicate P   // |P| =  |< _, P , _ >| in G
@@ -72,10 +72,30 @@ public class ParallelEndpointSampling {
     
     public void run() {
         System.out.println("Started ParallelEndpointSampling ...");
+        getNumberOfInstancesOfEachClass();
         dynamicBullyReservoirSampling();  // send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
-        collectEntityPropData(5); //run query for each sampled entity to get the property metadata ...
+        collectEntityPropData(2); //run query for each sampled entity to get the property metadata ...
         writeSupportToFile();
         extractSHACLShapes(false);
+    }
+    
+    private void getNumberOfInstancesOfEachClass() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String query = FilesUtil.readQuery("query2").replace(":instantiationProperty", typePredicate);
+        //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
+        graphDBUtils.runSelectQuery(query).forEach(result -> {
+            String c = result.getValue("class").stringValue();
+            int classCount = 0;
+            if (result.getBinding("classCount").getValue().isLiteral()) {
+                Literal literalClassCount = (Literal) result.getBinding("classCount").getValue();
+                classCount = literalClassCount.intValue();
+            }
+            classEntityCount.put(encoder.encode(c), classCount);
+        });
+        watch.stop();
+        System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("getNumberOfInstancesOfEachClass ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void dynamicBullyReservoirSampling() {
@@ -124,7 +144,7 @@ public class ParallelEndpointSampling {
     private void collectEntityPropData(Integer numberOfThreads) {
         StopWatch watch = new StopWatch();
         watch.start();
-        System.out.println("Started collectEntityPropData()");
+        System.out.println("Started collectEntityPropData(" + numberOfThreads + ")");
         ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
         try {
             List<Integer> entitiesList = new ArrayList<>(entityDataMapContainer.keySet());
@@ -174,7 +194,7 @@ public class ParallelEndpointSampling {
         }
         executor.shutdownNow();
         watch.stop();
-        Utils.logTime("cs.qse.endpoint.collectEntityPropData", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("cs.qse.endpoint.collectEntityPropData with threads: " + numberOfThreads + " ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void mergeJobsOutput(SubEntityPropDataCollector sEpDc) {
