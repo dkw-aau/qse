@@ -79,8 +79,8 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        //secondPassMultiThreaded(5); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        secondPass();
+        secondPassParallel(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        //secondPass();
         writeSupportToFile();
         extractSHACLShapes(false);
     }
@@ -129,28 +129,22 @@ public class EndpointSampling {
     }
     
     
-    private void secondPassMultiThreaded(Integer numberOfThreads) {
+    private void secondPassParallel() {
         StopWatch watch = new StopWatch();
         watch.start();
-        System.out.println("Started secondPassMultiThreaded()");
-        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
-        try {
-            List<Callable<Void>> jobs = new ArrayList<>();
-            for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
-                Integer subjID = entry.getKey();
-                EntityData entityData = entry.getValue();
-                jobs.add(() -> {
-                    collectMetaData(subjID, entityData);
-                    return null;
-                });
-            }
-            executor.invokeAll(jobs);
-            executor.shutdown();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("Started secondPassParallel()");
+        List<Integer> entities = new ArrayList<>(entityDataMapContainer.keySet());
+        entities.parallelStream().forEach(entity -> {
+            collectMetaData(entity, entityDataMapContainer.get(entity));
+        });
+/*        entityDataMapContainer.entrySet()
+                .parallelStream()
+                .forEach(entry -> {
+                    //System.out.println(entry.getKey() + ":" + entry.getValue());
+                    collectMetaData(entry.getKey(), entry.getValue());
+                });*/
         watch.stop();
-        Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling:secondPassParallel", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private void secondPass() {
@@ -233,7 +227,7 @@ public class EndpointSampling {
                     // <entityTypeID, propID, objTypesIDs
                     objTypesIDs.forEach(objTypeID -> {
                         Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
-                        if(shapeTripletSupport.containsKey(tuple3)){
+                        if (shapeTripletSupport.containsKey(tuple3)) {
                             Integer support = shapeTripletSupport.get(tuple3).getSupport();
                             support++;
                             shapeTripletSupport.put(tuple3, new SupportConfidence(support));
@@ -242,7 +236,8 @@ public class EndpointSampling {
                         }
                     });
                 }
-                sampledPropCount.merge(propID, 1, Integer::sum);
+         
+                //sampledPropCount.merge(propID, 1, Integer::sum);
             }
         }
     }
@@ -363,3 +358,21 @@ public class EndpointSampling {
     }
     
 }
+
+
+/*        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+        try {
+            List<Callable<Void>> jobs = new ArrayList<>();
+            for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
+                Integer subjID = entry.getKey();
+                EntityData entityData = entry.getValue();
+                jobs.add(() -> {
+                    collectMetaData(subjID, entityData);
+                    return null;
+                });
+            }
+            executor.invokeAll(jobs);
+            executor.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
