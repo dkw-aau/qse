@@ -74,7 +74,7 @@ public class ParallelEndpointSampling {
         System.out.println("Started ParallelEndpointSampling ...");
         getNumberOfInstancesOfEachClass();
         dynamicBullyReservoirSampling();  // send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
-        collectEntityPropData(2); //run query for each sampled entity to get the property metadata ...
+        collectEntityPropData(4); //run query for each sampled entity to get the property metadata ...
         writeSupportToFile();
         extractSHACLShapes(false);
     }
