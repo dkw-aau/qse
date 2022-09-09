@@ -46,11 +46,6 @@ public class SubEntityPropDataCollector {
         this.prevNodeEncoder = prevNodeEncoder;
     }
     
-    
-    // Which maps are updated here?
-    // FIXME: What has already been encoded? Only entities, for example, <.../kashif> entity of type :Person is encoded with NodeEncoder. And :Person is encoded with Encoder.
-    //  But properties of Kashif are not encoded.
-    //  What about IRI object types of properties of <.../kashif> ? They might be encoded and might not be encoded. Be careful.
     public void job(Integer jobIndex, List<Integer> entities, Map<Integer, EntityData> entityDataMapContainer) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -144,7 +139,7 @@ public class SubEntityPropDataCollector {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime(" for Job() " + jobIndex + " ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Finsished Job(" + jobIndex + ") in " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + "seconds " +  TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     
