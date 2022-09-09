@@ -1,15 +1,13 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.endpoint.sampling.parallel;
 
 import com.google.common.collect.Lists;
 import cs.Main;
-import cs.qse.EntityData;
-import cs.qse.ShapesExtractor;
-import cs.qse.SupportConfidence;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.common.EntityData;
+import cs.qse.filebased.SupportConfidence;
+import cs.qse.common.ExperimentsUtil;
 import cs.utils.*;
-import cs.utils.encoders.ConcurrentEncoder;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.Literal;

@@ -1,12 +1,11 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.endpoint.sampling.parallel;
 
-import cs.qse.EntityData;
-import cs.qse.sampling.BinaryNode;
-import cs.qse.sampling.ReservoirSampling;
+import cs.qse.common.EntityData;
+import cs.qse.filebased.sampling.BinaryNode;
+import cs.qse.filebased.sampling.ReservoirSampling;
 import cs.utils.Utils;
-import cs.utils.encoders.ConcurrentEncoder;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import org.semanticweb.yars.nx.Node;
 
 import java.util.List;

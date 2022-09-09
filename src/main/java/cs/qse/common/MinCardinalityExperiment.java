@@ -247,7 +247,7 @@ public class MinCardinalityExperiment {
                 String type = "count";
                 TupleQuery query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 Value queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getCsvHeader().get(i), literalCount.stringValue());
                 }
@@ -257,7 +257,7 @@ public class MinCardinalityExperiment {
                 String type = "avg";
                 TupleQuery query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 Value queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getAverageHeader().get(i), literalCount.stringValue());
                 }
@@ -265,7 +265,7 @@ public class MinCardinalityExperiment {
                 type = "max";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMaxHeader().get(i), literalCount.stringValue());
                 }
@@ -273,7 +273,7 @@ public class MinCardinalityExperiment {
                 type = "min";
                 query = conn.prepareTupleQuery(FilesUtil.readShaclStatsQuery("query" + i, type));
                 queryOutput = executeQuery(query, type);
-                if (queryOutput.isLiteral()) {
+                if (queryOutput != null && queryOutput.isLiteral()) {
                     Literal literalCount = (Literal) queryOutput;
                     shapesStats.put(ExperimentsUtil.getMinHeader().get(i), literalCount.stringValue());
                 }

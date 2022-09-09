@@ -1,11 +1,10 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.endpoint.sampling.parallel;
 
 import cs.Main;
-import cs.qse.SupportConfidence;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.filebased.SupportConfidence;
+import cs.qse.common.ExperimentsUtil;
 import cs.utils.*;
-import cs.utils.encoders.ConcurrentEncoder;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.ConcurrentEncoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -30,6 +29,7 @@ import java.util.*;
 
 /**
  * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
+ * This uses concurrent encoder as compared to others (only difference)
  */
 public class ShapesExtractorEndpoint {
     Model model = null;

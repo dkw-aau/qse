@@ -1,7 +1,7 @@
-package cs.qse.endpoint;
+package cs.qse.endpoint.nonsampling;
 
 import cs.utils.*;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.Encoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.Literal;

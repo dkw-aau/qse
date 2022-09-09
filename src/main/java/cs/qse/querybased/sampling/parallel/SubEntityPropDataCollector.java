@@ -1,14 +1,13 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.endpoint.sampling.parallel;
 
 import cs.Main;
-import cs.qse.EntityData;
-import cs.qse.SupportConfidence;
+import cs.qse.common.EntityData;
+import cs.qse.filebased.SupportConfidence;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.utils.encoders.ConcurrentEncoder;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -17,8 +16,8 @@ import org.semanticweb.yars.nx.Node;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static cs.qse.endpoint.Utility.buildQuery;
-import static cs.qse.endpoint.Utility.extractObjectType;
+import static cs.qse.common.Utility.buildQuery;
+import static cs.qse.common.Utility.extractObjectType;
 
 public class SubEntityPropDataCollector {
     private final GraphDBUtils graphDBUtils;
@@ -139,11 +138,11 @@ public class SubEntityPropDataCollector {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Finsished Job(" + jobIndex + ") in " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + "seconds " +  TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        System.out.println("Finished Job(" + jobIndex + ") in " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + "seconds or " +  TimeUnit.MILLISECONDS.toMinutes(watch.getTime()) + " minutes");
     }
     
     
-    //A utility method to add property constraints of each entity in the 2nd pass
+    //A utility method to add property constraints of each entity
     private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Integer subject) {
         EntityData currentEntityData = subEntityDataMapContainer.get(subject);
         if (currentEntityData == null) {

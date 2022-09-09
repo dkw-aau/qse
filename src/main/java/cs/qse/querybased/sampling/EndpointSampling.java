@@ -1,37 +1,34 @@
 package cs.qse.endpoint.sampling;
 
 import cs.Main;
-import cs.qse.EntityData;
-import cs.qse.ShapesExtractor;
-import cs.qse.SupportConfidence;
-import cs.qse.experiments.ExperimentsUtil;
-import cs.qse.sampling.DynamicBullyReservoirSampling;
+import cs.qse.common.EntityData;
+import cs.qse.filebased.ShapesExtractor;
+import cs.qse.filebased.SupportConfidence;
+import cs.qse.common.ExperimentsUtil;
+import cs.qse.filebased.sampling.DynamicBullyReservoirSampling;
 import cs.utils.*;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
-import redis.clients.jedis.Tuple;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static cs.qse.common.Utility.buildQuery;
 
 public class EndpointSampling {
     private final GraphDBUtils graphDBUtils;
@@ -79,8 +76,7 @@ public class EndpointSampling {
         //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         System.out.println("Started EndpointSampling ...");
         dynamicBullyReservoirSampling();
-        secondPassParallel(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        //secondPass();
+        secondPass(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
         writeSupportToFile();
         extractSHACLShapes(false);
     }
@@ -128,25 +124,6 @@ public class EndpointSampling {
         Utils.logSamplingStats("dynamicBullyReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
     }
     
-    
-    private void secondPassParallel() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.out.println("Started secondPassParallel()");
-        List<Integer> entities = new ArrayList<>(entityDataMapContainer.keySet());
-        entities.parallelStream().forEach(entity -> {
-            collectMetaData(entity, entityDataMapContainer.get(entity));
-        });
-/*        entityDataMapContainer.entrySet()
-                .parallelStream()
-                .forEach(entry -> {
-                    //System.out.println(entry.getKey() + ":" + entry.getValue());
-                    collectMetaData(entry.getKey(), entry.getValue());
-                });*/
-        watch.stop();
-        Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling:secondPassParallel", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
     private void secondPass() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -170,7 +147,7 @@ public class EndpointSampling {
             entityTypes.add(encoder.decode(entityTypeID));
         }
         String entity = nodeEncoder.decode(entityID).getLabel();
-        String query = buildQuery(entity, entityTypes); // query to get ?p ?o of entity
+        String query = buildQuery(entity, entityTypes, typePredicate); // query to get ?p ?o of entity
         
         // ?p ?o are binding variables
         for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
@@ -282,26 +259,6 @@ public class EndpointSampling {
         }
         //Add entity data into the map
         entityDataMapContainer.put(subject, currentEntityData);
-    }
-    
-    //helper methods
-    private String buildQuery(String entity, Set<String> types) {
-        StringBuilder query = new StringBuilder("PREFIX onto: <http://www.ontotext.com/> \nSELECT * from onto:explicit WHERE { \n");
-        
-        for (String type : types) {
-            query.append("<").append(entity).append("> ").append(typePredicate).append(" <").append(type).append("> .\n");
-        }
-        query.append("<").append(entity).append("> ").append("?p ?o . \n }\n");
-        return query.toString();
-    }
-    
-    private String buildQuery(String classIri, String property, String objectType, String queryFile) {
-        String query = (FilesUtil.readQuery(queryFile)
-                .replace(":Class", " <" + classIri + "> "))
-                .replace(":Prop", " <" + property + "> ")
-                .replace(":ObjectType", " " + objectType + " ");
-        query = query.replace(":instantiationProperty", typePredicate);
-        return query;
     }
     
     public void writeSupportToFile() {
