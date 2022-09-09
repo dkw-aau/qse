@@ -48,7 +48,7 @@ public class SubEntityPropDataCollector {
     public void job(Integer jobIndex, List<Integer> entities, Map<Integer, EntityData> entityDataMapContainer) {
         StopWatch watch = new StopWatch();
         watch.start();
-        System.out.println("Started Job " + jobIndex + " in Thread : " + Thread.currentThread().getName());
+        System.out.println("Started Job(index=" + jobIndex + ") in Thread : " + Thread.currentThread().getName());
         this.subEntityDataMapContainer = new HashMap<>();
         try {
             entities.forEach(entityID -> {
@@ -138,7 +138,8 @@ public class SubEntityPropDataCollector {
             e.printStackTrace();
         }
         watch.stop();
-        System.out.println("Finished Job(" + jobIndex + ") in " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + "seconds or " +  TimeUnit.MILLISECONDS.toMinutes(watch.getTime()) + " minutes");
+        System.out.println("\nFinished Job(index=" + jobIndex + ") in " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + "seconds or " +  TimeUnit.MILLISECONDS.toMinutes(watch.getTime()) + " minutes");
+        //Utils.logTime("Job(index=" + jobIndex + ")", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     

@@ -11,14 +11,14 @@ import org.semanticweb.yars.nx.Node;
 import java.util.List;
 import java.util.Map;
 
-public class DynamicBullyReservoirSamplingEndpoint implements ReservoirSampling {
+public class NbResSamplingForQb implements ReservoirSampling {
     Map<Integer, EntityData> entityDataMapContainer;
     Map<Integer, List<Integer>> sampledEntitiesPerClass;
     Map<Integer, Integer> reservoirCapacityPerClass;
     NodeEncoder nodeEncoder;
     ConcurrentEncoder encoder;
     
-    public DynamicBullyReservoirSamplingEndpoint(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, ConcurrentEncoder encoder) {
+    public NbResSamplingForQb(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, ConcurrentEncoder encoder) {
         this.entityDataMapContainer = entityDataMapContainer;
         this.sampledEntitiesPerClass = sampledEntitiesPerClass;
         this.reservoirCapacityPerClass = reservoirCapacityPerClass;

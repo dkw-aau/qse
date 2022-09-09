@@ -1,14 +1,30 @@
 package cs.qse.common;
 
+import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.Encoder;
+import cs.qse.filebased.SupportConfidence;
+import cs.utils.Constants;
 import cs.utils.FilesUtil;
+import cs.utils.Tuple3;
 import cs.utils.Utils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.semanticweb.yars.nx.Literal;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+/**
+ *
+ */
 public class Utility {
     
     /**
@@ -47,12 +63,59 @@ public class Utility {
     }
     
     
-    private String buildQuery(String classIri, String property, String objectType, String queryFile, String typePredicate) {
+    private static String buildQuery(String classIri, String property, String objectType, String queryFile, String typePredicate) {
         String query = (FilesUtil.readQuery(queryFile)
                 .replace(":Class", " <" + classIri + "> "))
                 .replace(":Prop", " <" + property + "> ")
                 .replace(":ObjectType", " " + objectType + " ");
         query = query.replace(":instantiationProperty", typePredicate);
         return query;
+    }
+    
+    
+    public static void writeSupportToFile(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+        System.out.println("Started writeSupportToFile()");
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), false);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            
+            for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : shapeTripletSupport.entrySet()) {
+                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
+                Integer count = entry.getValue().getSupport();
+                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
+                        encoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
+                printWriter.println(log);
+            }
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("writeSupportToFile() ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    public static void writeSupportToFile(ConcurrentEncoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+        System.out.println("Started writeSupportToFile()");
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), false);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            
+            for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : shapeTripletSupport.entrySet()) {
+                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
+                Integer count = entry.getValue().getSupport();
+                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
+                        encoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
+                printWriter.println(log);
+            }
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        Utils.logTime("writeSupportToFile() ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
 }

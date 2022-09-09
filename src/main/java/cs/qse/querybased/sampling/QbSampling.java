@@ -1,33 +1,37 @@
-package cs.qse.querybased.sampling.parallel;
+package cs.qse.querybased.sampling;
 
-import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
+import cs.qse.filebased.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
+import cs.qse.filebased.sampling.DynamicBullyReservoirSampling;
 import cs.utils.*;
-import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.Encoder;
 import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.query.BindingSet;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ParallelEndpointSampling {
+import static cs.qse.common.Utility.buildQuery;
+import static cs.qse.common.Utility.extractObjectType;
+import static cs.qse.common.Utility.writeSupportToFile;
+
+/**
+ * * Qb (query-based) Sampling Parser
+ */
+public class QbSampling {
     private final GraphDBUtils graphDBUtils;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
-    ConcurrentEncoder encoder;
+    Encoder encoder;
     String typePredicate;
     NodeEncoder nodeEncoder;
     Integer maxEntityThreshold;
@@ -41,39 +45,36 @@ public class ParallelEndpointSampling {
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     Map<Integer, Integer> reservoirCapacityPerClass; // Size == T
-    
-    
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
+    
     Map<Integer, Integer> propCount; // real count of *all (entire graph)* triples having predicate P   // |P| =  |< _, P , _ >| in G
     Map<Integer, Integer> sampledPropCount; // count of triples having predicate P across all entities in all reservoirs  |< _ , P , _ >| (the sampled entities)
     
-    public ParallelEndpointSampling(int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
+    public QbSampling(int expNoOfClasses, int expNoOfInstances, String typePredicate, Integer entitySamplingThreshold) {
         this.graphDBUtils = new GraphDBUtils();
         this.expectedNumberOfClasses = expNoOfClasses;
         this.expNoOfInstances = expNoOfInstances;
         this.typePredicate = typePredicate;
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.sampledEntitiesPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
-        
-        this.encoder = new ConcurrentEncoder();
+        this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
+        this.sampledPropCount = new HashMap<>((int) ((10000) / 0.75 + 1));
+        this.encoder = new Encoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
-        
-        //this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        //this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
-        //this.sampledPropCount = new HashMap<>((int) ((10000) / 0.75 + 1));
-        //this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
     }
     
     
     public void run() {
-        System.out.println("Started ParallelEndpointSampling ...");
+        System.out.println("Started EndpointSampling ...");
         getNumberOfInstancesOfEachClass();
-        dynamicBullyReservoirSampling();  // send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
-        collectEntityPropData(4); //run query for each sampled entity to get the property metadata ...
-        writeSupportToFile();
+        dynamicNeighborBasedReservoirSampling(); //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
+        collectEntityPropData(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        writeSupportToFile(encoder, this.shapeTripletSupport, this.sampledEntitiesPerClass);
         extractSHACLShapes(false);
     }
     
@@ -86,7 +87,7 @@ public class ParallelEndpointSampling {
             String c = result.getValue("class").stringValue();
             int classCount = 0;
             if (result.getBinding("classCount").getValue().isLiteral()) {
-                Literal literalClassCount = (Literal) result.getBinding("classCount").getValue();
+                org.eclipse.rdf4j.model.Literal literalClassCount = (org.eclipse.rdf4j.model.Literal) result.getBinding("classCount").getValue();
                 classCount = literalClassCount.intValue();
             }
             classEntityCount.put(encoder.encode(c), classCount);
@@ -96,7 +97,7 @@ public class ParallelEndpointSampling {
         Utils.logTime("getNumberOfInstancesOfEachClass ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void dynamicBullyReservoirSampling() {
+    private void dynamicNeighborBasedReservoirSampling() {
         System.out.println("invoked:dynamicBullyReservoirSampling()");
         StopWatch watch = new StopWatch();
         watch.start();
@@ -107,7 +108,7 @@ public class ParallelEndpointSampling {
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
-        DynamicBullyReservoirSamplingEndpoint drs = new DynamicBullyReservoirSamplingEndpoint(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
+        DynamicBullyReservoirSampling drs = new DynamicBullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
         try {
             graphDBUtils.runConstructQuery(queryToGetWikiDataEntities).forEach(line -> {
                 try {
@@ -139,132 +140,126 @@ public class ParallelEndpointSampling {
         Utils.logSamplingStats("dynamicBullyReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
     }
     
-    private void collectEntityPropData(Integer numberOfThreads) {
+    private void collectEntityPropData() {
         StopWatch watch = new StopWatch();
         watch.start();
-        System.out.println("Started collectEntityPropData(" + numberOfThreads + ")");
-        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+        System.out.println("Started secondPass()");
         try {
-            List<Integer> entitiesList = new ArrayList<>(entityDataMapContainer.keySet());
-            List<List<Integer>> entitiesPart = Lists.partition(entitiesList, entitiesList.size() / numberOfThreads);
-            
-            //declare jobs
-            List<Callable<SubEntityPropDataCollector>> jobs = new ArrayList<>();
-            
-            // create jobs
-            int jobIndex = 1;
-            for (List<Integer> part : entitiesPart) {
-                int finalJobIndex = jobIndex;
-                jobs.add(() -> {
-                    SubEntityPropDataCollector subEntityPdc = new SubEntityPropDataCollector(expectedNumberOfClasses);
-                    subEntityPdc.setFeatures(typePredicate, encoder, nodeEncoder);
-                    subEntityPdc.job(finalJobIndex, part, entityDataMapContainer);
-                    return subEntityPdc;
-                });
-                jobIndex++;
-            }
-            
-            //execute jobs using invokeAll() method and collect results
-            try {
-                List<Future<SubEntityPropDataCollector>> subEntityPropDataCollectors = executor.invokeAll(jobs);
-                
-                StopWatch sw = new StopWatch();
-                sw.start();
-                int i = 0;
-                for (Future<SubEntityPropDataCollector> subEntityPdc : subEntityPropDataCollectors) {
-                    SubEntityPropDataCollector sEpDc = subEntityPdc.get();
-                    if (i == 0) {
-                        this.classToPropWithObjTypes = sEpDc.classToPropWithObjTypes;
-                        this.shapeTripletSupport = sEpDc.shapeTripletSupport;
-                        this.sampledPropCount = sEpDc.sampledPropCount;
-                    } else {
-                        mergeJobsOutput(sEpDc);
-                    }
-                    i++;
-                }
-                sw.stop();
-                Utils.logTime("cs.qse.endpoint.collectEntityPropData:MergingJobs", TimeUnit.MILLISECONDS.toSeconds(sw.getTime()), TimeUnit.MILLISECONDS.toMinutes(sw.getTime()));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
+                Integer subjID = entry.getKey();
+                EntityData entityData = entry.getValue();
+                collectEntityPropData(subjID, entityData);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        executor.shutdownNow();
         watch.stop();
-        Utils.logTime("cs.qse.endpoint.collectEntityPropData with threads: " + numberOfThreads + " ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("secondPass:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void mergeJobsOutput(SubEntityPropDataCollector sEpDc) {
-        // 1. Merging class to property with object type information
-        sEpDc.classToPropWithObjTypes.forEach((c, localPwOt) -> {
-            Map<Integer, Set<Integer>> globalPwOt = this.classToPropWithObjTypes.get(c);
-            if (globalPwOt == null) {
-                this.classToPropWithObjTypes.put(c, localPwOt);
-            } else {
-                localPwOt.forEach((p, localOt) -> {
-                    Set<Integer> globalOt = globalPwOt.get(p);
-                    if (globalOt == null) {
-                        globalPwOt.put(p, localOt);
-                    } else {
-                        globalPwOt.get(p).addAll(localOt);
-                    }
-                });
-                this.classToPropWithObjTypes.put(c, globalPwOt);
-            }
-        });
-        
-        // 2. Merging shape triplet support
-        sEpDc.shapeTripletSupport.forEach((tuple3, localSupp) -> {
-            SupportConfidence globalSupp = this.shapeTripletSupport.get(tuple3);
-            if (globalSupp == null) {
-                this.shapeTripletSupport.put(tuple3, localSupp);
-            } else {
-                this.shapeTripletSupport.put(tuple3, new SupportConfidence(globalSupp.getSupport() + localSupp.getSupport()));
-            }
-        });
-        
-        // 3. Merging count of sampled properties
-        sEpDc.sampledPropCount.forEach((p, localCount) -> {
-            Integer globalCount = this.sampledPropCount.get(p);
-            if (globalCount == null) {
-                this.sampledPropCount.put(p, localCount);
-            } else { //equivalent to this.sampledPropCount.containsKey(p)
-                this.sampledPropCount.put(p, globalCount + localCount);
-            }
-        });
-    }
-    
-    
-    public void writeSupportToFile() {
-        System.out.println("Started writeSupportToFile()");
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), false);
-            PrintWriter printWriter = new PrintWriter(fileWriter);
-            
-            for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
-                Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
-                Integer count = entry.getValue().getSupport();
-                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
-                        encoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
-                printWriter.println(log);
-            }
-            printWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void collectEntityPropData(Integer entityID, EntityData entityData) {
+        Set<String> entityTypes = new HashSet<>();
+        for (Integer entityTypeID : entityData.getClassTypes()) {
+            entityTypes.add(encoder.decode(entityTypeID));
         }
-        watch.stop();
-        Utils.logTime("writeSupportToFile(): ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        String entity = nodeEncoder.decode(entityID).getLabel();
+        String query = buildQuery(entity, entityTypes, typePredicate); // query to get ?p ?o of entity
+        
+        // ?p ?o are binding variables
+        for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
+            String prop = row.getValue("p").stringValue();
+            String propIri = "<" + prop + ">";
+            
+            if (!propIri.equals(typePredicate)) {
+                int propID = encoder.encode(prop);
+                
+                String obj = row.getValue("o").stringValue();
+                Node objNode = Utils.IriToNode(obj);
+                String objType = extractObjectType(obj); // find out if the object is literal or IRI
+                
+                Set<Integer> objTypesIDs = new HashSet<>(10);
+                Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
+                
+                // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                if (objType.equals("IRI")) {
+                    EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(objNode));
+                    if (currEntityData != null) {
+                        objTypesIDs = currEntityData.getClassTypes();
+                        for (Integer objTypeID : objTypesIDs) { // get classes of node2
+                            prop2objTypeTuples.add(new Tuple2<>(propID, objTypeID));
+                        }
+                        addEntityToPropertyConstraints(prop2objTypeTuples, entityID);
+                    } else {
+                        objTypesIDs.add(-1);
+                    }
+                    /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+                    int objID = encoder.encode(objType);
+                    objTypesIDs.add(objID);
+                    prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+                    addEntityToPropertyConstraints(prop2objTypeTuples, entityID);
+                }
+                
+                for (Integer entityTypeID : entityData.getClassTypes()) {
+                    Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityTypeID);
+                    if (propToObjTypes == null) {
+                        propToObjTypes = new HashMap<>();
+                        classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+                    }
+                    
+                    Set<Integer> classObjTypes = propToObjTypes.get(propID);
+                    if (classObjTypes == null) {
+                        classObjTypes = new HashSet<>();
+                        propToObjTypes.put(propID, classObjTypes);
+                    }
+                    classObjTypes.addAll(objTypesIDs);
+                    propToObjTypes.put(propID, classObjTypes);
+                    classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+                    
+                    //Compute Support
+                    // <entityTypeID, propID, objTypesIDs
+                    objTypesIDs.forEach(objTypeID -> {
+                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
+                        if (shapeTripletSupport.containsKey(tuple3)) {
+                            Integer support = shapeTripletSupport.get(tuple3).getSupport();
+                            support++;
+                            shapeTripletSupport.put(tuple3, new SupportConfidence(support));
+                        } else {
+                            shapeTripletSupport.put(tuple3, new SupportConfidence(1));
+                        }
+                    });
+                }
+                
+                //sampledPropCount.merge(propID, 1, Integer::sum);
+            }
+        }
     }
+    
+    //A utility method to add property constraints of each entity in the 2nd pass
+    private void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Integer subject) {
+        EntityData currentEntityData = entityDataMapContainer.get(subject);
+        if (currentEntityData == null) {
+            currentEntityData = new EntityData();
+        }
+        //Add Property Constraint and Property cardinality
+        for (Tuple2<Integer, Integer> tuple2 : prop2objTypeTuples) {
+            currentEntityData.addPropertyConstraint(tuple2._1, tuple2._2);
+            if (Main.extractMaxCardConstraints) {
+                currentEntityData.addPropertyCardinality(tuple2._1);
+            }
+        }
+        //Add entity data into the map
+        entityDataMapContainer.put(subject, currentEntityData);
+    }
+    
+ 
     
     protected void extractSHACLShapes(Boolean performPruning) {
         System.out.println("Started extractSHACLShapes()");
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorEndpoint se = new ShapesExtractorEndpoint(encoder, shapeTripletSupport, classEntityCount);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
@@ -288,5 +283,4 @@ public class ParallelEndpointSampling {
         watch.stop();
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
 }

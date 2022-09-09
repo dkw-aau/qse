@@ -76,7 +76,7 @@ public class Utils {
         String line = ConfigManager.getProperty("dataset_name") + "," + method + "," + seconds + "," + minutes + "," + secondsTotal + "," + minutesTotal + "," + Main.extractMaxCardConstraints + "," + Main.datasetPath;
         log(line);
         System.out.println("Time Elapsed " + method + " " + seconds + " sec , " + minutes + " min");
-        System.out.println("Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min");
+        System.out.println("***** Total Parsing Time " + secondsTotal + " sec , " + minutesTotal + " min *****");
     }
     
     public static void logSamplingStats(String samplingType, int samplingPercentage, int samplingMinThreshold, int samplingMaxThreshold, int entityDataMapContainerSize) {

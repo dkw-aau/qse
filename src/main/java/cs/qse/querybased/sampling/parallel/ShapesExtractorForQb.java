@@ -31,7 +31,7 @@ import java.util.*;
  * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
  * This uses concurrent encoder as compared to others (only difference)
  */
-public class ShapesExtractorEndpoint {
+public class ShapesExtractorForQb {
     Model model = null;
     ModelBuilder builder;
     ConcurrentEncoder encoder;
@@ -46,7 +46,7 @@ public class ShapesExtractorEndpoint {
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     Map<Integer, List<Double>> supportToRelativeSupport = new HashMap<>();
     
-    public ShapesExtractorEndpoint(ConcurrentEncoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+    public ShapesExtractorForQb(ConcurrentEncoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
