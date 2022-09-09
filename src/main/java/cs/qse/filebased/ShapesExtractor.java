@@ -1,9 +1,9 @@
-package cs.qse;
+package cs.qse.filebased;
 
 import cs.Main;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.common.ExperimentsUtil;
 import cs.utils.*;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;

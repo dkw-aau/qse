@@ -1,16 +1,13 @@
 package cs;
 
-import cs.qse.Parser;
-import cs.qse.endpoint.sampling.ParallelEndpointSampling;
-import cs.qse.sampling.ReservoirSamplingParser;
-import cs.qse.endpoint.EndpointParser;
+import cs.qse.filebased.Parser;
+import cs.qse.querybased.sampling.parallel.ParallelEndpointSampling;
+import cs.qse.filebased.sampling.ReservoirSamplingParser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.PrecisionRecallComputer;
 import cs.utils.Utils;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import cs.utils.graphdb.ExampleQueryExecutor;
 import org.slf4j.LoggerFactory;
 
 public class Main {

@@ -1,4 +1,4 @@
-package cs.qse.experiments;
+package cs.qse.common;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;

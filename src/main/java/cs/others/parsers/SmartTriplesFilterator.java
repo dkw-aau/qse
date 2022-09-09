@@ -4,7 +4,7 @@ import cs.others.parsers.mg.MembershipGraph;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import org.apache.commons.lang3.time.StopWatch;

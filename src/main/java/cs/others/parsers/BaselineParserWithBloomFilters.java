@@ -1,6 +1,6 @@
 package cs.others.parsers;
 
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.Constants;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;

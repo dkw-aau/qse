@@ -1,4 +1,4 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.common;
 
 import cs.utils.FilesUtil;
 import cs.utils.Utils;

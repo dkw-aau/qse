@@ -1,6 +1,5 @@
-package cs.utils.encoders;
+package cs.qse.common.encoders;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

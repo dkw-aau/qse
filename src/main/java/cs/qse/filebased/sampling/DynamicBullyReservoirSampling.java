@@ -1,9 +1,9 @@
-package cs.qse.sampling;
+package cs.qse.filebased.sampling;
 
-import cs.qse.EntityData;
+import cs.qse.common.EntityData;
 import cs.utils.Utils;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.NodeEncoder;
 import org.semanticweb.yars.nx.Node;
 
 import java.util.*;

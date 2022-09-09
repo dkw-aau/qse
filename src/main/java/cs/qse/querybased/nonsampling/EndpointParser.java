@@ -1,4 +1,4 @@
-package cs.qse.endpoint.nonsampling;
+package cs.qse.querybased.nonsampling;
 
 import cs.utils.*;
 import cs.qse.common.encoders.Encoder;

@@ -1,4 +1,4 @@
-package cs.qse.endpoint.sampling.parallel;
+package cs.qse.querybased.sampling.parallel;
 
 import com.google.common.collect.Lists;
 import cs.Main;

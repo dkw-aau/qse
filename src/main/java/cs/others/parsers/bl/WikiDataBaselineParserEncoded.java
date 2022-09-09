@@ -1,9 +1,9 @@
 package cs.others.parsers.bl;
 
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;

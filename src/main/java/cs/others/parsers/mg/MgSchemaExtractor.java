@@ -1,9 +1,9 @@
 package cs.others.parsers.mg;
 
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.Utils;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
@@ -99,13 +99,23 @@ public class MgSchemaExtractor {
         this.mg = new MembershipGraph(encoder, ctiBf, classInstanceCount);
         mg.createMembershipSets(instanceToClass);
         mg.createMembershipGraph();
+        System.out.println("Before");
+        System.out.println("Vertices: " + mg.getMembershipGraph().vertexSet().size());
+        System.out.println("Edges: " + mg.getMembershipGraph().edgeSet().size());
+        
+        
         mg.membershipGraphCompression(Integer.parseInt(ConfigManager.getProperty("mg_threshold")));
+    
+        System.out.println("Vertices: " + mg.getMembershipGraph().vertexSet().size());
+        System.out.println("Edges: " + mg.getMembershipGraph().edgeSet().size());
+        
         //mg.exportGraphRelatedData();
         //mg.importGraphRelatedData();
         this.membershipGraph = mg.getMembershipGraph();
         this.membershipGraphRootNode = mg.getMembershipGraphRootNode();
         this.ctiBf = mg.getCtiBf();
-        
+    
+       
         watch.stop();
         System.out.println("Time Elapsed MembershipGraphConstruction: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
@@ -260,8 +270,8 @@ public class MgSchemaExtractor {
     
     private void runParser() throws IOException {
         firstPass();
-        measureMemoryUsage();
-//        membershipGraphConstruction();
+        //measureMemoryUsage();
+        membershipGraphConstruction();
 //        secondPass();
 //        populateShapes();
 //        shacler.writeModelToFile();

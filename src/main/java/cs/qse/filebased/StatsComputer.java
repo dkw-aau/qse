@@ -1,9 +1,9 @@
-package cs.qse;
+package cs.qse.filebased;
 
 import cs.Main;
+import cs.qse.common.EntityData;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
-import cs.utils.Utils;
 import org.semanticweb.yars.nx.Node;
 
 import java.util.*;

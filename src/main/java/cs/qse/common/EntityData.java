@@ -1,4 +1,4 @@
-package cs.qse.filebased;
+package cs.qse.common;
 
 import cs.utils.Tuple2;
 
@@ -9,7 +9,7 @@ import java.util.*;
  */
 public class EntityData {
     Set<Integer> classTypes; // O(T) number of types of this node
-    Map<Integer, PropertyData> propertyConstraintsMap; // Map from PropertyID -> PropertyData which consists of property's object types and count
+    public Map<Integer, PropertyData> propertyConstraintsMap; // Map from PropertyID -> PropertyData which consists of property's object types and count
     
     public EntityData() {
         this.classTypes = new HashSet<>();
@@ -58,6 +58,6 @@ public class EntityData {
      */
     public static class PropertyData {
         Set<Integer> objTypes = new HashSet<>(5); // these are object types
-        int count = 0; // number of times I've seen this property for this node
+        public int count = 0; // number of times I've seen this property for this node
     }
 }

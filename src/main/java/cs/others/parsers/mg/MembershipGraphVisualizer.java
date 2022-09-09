@@ -1,7 +1,7 @@
 package cs.others.parsers.mg;
 
 import cs.others.extras.Neo4jGraph;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 

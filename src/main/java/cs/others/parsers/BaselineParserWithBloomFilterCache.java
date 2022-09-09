@@ -2,7 +2,7 @@ package cs.others.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.LRUCache;
 import me.tongfei.progressbar.ProgressBar;

@@ -1,4 +1,4 @@
-package cs.qse;
+package cs.qse.filebased;
 
 /**
  * This class is called Support Confidence (SuppConf) Computer Class, used to get or set the support/confidence of shape

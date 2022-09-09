@@ -2,7 +2,7 @@ package cs.others.parsers;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;

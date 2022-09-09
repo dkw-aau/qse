@@ -2,7 +2,7 @@ package cs.others.parsers.mg;
 
 
 import cs.utils.*;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;

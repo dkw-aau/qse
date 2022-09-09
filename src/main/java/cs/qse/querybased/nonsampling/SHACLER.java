@@ -1,4 +1,4 @@
-package cs.qse.endpoint.nonsampling;
+package cs.qse.querybased.nonsampling;
 
 import cs.Main;
 import cs.qse.filebased.SupportConfidence;

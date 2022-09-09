@@ -1,14 +1,15 @@
-package cs.qse.sampling;
+package cs.qse.filebased.sampling;
 
 import cs.Main;
-import cs.qse.*;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.common.EntityData;
+import cs.qse.common.ExperimentsUtil;
+import cs.qse.filebased.*;
 import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.utils.encoders.Encoder;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -267,7 +268,7 @@ public class ReservoirSamplingParser extends Parser {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime("secondPass:cs.qse.sampling.ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("secondPass:cs.qse.filebased.sampling.ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     //A utility method to add property constraints of each entity in the 2nd pass
@@ -299,7 +300,7 @@ public class ReservoirSamplingParser extends Parser {
         statsComputer.setSamplingOn(true);
         statsComputer.computeSupportConfidenceWithEncodedEntities(entityDataMapContainer, classEntityCount);
         watch.stop();
-        Utils.logTime("computeSupportConfidence:cs.qse.sampling.ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("computeSupportConfidence:cs.qse.filebased.sampling.ReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         
     }
     
@@ -307,7 +308,7 @@ public class ReservoirSamplingParser extends Parser {
     protected void extractSHACLShapes(Boolean performPruning) {
         StopWatch watch = new StopWatch();
         watch.start();
-        String methodName = "extractSHACLShapes:cs.qse.sampling.ReservoirSampling: No Pruning";
+        String methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling: No Pruning";
         ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
@@ -323,7 +324,7 @@ public class ReservoirSamplingParser extends Parser {
                     se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
                 });
             });
-            methodName = "extractSHACLShapes:cs.qse.sampling.ReservoirSampling";
+            methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling";
             watchForPruning.stop();
             Utils.logTime(methodName+"-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }

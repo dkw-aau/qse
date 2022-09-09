@@ -1,6 +1,6 @@
 //package cs.others.parsers;
 //
-//import cs.qse.endpoint.SHACLER;
+//import cs.qse.endpoint.nonsampling.SHACLER;
 //import cs.utils.ConfigManager;
 //import org.apache.commons.lang3.time.StopWatch;
 //import org.eclipse.rdf4j.model.vocabulary.RDF;

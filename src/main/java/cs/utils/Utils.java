@@ -1,7 +1,7 @@
 package cs.utils;
 
 import cs.Main;
-import cs.qse.sampling.BinaryNode;
+import cs.qse.filebased.sampling.BinaryNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;

@@ -1,4 +1,4 @@
-package cs.qse.endpoint.sampling.parallel;
+package cs.qse.querybased.sampling.parallel;
 
 import cs.Main;
 import cs.qse.common.EntityData;

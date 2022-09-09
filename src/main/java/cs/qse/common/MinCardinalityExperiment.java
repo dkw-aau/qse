@@ -1,13 +1,13 @@
 
-package cs.qse.experiments;
+package cs.qse.common;
 
 import cs.Main;
-import cs.qse.SupportConfidence;
+import cs.qse.filebased.SupportConfidence;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.Tuple3;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;

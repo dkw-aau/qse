@@ -1,13 +1,14 @@
-package cs.qse;
+package cs.qse.filebased;
 
 import cs.Main;
-import cs.qse.experiments.ExperimentsUtil;
-import cs.qse.experiments.MinCardinalityExperiment;
+import cs.qse.common.EntityData;
+import cs.qse.common.ExperimentsUtil;
+import cs.qse.common.MinCardinalityExperiment;
 import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.utils.encoders.Encoder;
+import cs.qse.common.encoders.Encoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;

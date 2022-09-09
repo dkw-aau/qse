@@ -1,9 +1,9 @@
 package cs.others.parsers.mg;
 
-import cs.qse.endpoint.SHACLER;
+import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.utils.encoders.NodeEncoder;
+import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.Utils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.cache2k.Cache;

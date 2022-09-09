@@ -1,4 +1,4 @@
-package cs.qse.endpoint.sampling;
+package cs.qse.querybased.sampling;
 
 import cs.Main;
 import cs.qse.common.EntityData;

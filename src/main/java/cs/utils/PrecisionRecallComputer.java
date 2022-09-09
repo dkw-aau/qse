@@ -2,7 +2,7 @@ package cs.utils;
 
 import com.google.common.collect.Sets;
 import cs.Main;
-import cs.qse.experiments.ExperimentsUtil;
+import cs.qse.common.ExperimentsUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.Model;

@@ -1,4 +1,4 @@
-package cs.qse.sampling;
+package cs.qse.filebased.sampling;
 
 public class BinaryNode {
     public int id;

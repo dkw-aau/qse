@@ -1,5 +1,6 @@
-package cs.qse;
+package cs.qse.filebased;
 
+import cs.qse.common.EntityData;
 import cs.utils.Tuple2;
 import cs.utils.Utils;
 import org.apache.commons.lang3.time.StopWatch;
