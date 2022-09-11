@@ -1,0 +1,12 @@
+Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath
+WikiData,firstPass:dynamicBullyReservoirSampling,347,5,347,5,false,/app/data/wikidata-shexer-clean.nt
+WikiData,secondPass:cs.qse.filebased.sampling.ReservoirSampling,338,5,685,10,false,/app/data/wikidata-shexer-clean.nt
+WikiData,computeSupportConfidence:cs.qse.filebased.sampling.ReservoirSampling,2,0,687,10,false,/app/data/wikidata-shexer-clean.nt
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling-Time.For.Pruning.Only,99,1,786,11,false,/app/data/wikidata-shexer-clean.nt
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling,138,2,924,13,false,/app/data/wikidata-shexer-clean.nt
+Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath
+WikiData,firstPass:dynamicBullyReservoirSampling,356,5,356,5,false,/app/data/wikidata-shexer-clean.nt
+WikiData,secondPass:cs.qse.filebased.sampling.ReservoirSampling,349,5,705,10,false,/app/data/wikidata-shexer-clean.nt
+WikiData,computeSupportConfidence:cs.qse.filebased.sampling.ReservoirSampling,2,0,707,10,false,/app/data/wikidata-shexer-clean.nt
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling-Time.For.Pruning.Only,97,1,804,11,false,/app/data/wikidata-shexer-clean.nt
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling,135,2,939,13,false,/app/data/wikidata-shexer-clean.nt

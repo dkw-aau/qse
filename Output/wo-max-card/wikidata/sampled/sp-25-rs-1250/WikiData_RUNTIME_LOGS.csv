@@ -1,0 +1,6 @@
+Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath
+WikiData,firstPass:dynamicBullyReservoirSampling,2306,38,2306,38,false,/app/data/WikiData_CLEAN_DATASET_FILE.n3
+WikiData,secondPass:cs.qse.filebased.sampling.ReservoirSampling,2056,34,4362,72,false,/app/data/WikiData_CLEAN_DATASET_FILE.n3
+WikiData,computeSupportConfidence:cs.qse.filebased.sampling.ReservoirSampling,10,0,4372,72,false,/app/data/WikiData_CLEAN_DATASET_FILE.n3
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling-Time.For.Pruning.Only,624,10,4996,82,false,/app/data/WikiData_CLEAN_DATASET_FILE.n3
+WikiData,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling,911,15,5907,97,false,/app/data/WikiData_CLEAN_DATASET_FILE.n3

@@ -39,5 +39,3 @@ done
 status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
-
-

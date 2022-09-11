@@ -1,0 +1,6 @@
+Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath
+YAGO,firstPass:dynamicBullyReservoirSampling,374,6,374,6,false,/app/data/yago.n3
+YAGO,secondPass:cs.qse.filebased.sampling.ReservoirSampling,365,6,739,12,false,/app/data/yago.n3
+YAGO,computeSupportConfidence:cs.qse.filebased.sampling.ReservoirSampling,3,0,742,12,false,/app/data/yago.n3
+YAGO,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling-Time.For.Pruning.Only,64,1,806,13,false,/app/data/yago.n3
+YAGO,extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling,80,1,886,14,false,/app/data/yago.n3
