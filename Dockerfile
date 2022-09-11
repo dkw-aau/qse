@@ -1,7 +1,7 @@
-FROM gradle:7.5.1-jdk11-alpine AS builder
+FROM gradle:7.5-jdk17 AS builder
 RUN mkdir -p /app/shacl
 COPY . /app/shacl
-WORKDIR /app/shacl
+WORKDIR /app/shacljava
 RUN gradle build
 RUN gradle shadowJar
 
