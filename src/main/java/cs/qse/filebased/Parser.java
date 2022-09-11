@@ -66,8 +66,8 @@ public class Parser {
         firstPass();
         secondPass();
         computeSupportConfidence();
-        extractSHACLShapes(true);
-        assignCardinalityConstraints();
+        extractSHACLShapes(false);
+        //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
@@ -112,7 +112,7 @@ public class Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Files.lines(Path.of(rdfFilePath)).filter(line -> !line.contains(typePredicate)).forEach(line -> {
+            Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     //Declaring required sets
                     Set<Integer> objTypes = new HashSet<>(10);
@@ -238,7 +238,7 @@ public class Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
@@ -255,7 +255,7 @@ public class Parser {
             });
             methodName = "extractSHACLShapes";
             watchForPruning.stop();
-            Utils.logTime(methodName+"-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
+            Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }
         
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);

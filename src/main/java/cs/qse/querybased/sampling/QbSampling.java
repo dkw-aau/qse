@@ -5,7 +5,7 @@ import cs.qse.common.EntityData;
 import cs.qse.filebased.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
-import cs.qse.filebased.sampling.DynamicBullyReservoirSampling;
+import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;
 import cs.utils.*;
 import cs.qse.common.encoders.Encoder;
 import cs.qse.common.encoders.NodeEncoder;
@@ -98,7 +98,7 @@ public class QbSampling {
     }
     
     private void dynamicNeighborBasedReservoirSampling() {
-        System.out.println("invoked:dynamicBullyReservoirSampling()");
+        System.out.println("invoked:dynamicNeighborBasedReservoirSampling()");
         StopWatch watch = new StopWatch();
         watch.start();
         String queryToGetWikiDataEntities = "PREFIX onto: <http://www.ontotext.com/>  CONSTRUCT from onto:explicit WHERE { ?s " + typePredicate + " ?o .} ";
@@ -108,7 +108,7 @@ public class QbSampling {
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
-        DynamicBullyReservoirSampling drs = new DynamicBullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
+        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
         try {
             graphDBUtils.runConstructQuery(queryToGetWikiDataEntities).forEach(line -> {
                 try {
@@ -136,8 +136,8 @@ public class QbSampling {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime("firstPass:dynamicBullyReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        Utils.logSamplingStats("dynamicBullyReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
+        Utils.logTime("firstPass:dynamicNeighborBasedReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logSamplingStats("dynamicNeighborBasedReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
     }
     
     private void collectEntityPropData() {
@@ -259,7 +259,7 @@ public class QbSampling {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {

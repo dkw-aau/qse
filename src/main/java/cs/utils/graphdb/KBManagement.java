@@ -17,8 +17,8 @@ public class KBManagement {
      */
     public Repository initGraphDBRepository() {
         try {
-            RepositoryManager repositoryManager = new RemoteRepositoryManager(ConfigManager.getProperty("graphDB_URL"));
-            repository = repositoryManager.getRepository(ConfigManager.getProperty("graphDB_REPOSITORY"));
+            RepositoryManager repositoryManager = new RemoteRepositoryManager(ConfigManager.getProperty("graphdb_url"));
+            repository = repositoryManager.getRepository(ConfigManager.getProperty("graphdb_repository"));
             repository.init();
             
         } catch (Exception e) {

@@ -70,8 +70,8 @@ public class ReservoirSamplingParser extends Parser {
     
     private void runParser() {
         //standardReservoirSampling();
-        //bullyReservoirSampling();
-        dynamicBullyReservoirSampling();
+        //neighborBasedReservoirSampling();
+        dynamicNbReservoirSampling();
         //prepareStatistics();
         //printSampledEntitiesLogs();
         secondPass();
@@ -116,12 +116,12 @@ public class ReservoirSamplingParser extends Parser {
         Utils.logTime("firstPass:StandardReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void bullyReservoirSampling() {
+    private void neighborBasedReservoirSampling() {
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
         AtomicInteger lineCounter = new AtomicInteger();
-        BullyReservoirSampling brs = new BullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, encoder);
+        NeighborBasedReservoirSampling brs = new NeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, encoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
@@ -148,11 +148,11 @@ public class ReservoirSamplingParser extends Parser {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime("firstPass:bullyReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("firstPass:neighborBasedReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    private void dynamicBullyReservoirSampling() {
-        System.out.println("invoked:dynamicBullyReservoirSampling()");
+    private void dynamicNbReservoirSampling() {
+        System.out.println("invoked:dynamicNbReservoirSampling()");
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -160,7 +160,7 @@ public class ReservoirSamplingParser extends Parser {
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
-        DynamicBullyReservoirSampling drs = new DynamicBullyReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
+        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
@@ -190,8 +190,8 @@ public class ReservoirSamplingParser extends Parser {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime("firstPass:dynamicBullyReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        Utils.logSamplingStats("dynamicBullyReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
+        Utils.logTime("firstPass:dynamicNbReservoirSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logSamplingStats("dynamicNbReservoirSampling", samplingPercentage, minEntityThreshold, maxEntityThreshold, entityDataMapContainer.size());
     }
     
     private void prepareStatistics() {
@@ -309,7 +309,7 @@ public class ReservoirSamplingParser extends Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling: No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         se.setPropCount(propCount);

@@ -2,12 +2,16 @@ package cs.qse.filebased;
 
 import cs.Main;
 import cs.qse.common.ExperimentsUtil;
+import cs.qse.common.TurtlePrettyFormatter;
 import cs.utils.*;
 import cs.qse.common.encoders.Encoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
+import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -25,6 +29,8 @@ import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static org.eclipse.rdf4j.model.util.Values.bnode;
 
 /**
  * This class is used to extract/construct shapes (default and pruned) using all the information/metadata collected in Parser
@@ -44,11 +50,14 @@ public class ShapesExtractor {
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     Map<Integer, List<Double>> supportToRelativeSupport = new HashMap<>();
     
-    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+    String typePredicate;
+    
+    public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount, String typePredicate) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
         this.classInstanceCount = classInstanceCount;
+        this.typePredicate = typePredicate;
         builder.setNamespace("shape", Constants.SHAPES_NAMESPACE);
     }
     
@@ -105,7 +114,7 @@ public class ShapesExtractor {
                 b.subject(nodeShape)
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
-                        .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                         .add(SHACL.CLOSED, false);
                 
                 if (propToObjectType != null) {
@@ -155,7 +164,7 @@ public class ShapesExtractor {
         b.subject(nodeShape)
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
                 .add(SHACL.TARGET_CLASS, subj)
-                .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                 .add(SHACL.CLOSED, false);
         
         if (propToObjectType != null) {
@@ -167,51 +176,119 @@ public class ShapesExtractor {
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             IRI property = factory.createIRI(encoder.decode(prop));
-            IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
+            String localName = property.getLocalName();
+            
+            boolean isInstantTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
+            if (isInstantTypeProperty) {
+                localName = "instantType";
+            }
+            
+            IRI propShape = factory.createIRI("sh:" + localName + subj.getLocalName() + "ShapeProperty");
             b.subject(nodeShape)
                     .add(SHACL.PROPERTY, propShape);
             b.subject(propShape)
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
             
+            if (isInstantTypeProperty) {
+                Resource head = bnode();
+                List<Resource> members = Arrays.asList(new Resource[]{subj});
+                Model tempModel = RDFCollections.asRDF(members, head, new LinkedHashModel());
+                tempModel.add(propShape, SHACL.IN, head);
+                b.build().addAll(tempModel);
+            }
             
-            propObjectTypes.forEach(encodedObjectType -> {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
-                if (shapeTripletSupport.containsKey(tuple3)) {
-                    if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
-                        b.subject(propShape).add(SHACL.MIN_COUNT, 1);
-                    }
-                    if (Main.extractMaxCardConstraints) {
-                        if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
-                            b.subject(propShape).add(SHACL.MAX_COUNT, 1);
+            int numberOfObjectTypes = propObjectTypes.size();
+            
+            if (numberOfObjectTypes == 1) {
+                propObjectTypes.forEach(encodedObjectType -> {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                    if (shapeTripletSupport.containsKey(tuple3)) {
+                        if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                            b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                        }
+                        if (Main.extractMaxCardConstraints) {
+                            if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                                b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            }
                         }
                     }
-                }
-                String objectType = encoder.decode(encodedObjectType);
-                if (objectType != null) {
-                    if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
-                        if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
-                        IRI objectTypeIri = factory.createIRI(objectType);
-                        b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
-                        b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
-                    } else {
-                        //objectType = objectType.replace("<", "").replace(">", "");
-                        if (Utils.isValidIRI(objectType)) {
+                    String objectType = encoder.decode(encodedObjectType);
+                    if (objectType != null) {
+                        if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
+                            if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
-                            b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
+                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
                         } else {
-                            //IRI objectTypeIri = factory.createIRI(objectType);
-                            //b.subject(propShape).add(SHACL.CLASS, objectType);
-                            System.out.println("INVALID Object Type IRI: " + objectType);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            //objectType = objectType.replace("<", "").replace(">", "");
+                            if (Utils.isValidIRI(objectType)) {
+                                IRI objectTypeIri = factory.createIRI(objectType);
+                                b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
+                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            } else {
+                                //IRI objectTypeIri = factory.createIRI(objectType);
+                                //b.subject(propShape).add(SHACL.CLASS, objectType);
+                                System.out.println("INVALID Object Type IRI: " + objectType);
+                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            }
+                        }
+                    } else {
+                        // in case the type is null, we set it default as string
+                        b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                    }
+                });
+            }
+            if (numberOfObjectTypes > 1) {
+                List<Resource> members = new ArrayList<>();
+                Resource headMember = bnode();
+                ModelBuilder localBuilder = new ModelBuilder();
+                
+                for (Integer encodedObjectType : propObjectTypes) {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                    String objectType = encoder.decode(encodedObjectType);
+                    Resource currentMember = bnode();
+                    //Cardinality Constraints
+                    if (shapeTripletSupport.containsKey(tuple3)) {
+                        if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                            b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                        }
+                        if (Main.extractMaxCardConstraints) {
+                            if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
+                                b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            }
                         }
                     }
-                } else {
-                    // in case the type is null, we set it default as string
-                    b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                    
+                    if (objectType != null) {
+                        if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
+                            if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
+                            IRI objectTypeIri = factory.createIRI(objectType);
+                            localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
+                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            
+                        } else {
+                            if (Utils.isValidIRI(objectType)) {
+                                IRI objectTypeIri = factory.createIRI(objectType);
+                                localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                            } else {
+                                System.out.println("INVALID Object Type IRI: " + objectType);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                            }
+                        }
+                    } else {
+                        // in case the type is null, we set it default as string
+                        //b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
+                        localBuilder.subject(currentMember).add(SHACL.DATATYPE, XSD.STRING);
+                    }
+                    members.add(currentMember);
                 }
-            });
+                Model localModel = RDFCollections.asRDF(members, headMember, new LinkedHashModel());
+                localModel.add(propShape, SHACL.OR, headMember);
+                localModel.addAll(localBuilder.build());
+                b.build().addAll(localModel);
+            }
         });
     }
     
@@ -221,7 +298,7 @@ public class ShapesExtractor {
             Integer prop = entry.getKey();
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
-    
+            
             //compute Relative Support if sampling is on
             double relativeSupport = 0;
             if (isSamplingOn) {
@@ -324,9 +401,12 @@ public class ShapesExtractor {
         Path path = Paths.get(Main.datasetPath);
         String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
+        String outputPath = ConfigManager.getProperty("output_file_path") + fileName;
+        String outputPathPretty = ConfigManager.getProperty("output_file_path") + "Pretty_" + fileName;
         try {
-            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            FileWriter fileWriter = new FileWriter(outputPath, false);
             Rio.write(model, fileWriter, RDFFormat.TURTLE);
+            new TurtlePrettyFormatter(outputPath).format(outputPathPretty);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -370,5 +450,9 @@ public class ShapesExtractor {
     
     public void setSampledPropCount(Map<Integer, Integer> sampledPropCount) {
         this.sampledPropCount = propCount;
+    }
+    
+    public String remAngBrackets(String typePredicate) {
+        return typePredicate.replace("<", "").replace(">", "");
     }
 }

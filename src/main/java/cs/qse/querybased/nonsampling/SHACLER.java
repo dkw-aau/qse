@@ -69,7 +69,7 @@ public class SHACLER {
         b.subject(nodeShape)
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
                 .add(SHACL.TARGET_CLASS, subj)
-                .add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                 .add(SHACL.CLOSED, false);
         
         if (propToType != null) {

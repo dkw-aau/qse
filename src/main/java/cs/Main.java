@@ -31,10 +31,9 @@ public class Main {
         numberOfClasses = Integer.parseInt(paramVal("expected_number_classes")); // expected or estimated numberOfClasses
         numberOfInstances = Integer.parseInt(paramVal("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
         extractMaxCardConstraints = isActivated("max_cardinality");
-        isWikiData = isActivated("isWikiData");
-        entitySamplingThreshold = Integer.parseInt(paramVal("entitySamplingThreshold"));
-        entitySamplingTargetPercentage = Integer.parseInt(paramVal("entitySamplingTargetPercentage"));
-        entitySamplingThreshold = Integer.parseInt(paramVal("entitySamplingThreshold"));
+        isWikiData = isActivated("is_wikidata");
+        entitySamplingThreshold = Integer.parseInt(paramVal("entity_sampling_threshold"));
+        entitySamplingTargetPercentage = Integer.parseInt(paramVal("entity_sampling_target_percentage"));
         
         execute();
     }
