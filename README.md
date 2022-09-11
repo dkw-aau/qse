@@ -1,119 +1,98 @@
-# Quality Shapes Extractor
+# Quality Shapes Extraction (QSE)
 
-**This repository contains the code for the following paper under submission in WWW-2022:**
-> **Extracting Validating Shapes from very large Knowledge Graphs with Quality Guarantees**
+This repository contains the source code, resources, and instructions to reproduce the experiments performed for the following research paper under submission in VLDB - July 2022:
+> **Extraction of Validating Shapes from very large Knowledge Graphs [Scalable Data Science]**
 
+**The extended version of the paper is available [here](https://github.com/Kashif-Rabbani/shacl/blob/main/qse-extended.pdf).**
 
-In this paper, we propose a **Quality Shapes Extraction Approach (QSE)** to extract validating shapes from very large
-RDF graphs with quality guarantees. QSE is a support-based shapes-extraction approach which supports shapes extraction
-from knowledge graphs available as datafiles or in a triplestore as an endpoint denoted as **QSE-File** and **QSE-Endpoint**.
+-------
 
+Please follow these steps to get the code and data to reproduce the results:
 
-## Reproducibility Instructions
-
-The following instructions are for reproducing the experiments we presented in our paper. To reproduce and extend the experiments you should clone the branch `master` on the Github repository as follows:
-
+### 1. Getting the code
+Clone the GitHub repository using the following url.
 ```
 git clone https://github.com/Kashif-Rabbani/shacl.git
 ```
-The repository contains all code, and instructions. Dataset should be downloaded separately as explained below.
 
+### 2. Getting the data
+We have used WikiData, DBpedia, YAGO-4, and LUBM datasets. Details on how to download these datasets are given below:
 
-## Requirements
-The experiments run on a _single machine_. To reproduce the experiments the suggested setup is:
-- **Software:**
-   - A GNU/Linux distribution (with git, bash, make, and wget)
-   - Java version 15.0.2.fx-zulu
-
-- **Hardware used in the experiments (and minimum required):**
-   - RAM: 256 GB (minimum 16GB)
-   - CPU: 16 cores (minimum 1)
-   - Disk space: ~100 GB free
-
-
-## Getting the data
-We have used DBpedia, YAGO-4, and LUBM datasets. Details on how we downloaded are given below:
-
-1. **DBPedia:** We used  [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/download-dbpedia.sh) to download all the dbpedia files listed [here](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/dbpedia-files.txt).
+1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/dkw/qse/blob/main/scripts/dbpedia/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
+4. **WikiData (Wdt15):** We downloaded a WikiData dump from 2015 form [this](https://archive.org/details/wikidata-json-20150518) link.
+5. **WikiData (Wdt21):** We downloaded the [truthy dump](https://dumps.wikimedia.org/wikidatawiki/entities/) of WikiData (2021) and then used our [wikidata python script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/wikidata/filter_WikiData.py) to remove labels, descriptions, and non-English strings.
 
-
-We provide a copy of all our datasets in a [single archive](http://130.226.98.152/www_datasets/). You can download these datasets in `data` folder, and check the size and number of lines (triples) with the following commands:
-
-```
- cd data 
- du -sh yago.n3 or dbpedia.n3 or yago.n3
- wc -l yago.n3 or dbpedia.n3 or yago.n3
-```
-## Software Setup and Experiments (with Docker)
-
-### With Script:
-We have prepared shell scripts in the [scripts](https://github.com/Kashif-Rabbani/shacl/tree/main/scripts) directory to smoothly run the experiments.
-Assuming you are in the project's directory, and docker is installed in your machine, run the following commands:
-
-```
- cd scripts
- chmod +rwx run.sh
- ./run.sh
-```
-Note: You will have to update the configuration files for each dataset in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory, i.e., `yagoConfig.properties`, `dbpediaConfig.properties`, and `dbpediaConfig.properties` to set the correct paths.
-
-### Without Script:
-In case you want to build and run docker for each dataset individually, then follow these guidelines:
-
-#### Build Docker 
-
-Go inside the project directory and execute the following command to build the docker
-
-```
-docker build . -t shacl:v1
-```
-
-#### Run the container
-Running the build image as a container to run QSE approach for LUBM dataset using `lubmConfig.properties`. 
-You can use other config files such as `yagoConfig.properties` or `dbpediaConfig.properties` for YAGO-4 and DBpedia datasets.
-```
-docker run -d --name shacl \
-    -m 20GB \
-    -e "JAVA_TOOL_OPTIONS=-Xms16g -Xmx16g" \
-    --mount type=bind,source=/srv/data/home/data/,target=/app/data \ 
-    --mount type=bind,source=/srv/data/home/git/shacl/,target=/app/local \ 
-    shacl:v1 /app/local/lubmConfig.properties
-```
-
-`-m` limits the container memory.  <br /> 
-`JAVA_TOOL_OPTIONS` specifies the min (`Xms`) and max (`Xmx`) memory values for JVM memory allocation pool. <br />
-`-e` sets environment variables. <br />
-`-d` runs container in background and prints container ID. <br />
-`--name`  assigns a name to the container. <br />
-`--mount` attaches a filesystem mount to the container. <br />
-
-#### Get inside the container
-```
-sudo docker exec -it shacl /bin/sh
-```
-
-#### Log Output
-```
-docker logs --follow shacl
-```
-
-#### See Memory Utilization by Docker Container
-```
-docker stats
-```
+We provide a copy of some of these  datasets in a [single archive](http://130.226.98.152/www_datasets/).
+You should download these datasets in `data` directory. You can check the size and number of lines (triples) with the commands:
+``` cd data; du -sh yago.n3; wc -l yago.n3 ```, etc.
 
 
 
-## Software Setup and Experiments (without Docker)
+### 3. Running the experiments (with Docker)
+We used Docker and shell scripts to build and run the code on different datasets. We allow users to specify the configuration parameters in the config files depending on the dataset and user's requirement.
 
-1. Install Java
-   Follow [these](https://sdkman.io/install) steps to install sdkman and execute the following commands to install the specified version of Java.
+
+####  3.1. Requirements
+The experiments run on a _single machine_. To reproduce the experiments the software used are *a GNU/Linux distribution (with git, bash, make, and wget)*, Docker,  and Java  *version 15.0.2.fx-zulu*
+having a machine with 256 GB (minimum required 16GB) and CPU with 16 cores (minimum required 1 core).
+
+We have prepared shell scripts and configuration files for each dataset to make the process of running experiments as much easy as possible.
+
+#### 3.2. Configuration Parameters
+Please update the configuration file for each dataset available in the [config](https://github.com/dkw/qse/tree/main/config) directory, i.e., `dbpediaConfig`, `yagoConfig`, `lubmConfig`, `wdt15Config`, and `wdt21Config` to set the correct paths for your machine.
+You have to choose from one of these options to either extract shapes using QSE-Exact (file or query-based) or QSE-Approximate.
+
+| Parameter             | Description                                                                       | Options           |
+|-----------------------|-----------------------------------------------------------------------------------|-------------------|
+| qse_exact_file        | set the value to extract shapes from a file using QSE-Exact                       | `true` or `false` |
+| qse_exact_query_based | set the value to extract shapes from an endpoint using QSE-Exact                  | `true` or `false` |
+| qse_approximate_file  | set the value to extract shapes from a file using QSE-Approximate                 | `true` or `false` |
+
+
+Depending on the approach you have chosen from one of the above, you have to set the value for the following parameters:
+
+| Parameter                         | Description                                                                                                                      | Options                       |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
+| dataset_path                      | set the path of the datasets directory                                                                                           | `qse/data/`                   |
+| resources_path                    | set the path of the resources directory                                                                                          | `qse/src/main/resources`      |
+| output_file_path                  | set the path of the output directory                                                                                             | `qse/output/`                 |
+| max_cardinality                   | set the value to enable extraction of sh:maxCount constraints for property shapes                                                | `true` or `false`             |
+| graphdb_url                       | set the path of graphdb's endpoint url (when qse_exact_query_based is set as `true`)                                             | `http://172.0.0.0:7200`       |
+| graphdb_repository                | set the name of the graphdb's repository                                                                                         | `repository`                  |
+| entity_sampling_threshold         | set the entity sampling threshold (maximum size of reservoir) for qse_approximate                                                | default `500`                 |
+| entity_sampling_target_percentage | set the entity sampling percentage for qse_approximate                                                                           | default `75`                  |
+| default_directory                 | set the directory where output of qse_exact is stored to compute precision and recall in comparison to output of qse_approximate | `qse/output/dbpedia/default/` |
+| is_wikidata                       | set if the dataset is WikiData or any of its version                                                                             | `true` or  `false`            |
+
+
+
+
+
+#### 3.3. Shell Scripts
+Assuming that you are in the project's directory, you have updated the configuration file(s), and docker is installed on your machine, move into [scripts](https://github.com/Kashif-Rabbani/shacl/tree/main/scripts) directory using the command ``` cd scripts ``` and then execute one of the following shell scripts files:
+``` ./dbpedia.sh ``` ,
+``` ./yago.sh ``` ,
+``` ./lubm.sh ``` ,
+``` ./wdt15.sh ``` , or
+``` ./wdt21.sh ```
+
+You will see logs and the output will be stored in the path of the output directory specified in the config file.
+
+*Note: You may have to execute ```chmod +rwx ``` for each script to solve the permissions issue. In case you want to run the experiments without script, please follow the instructions on [this](https://github.com/Kashif-Rabbani/shacl/blob/main/README-withoutScript.md) page.*
+
+
+
+---------
+
+### 4. Running the experiments (without Docker)
+
+1. Install Java:  Please follow [these](https://sdkman.io/install) steps to install sdkman and execute the following commands to install the specified version of Java.
 
         sdk list java
-        sdk install java 11.0.10.fx-zulu 
-        sdk use java 11.0.10.fx-zulu 
+        sdk install java 15.0.2.fx-zulu
+        sdk use java 15.0.2.fx-zulu
 
 2. Install gradle
 
@@ -128,26 +107,12 @@ docker stats
 
 4. Install GraphDB by following the instructions listed [here](https://graphdb.ontotext.com/).
 
-
-[comment]: <> (## Experimentation)
-Here we explain how to repeat experiments and the output (numbers) presented in the evaluation section of our paper.
-
-
-#### How to repeat experiments?
-
-Update the following parameters for each of the config file in the [config](https://github.com/Kashif-Rabbani/shacl/tree/main/config) directory to configure **QSE-File** approach:
+As stated above, that you have to set the configuration parameters for each file individually based on your machine and requirements.
 
 ```
- QSE_File=true, dataset_path, expected_number_classes, expected_number_of_lines, dataset_name,  QSE_Endpoint=false
-```
-To run **QSE-Endpoint** approach, you will have to set the following parameters as well:
-
-```
-QSE_Endpoint=true, graphDB_URL and graphDB_REPOSITORY, QSE_File=false
-```
-We have already prepared 3 config files for each of our dataset, you can use these files to run the experiments using the following commands:
-```
-java -jar -Xmx16g  build/libs/shacl.jar config/dbpediaConfig.properties &> dbpedia.logs
-java -jar -Xmx16g  build/libs/shacl.jar config/yagoConfig.properties &> yago.logs
-java -jar -Xmx16g  build/libs/shacl.jar config/lubmConfig.properties &> lubm.logs
+java -jar -Xmx10g  build/libs/qse.jar config/dbpediaConfig.properties &> dbpedia.logs
+java -jar -Xmx10g  build/libs/qse.jar config/yagoConfig.properties &> yago.logs
+java -jar -Xmx10g  build/libs/qse.jar config/lubmConfig.properties &> lubm.logs
+java -jar -Xmx16g  build/libs/qse.jar config/wdt15Config.properties &> wdt15.logs
+java -jar -Xmx32g  build/libs/qse.jar config/wdt21Config.properties &> wdt21.logs
 ```
