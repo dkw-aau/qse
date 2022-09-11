@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 public class Main {
     public static String configPath;
     public static String datasetPath;
+    public static String datasetName;
     public static int numberOfClasses;
     public static int numberOfInstances;
     public static int entitySamplingThreshold;
@@ -22,19 +23,20 @@ public class Main {
     public static boolean extractMaxCardConstraints;
     public static boolean isWikiData;
     
+    
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
         
         datasetPath = paramVal("dataset_path");
+        datasetName = paramVal("dataset_name");
         numberOfClasses = Integer.parseInt(paramVal("expected_number_classes")); // expected or estimated numberOfClasses
         numberOfInstances = Integer.parseInt(paramVal("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
         extractMaxCardConstraints = isActivated("max_cardinality");
         isWikiData = isActivated("is_wikidata");
         entitySamplingThreshold = Integer.parseInt(paramVal("entity_sampling_threshold"));
         entitySamplingTargetPercentage = Integer.parseInt(paramVal("entity_sampling_target_percentage"));
-        
         execute();
     }
     

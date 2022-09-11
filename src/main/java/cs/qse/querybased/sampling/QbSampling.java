@@ -7,7 +7,7 @@ import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;
 import cs.utils.*;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -31,7 +31,7 @@ public class QbSampling {
     private final GraphDBUtils graphDBUtils;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     String typePredicate;
     NodeEncoder nodeEncoder;
     Integer maxEntityThreshold;
@@ -62,7 +62,7 @@ public class QbSampling {
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
         this.sampledPropCount = new HashMap<>((int) ((10000) / 0.75 + 1));
-        this.encoder = new Encoder();
+        this.stringEncoder = new StringEncoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
@@ -74,7 +74,7 @@ public class QbSampling {
         getNumberOfInstancesOfEachClass();
         dynamicNeighborBasedReservoirSampling(); //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
         collectEntityPropData(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
-        writeSupportToFile(encoder, this.shapeTripletSupport, this.sampledEntitiesPerClass);
+        writeSupportToFile(stringEncoder, this.shapeTripletSupport, this.sampledEntitiesPerClass);
         extractSHACLShapes(false);
     }
     
@@ -90,7 +90,7 @@ public class QbSampling {
                 org.eclipse.rdf4j.model.Literal literalClassCount = (org.eclipse.rdf4j.model.Literal) result.getBinding("classCount").getValue();
                 classCount = literalClassCount.intValue();
             }
-            classEntityCount.put(encoder.encode(c), classCount);
+            classEntityCount.put(stringEncoder.encode(c), classCount);
         });
         watch.stop();
         System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
@@ -108,14 +108,14 @@ public class QbSampling {
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
-        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
+        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, stringEncoder);
         try {
             graphDBUtils.runConstructQuery(queryToGetWikiDataEntities).forEach(line -> {
                 try {
                     String triple = "<" + line.getSubject() + "> <" + line.getPredicate() + "> <" + line.getObject() + "> ."; // prepare triple in N3 format to avoid changing many methods using nodes of type Node
                     Node[] nodes = NxParser.parseNodes(triple); // Get [S,P,O] as Node from triple
                     
-                    int objID = encoder.encode(nodes[2].getLabel());
+                    int objID = stringEncoder.encode(nodes[2].getLabel());
                     sampledEntitiesPerClass.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                     reservoirCapacityPerClass.putIfAbsent(objID, minEntityThreshold);
                     
@@ -160,7 +160,7 @@ public class QbSampling {
     private void collectEntityPropData(Integer entityID, EntityData entityData) {
         Set<String> entityTypes = new HashSet<>();
         for (Integer entityTypeID : entityData.getClassTypes()) {
-            entityTypes.add(encoder.decode(entityTypeID));
+            entityTypes.add(stringEncoder.decode(entityTypeID));
         }
         String entity = nodeEncoder.decode(entityID).getLabel();
         String query = buildQuery(entity, entityTypes, typePredicate); // query to get ?p ?o of entity
@@ -171,7 +171,7 @@ public class QbSampling {
             String propIri = "<" + prop + ">";
             
             if (!propIri.equals(typePredicate)) {
-                int propID = encoder.encode(prop);
+                int propID = stringEncoder.encode(prop);
                 
                 String obj = row.getValue("o").stringValue();
                 Node objNode = Utils.IriToNode(obj);
@@ -194,7 +194,7 @@ public class QbSampling {
                     }
                     /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
                 } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                    int objID = encoder.encode(objType);
+                    int objID = stringEncoder.encode(objType);
                     objTypesIDs.add(objID);
                     prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
                     addEntityToPropertyConstraints(prop2objTypeTuples, entityID);
@@ -259,7 +259,7 @@ public class QbSampling {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {

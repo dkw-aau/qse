@@ -1,19 +1,19 @@
 package cs.qse.common.encoders;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * This class encodes the String values into Integers and also provides decode functionality
  */
-public class ConcurrentEncoder {
+public class StringEncoder implements Encoder {
     int counter;
-    ConcurrentHashMap<Integer, String> table;
-    ConcurrentHashMap<String, Integer> reverseTable;
+    HashMap<Integer, String> table;
+    HashMap<String, Integer> reverseTable;
     
-    public ConcurrentEncoder() {
+    public StringEncoder() {
         this.counter = -1;
-        this.table = new ConcurrentHashMap<>();
-        this.reverseTable = new ConcurrentHashMap<>();
+        this.table = new HashMap<>();
+        this.reverseTable = new HashMap<>();
     }
     
     public int encode(String val) {
@@ -32,7 +32,7 @@ public class ConcurrentEncoder {
     }
     
     
-    public ConcurrentHashMap<Integer, String> getTable() {
+    public HashMap<Integer, String> getTable() {
         return table;
     }
     
@@ -40,7 +40,7 @@ public class ConcurrentEncoder {
         return this.table.get(val);
     }
     
-    public ConcurrentHashMap<String, Integer> getRevTable() {
+    public HashMap<String, Integer> getRevTable() {
         return reverseTable;
     }
 }

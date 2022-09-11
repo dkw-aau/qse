@@ -3,7 +3,7 @@ package cs.others.parsers.bl;
 import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.ehcache.sizeof.SizeOf;
@@ -29,7 +29,7 @@ public class WikiDataBaselineParserEncoded {
     HashMap<String, HashMap<Node, Integer>> classToPropWithCount;
     HashMap<Node, List<Integer>> instanceToClass;
     HashSet<Node> properties;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     
     public WikiDataBaselineParserEncoded(String filePath, int expSizeOfClasses) {
         this.rdfFile = filePath;
@@ -40,7 +40,7 @@ public class WikiDataBaselineParserEncoded {
         int nol = Integer.parseInt(ConfigManager.getProperty("expected_number_of_lines"));
         this.instanceToClass = new HashMap<>((int) ((nol) / 0.75 + 1));
         this.properties = new HashSet<>((int) (1000 * 1.33));
-        this.encoder = new Encoder();
+        this.stringEncoder = new StringEncoder();
     }
     
     private void firstPass() {
@@ -55,10 +55,10 @@ public class WikiDataBaselineParserEncoded {
                             classInstanceCount.put(nodes[2].toString(), (classInstanceCount.getOrDefault(nodes[2].toString(), 0)) + 1);
                             // Track classes per instance
                             if (instanceToClass.containsKey(nodes[0])) {
-                                instanceToClass.get(nodes[0]).add(encoder.encode(nodes[2].getLabel()));
+                                instanceToClass.get(nodes[0]).add(stringEncoder.encode(nodes[2].getLabel()));
                             } else {
                                 List<Integer> list = new ArrayList<>(); // initialize 5, 10, 15
-                                list.add(encoder.encode(nodes[2].getLabel()));
+                                list.add(stringEncoder.encode(nodes[2].getLabel()));
                                 instanceToClass.put(nodes[0], list);
                             }
                         } catch (ParseException e) {
@@ -83,12 +83,12 @@ public class WikiDataBaselineParserEncoded {
                             Node[] nodes = NxParser.parseNodes(line);
                             if (instanceToClass.containsKey(nodes[0])) {
                                 instanceToClass.get(nodes[0]).forEach(c -> {
-                                    if (classToPropWithObjTypes.containsKey(encoder.decode(c))) {
-                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(encoder.decode(c));
+                                    if (classToPropWithObjTypes.containsKey(stringEncoder.decode(c))) {
+                                        HashMap<Node, HashSet<String>> propToObjTypes = classToPropWithObjTypes.get(stringEncoder.decode(c));
                                         HashSet<String> objTypes = new HashSet<String>();
                                         if (instanceToClass.containsKey(nodes[2])) // object is an instance of some class e.g., :Paris is an instance of :City.
                                             instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(encoder.decode(node));
+                                                objTypes.add(stringEncoder.decode(node));
                                             });
                                         else {
                                             objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
@@ -98,21 +98,21 @@ public class WikiDataBaselineParserEncoded {
                                         else {
                                             propToObjTypes.put(nodes[1], objTypes);
                                         }
-                                        classToPropWithObjTypes.put(encoder.decode(c), propToObjTypes);
+                                        classToPropWithObjTypes.put(stringEncoder.decode(c), propToObjTypes);
                                         
-                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(encoder.decode(c));
+                                        HashMap<Node, Integer> propToCount = classToPropWithCount.get(stringEncoder.decode(c));
                                         if (propToCount.containsKey(nodes[1])) {
                                             propToCount.replace(nodes[1], propToCount.get(nodes[1]) + 1);
                                         } else {
                                             propToCount.put(nodes[1], 1);
                                         }
-                                        classToPropWithCount.put(encoder.decode(c), propToCount);
+                                        classToPropWithCount.put(stringEncoder.decode(c), propToCount);
                                         
                                     } else {
                                         HashSet<String> objTypes = new HashSet<String>();
                                         if (instanceToClass.containsKey(nodes[2]))  // object is an instance of some class e.g., :Paris is an instance of :City.
                                             instanceToClass.get(nodes[2]).forEach(node -> {
-                                                objTypes.add(encoder.decode(node));
+                                                objTypes.add(stringEncoder.decode(node));
                                             });
                                         else {
                                             objTypes.add(getType(nodes[2].toString())); // Object is literal https://www.w3.org/TR/turtle/#abbrev
@@ -126,8 +126,8 @@ public class WikiDataBaselineParserEncoded {
                                         propToCount.put(nodes[1], 1);
                                         
                                         instanceToClass.get(nodes[0]).forEach(cl -> {
-                                            classToPropWithObjTypes.put(encoder.decode(cl), propToObjTypes);
-                                            classToPropWithCount.put(encoder.decode(cl), propToCount);
+                                            classToPropWithObjTypes.put(stringEncoder.decode(cl), propToObjTypes);
+                                            classToPropWithCount.put(stringEncoder.decode(cl), propToCount);
                                         });
                                     }
                                 });
@@ -181,7 +181,7 @@ public class WikiDataBaselineParserEncoded {
     private void measureMemoryUsage() {
         SizeOf sizeOf = SizeOf.newInstance();
         System.out.println("Size - Parser HashMap<String, Integer> classInstanceCount: " + sizeOf.deepSizeOf(classInstanceCount));
-        System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(encoder.getTable()));
+        System.out.println("Size - Encoder object encoder: " + sizeOf.deepSizeOf(stringEncoder.getTable()));
         System.out.println("Size - Parser HashMap<Node, List<Node>> instanceToClass: " + sizeOf.deepSizeOf(instanceToClass));
         System.out.println("Size - Parser HashSet<String> properties: " + sizeOf.deepSizeOf(properties));
         System.out.println("Size - Parser HashMap<String, HashMap<String, HashSet<String>>> classToPropWithObjTypes: " + sizeOf.deepSizeOf(classToPropWithObjTypes));

@@ -68,18 +68,6 @@ public class NodeEncoder {
         return this.reverseTable;
     }
     
-    public void setCounter(int counter) {
-        this.counter = counter;
-    }
-    
-    public void setTable(HashMap<Integer, Node> table) {
-        this.table = table;
-    }
-    
-    public void setReverseTable(HashMap<Node, Integer> reverseTable) {
-        this.reverseTable = reverseTable;
-    }
-    
     public boolean isNodeExists(Node node) {
         return reverseTable.get(node) != null;
     }

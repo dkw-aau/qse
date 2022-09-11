@@ -7,7 +7,7 @@ import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.Tuple3;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -36,14 +36,14 @@ import java.util.Set;
 public class MinCardinalityExperiment {
     Model model = null;
     ModelBuilder builder = null;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
     Map<Integer, Integer> classInstanceCount;
     ValueFactory factory = SimpleValueFactory.getInstance();
     String logfileAddress = Constants.EXPERIMENTS_RESULT_MIN_CARD;
     
-    public MinCardinalityExperiment(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
-        this.encoder = encoder;
+    public MinCardinalityExperiment(StringEncoder stringEncoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount) {
+        this.stringEncoder = stringEncoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
         this.classInstanceCount = classInstanceCount;
@@ -91,7 +91,7 @@ public class MinCardinalityExperiment {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+            IRI subj = factory.createIRI(stringEncoder.decode(classEncodedLabel));
             
             String nodeShape = "shape:" + subj.getLocalName() + "Shape";
             b.subject(nodeShape)
@@ -112,7 +112,7 @@ public class MinCardinalityExperiment {
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((classEncodedLabel, propToObjectType) -> {
-            IRI subj = factory.createIRI(encoder.decode(classEncodedLabel));
+            IRI subj = factory.createIRI(stringEncoder.decode(classEncodedLabel));
             
             String nodeShape = "shape:" + subj.getLocalName() + "Shape";
             b.subject(nodeShape)
@@ -132,7 +132,7 @@ public class MinCardinalityExperiment {
     
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
-            IRI property = factory.createIRI(encoder.decode(prop));
+            IRI property = factory.createIRI(stringEncoder.decode(prop));
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
             b.subject(nodeShape)
                     .add(SHACL.PROPERTY, propShape);
@@ -141,13 +141,13 @@ public class MinCardinalityExperiment {
                     .add(SHACL.PATH, property);
             
             propObjectTypes.forEach(encodedObjectType -> {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(stringEncoder.encode(subj.stringValue()), prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
-                    if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
+                    if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(stringEncoder.encode(subj.stringValue())))) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
                     }
                 }
-                String objectType = encoder.decode(encodedObjectType);
+                String objectType = stringEncoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
                         if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
@@ -170,7 +170,7 @@ public class MinCardinalityExperiment {
     
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal, Double confidence, Integer support) {
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
-            IRI property = factory.createIRI(encoder.decode(prop));
+            IRI property = factory.createIRI(stringEncoder.decode(prop));
             IRI propShape = factory.createIRI("sh:" + property.getLocalName() + subj.getLocalName() + "ShapeProperty");
             b.subject(nodeShape)
                     .add(SHACL.PROPERTY, propShape);
@@ -179,7 +179,7 @@ public class MinCardinalityExperiment {
                     .add(SHACL.PATH, property);
             
             propObjectTypes.forEach(encodedObjectType -> {
-                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(stringEncoder.encode(subj.stringValue()), prop, encodedObjectType);
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     if (shapeTripletSupport.get(tuple3).getSupport() > support && shapeTripletSupport.get(tuple3).getConfidence() > confidence) {
                         b.subject(propShape).add(SHACL.MIN_COUNT, 1);
@@ -187,7 +187,7 @@ public class MinCardinalityExperiment {
                 }
                 
                 
-                String objectType = encoder.decode(encodedObjectType);
+                String objectType = stringEncoder.decode(encodedObjectType);
                 if (objectType != null) {
                     if (objectType.contains(XSD.NAMESPACE) || objectType.contains(RDF.LANGSTRING.toString())) {
                         if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}

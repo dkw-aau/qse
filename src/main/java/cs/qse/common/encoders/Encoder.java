@@ -1,46 +1,9 @@
 package cs.qse.common.encoders;
 
-import java.util.HashMap;
-
-/**
- * This class encodes the String values into Integers and also provides decode functionality
- */
-public class Encoder {
-    int counter;
-    HashMap<Integer, String> table;
-    HashMap<String, Integer> reverseTable;
+public interface Encoder {
     
-    public Encoder() {
-        this.counter = -1;
-        this.table = new HashMap<>();
-        this.reverseTable = new HashMap<>();
-    }
+    int encode(String val);
     
-    public int encode(String val) {
-        if (reverseTable.containsKey(val)) {
-            return reverseTable.get(val);
-        } else {
-            this.counter++;
-            table.put(counter, val);
-            reverseTable.put(val, counter);
-            return counter;
-        }
-    }
+    public String decode(int val);
     
-    public boolean isEncoded(String val) {
-        return reverseTable.containsKey(val);
-    }
-    
-    
-    public HashMap<Integer, String> getTable() {
-        return table;
-    }
-    
-    public String decode(int val) {
-        return this.table.get(val);
-    }
-    
-    public HashMap<String, Integer> getRevTable() {
-        return reverseTable;
-    }
 }

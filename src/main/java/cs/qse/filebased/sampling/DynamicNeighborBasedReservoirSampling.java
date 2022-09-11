@@ -2,7 +2,7 @@ package cs.qse.filebased.sampling;
 
 import cs.qse.common.EntityData;
 import cs.utils.Utils;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import org.semanticweb.yars.nx.Node;
 
@@ -13,20 +13,20 @@ public class DynamicNeighborBasedReservoirSampling implements ReservoirSampling 
     Map<Integer, List<Integer>> sampledEntitiesPerClass;
     Map<Integer, Integer> reservoirCapacityPerClass;
     NodeEncoder nodeEncoder;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     
-    public DynamicNeighborBasedReservoirSampling(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, Encoder encoder) {
+    public DynamicNeighborBasedReservoirSampling(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, StringEncoder stringEncoder) {
         this.entityDataMapContainer = entityDataMapContainer;
         this.sampledEntitiesPerClass = sampledEntitiesPerClass;
         this.reservoirCapacityPerClass = reservoirCapacityPerClass;
         this.nodeEncoder = nodeEncoder;
-        this.encoder = encoder;
+        this.stringEncoder = stringEncoder;
     }
     
     @Override
     public void sample(Node[] nodes) {
         int subjID = nodeEncoder.encode(nodes[0]);
-        int objID = encoder.encode(nodes[2].getLabel());
+        int objID = stringEncoder.encode(nodes[2].getLabel());
         EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
         if (entityData == null) {
             entityData = new EntityData();
@@ -38,7 +38,7 @@ public class DynamicNeighborBasedReservoirSampling implements ReservoirSampling 
     
     @Override
     public void replace(int candidateIndex, Node[] nodes) {
-        int objID = encoder.encode(nodes[2].getLabel());
+        int objID = stringEncoder.encode(nodes[2].getLabel());
         int currSize = sampledEntitiesPerClass.get(objID).size();
         if (candidateIndex < currSize) {
             int candidateNodeLeft = -1, candidateNodeRight = -1, scopeCandidateNodeLeft = 999999999, scopeCandidateNodeRight = 999999999;
@@ -96,7 +96,7 @@ public class DynamicNeighborBasedReservoirSampling implements ReservoirSampling 
                     Integer k = entry.getKey();
                     List<Integer> v = entry.getValue();
                     if (v.contains(candidateNode))
-                        System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
+                        System.out.println("Class " + k + " : " + stringEncoder.decode(k) + " has candidate " + candidateNode);
                 }
             }
         }

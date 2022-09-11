@@ -1,7 +1,7 @@
 package cs.qse.filebased.sampling;
 
 import cs.qse.common.EntityData;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import org.semanticweb.yars.nx.Node;
 
@@ -13,19 +13,19 @@ public class StandardReservoirSampling implements ReservoirSampling {
     Map<Integer, EntityData> entityDataMapContainer;
     Map<Integer, List<Integer>> sampledEntitiesPerClass;
     NodeEncoder nodeEncoder;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     
-    public StandardReservoirSampling(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, NodeEncoder nodeEncoder, Encoder encoder) {
+    public StandardReservoirSampling(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, NodeEncoder nodeEncoder, StringEncoder stringEncoder) {
         this.entityDataMapContainer = entityDataMapContainer;
         this.sampledEntitiesPerClass = sampledEntitiesPerClass;
         this.nodeEncoder = nodeEncoder;
-        this.encoder = encoder;
+        this.stringEncoder = stringEncoder;
     }
     
     @Override
     public void sample(Node[] nodes) {
         int subjID = nodeEncoder.encode(nodes[0]);
-        int objID = encoder.encode(nodes[2].getLabel());
+        int objID = stringEncoder.encode(nodes[2].getLabel());
         EntityData entityData = entityDataMapContainer.get(subjID); // Track classes per entity
         if (entityData == null) {
             entityData = new EntityData();
@@ -43,7 +43,7 @@ public class StandardReservoirSampling implements ReservoirSampling {
     
     @Override
     public void replace(int candidateIndex, Node[] nodes) {
-        int objID = encoder.encode(nodes[2].getLabel());
+        int objID = stringEncoder.encode(nodes[2].getLabel());
         int currSize = sampledEntitiesPerClass.get(objID).size();
         
         //Rolling the dice again by generating another random number
@@ -78,7 +78,7 @@ public class StandardReservoirSampling implements ReservoirSampling {
                 System.out.println("WARNING::It's null for candidateNode " + candidateNode);
                 sampledEntitiesPerClass.forEach((k, v) -> {
                     if (v.contains(candidateNode))
-                        System.out.println("Class " + k + " : " + encoder.decode(k) + " has candidate " + candidateNode);
+                        System.out.println("Class " + k + " : " + stringEncoder.decode(k) + " has candidate " + candidateNode);
                 });
             }
         }

@@ -8,7 +8,7 @@ import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.semanticweb.yars.nx.Node;
@@ -26,7 +26,7 @@ public class ReservoirSamplingParser extends Parser {
     String rdfFilePath;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     StatsComputer statsComputer;
     String typePredicate;
     NodeEncoder nodeEncoder;
@@ -58,7 +58,7 @@ public class ReservoirSamplingParser extends Parser {
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.propCount = new HashMap<>((int) ((10000) / 0.75 + 1));
         this.sampledPropCount = new HashMap<>((int) ((10000) / 0.75 + 1));
-        this.encoder = new Encoder();
+        this.stringEncoder = new StringEncoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
     }
@@ -85,14 +85,14 @@ public class ReservoirSamplingParser extends Parser {
         watch.start();
         Random random = new Random(100);
         AtomicInteger lineCounter = new AtomicInteger();
-        StandardReservoirSampling srs = new StandardReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, encoder);
+        StandardReservoirSampling srs = new StandardReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, stringEncoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     
                     Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
-                        int objID = encoder.encode(nodes[2].getLabel());
+                        int objID = stringEncoder.encode(nodes[2].getLabel());
                         sampledEntitiesPerClass.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         int numberOfSampledEntities = sampledEntitiesPerClass.get(objID).size();
                         
@@ -121,13 +121,13 @@ public class ReservoirSamplingParser extends Parser {
         watch.start();
         Random random = new Random(100);
         AtomicInteger lineCounter = new AtomicInteger();
-        NeighborBasedReservoirSampling brs = new NeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, encoder);
+        NeighborBasedReservoirSampling brs = new NeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, nodeEncoder, stringEncoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
-                        int objID = encoder.encode(nodes[2].getLabel());
+                        int objID = stringEncoder.encode(nodes[2].getLabel());
                         sampledEntitiesPerClass.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         int numberOfSampledEntities = sampledEntitiesPerClass.get(objID).size();
                         
@@ -160,14 +160,14 @@ public class ReservoirSamplingParser extends Parser {
         this.reservoirCapacityPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         int minEntityThreshold = 1;
         int samplingPercentage = Main.entitySamplingTargetPercentage;
-        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, encoder);
+        DynamicNeighborBasedReservoirSampling drs = new DynamicNeighborBasedReservoirSampling(entityDataMapContainer, sampledEntitiesPerClass, reservoirCapacityPerClass, nodeEncoder, stringEncoder);
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
                    
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
-                        int objID = encoder.encode(nodes[2].getLabel());
+                        int objID = stringEncoder.encode(nodes[2].getLabel());
                         sampledEntitiesPerClass.putIfAbsent(objID, new ArrayList<>(maxEntityThreshold));
                         reservoirCapacityPerClass.putIfAbsent(objID, minEntityThreshold);
                         
@@ -179,7 +179,7 @@ public class ReservoirSamplingParser extends Parser {
                         classEntityCount.merge(objID, 1, Integer::sum); // Get the real entity count for current class
                         drs.resizeReservoir(classEntityCount.get(objID), sampledEntitiesPerClass.get(objID).size(), maxEntityThreshold, samplingPercentage, objID);
                     } else {
-                        propCount.merge(encoder.encode(nodes[1].getLabel()), 1, Integer::sum); // Get the
+                        propCount.merge(stringEncoder.encode(nodes[1].getLabel()), 1, Integer::sum); // Get the
                     }
                     lineCounter.getAndIncrement(); // increment the line counter
                 } catch (ParseException e) {
@@ -196,7 +196,7 @@ public class ReservoirSamplingParser extends Parser {
     
     private void prepareStatistics() {
         classEntityCount.forEach((classIRI, entityCount) -> {
-            String log = "LOG:: " + classIRI + "," + encoder.decode(classIRI) + "," + entityCount + "," + sampledEntitiesPerClass.get(classIRI).size() + "," + reservoirCapacityPerClass.get(classIRI);
+            String log = "LOG:: " + classIRI + "," + stringEncoder.decode(classIRI) + "," + entityCount + "," + sampledEntitiesPerClass.get(classIRI).size() + "," + reservoirCapacityPerClass.get(classIRI);
             Utils.writeLineToFile(log, Constants.THE_LOGS);
         });
     }
@@ -219,7 +219,7 @@ public class ReservoirSamplingParser extends Parser {
                         // if the entity is in the Reservoir, we go for it
                         if (entityDataMapContainer.get(subjID) != null) {
                             String objectType = extractObjectType(nodes[2].toString());
-                            int propID = encoder.encode(nodes[1].getLabel());
+                            int propID = stringEncoder.encode(nodes[1].getLabel());
                             if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                                 EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(nodes[2]));
                                 if (currEntityData != null) {
@@ -232,7 +232,7 @@ public class ReservoirSamplingParser extends Parser {
                                 /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
                                 
                             } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                                int objID = encoder.encode(objectType);
+                                int objID = stringEncoder.encode(objectType);
                                 objTypes.add(objID);
                                 prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
                                 addEntityToPropertyConstraints(prop2objTypeTuples, subjID);
@@ -309,7 +309,7 @@ public class ReservoirSamplingParser extends Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling: No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         se.setPropCount(propCount);

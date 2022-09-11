@@ -4,8 +4,9 @@ import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
-import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
+import cs.qse.filebased.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -28,7 +29,7 @@ public class ParallelQbSampling {
     private final GraphDBUtils graphDBUtils;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
-    ConcurrentEncoder encoder;
+    ConcurrentStringEncoder encoder;
     String typePredicate;
     NodeEncoder nodeEncoder;
     Integer maxEntityThreshold;
@@ -58,7 +59,7 @@ public class ParallelQbSampling {
         this.sampledEntitiesPerClass = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataMapContainer = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         
-        this.encoder = new ConcurrentEncoder();
+        this.encoder = new ConcurrentStringEncoder();
         this.nodeEncoder = new NodeEncoder();
         this.maxEntityThreshold = entitySamplingThreshold;
         this.numOfThreads = numOfThreads;
@@ -238,7 +239,7 @@ public class ParallelQbSampling {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorForQb se = new ShapesExtractorForQb(encoder, shapeTripletSupport, classEntityCount);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         

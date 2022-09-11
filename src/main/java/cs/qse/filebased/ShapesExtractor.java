@@ -3,9 +3,8 @@ package cs.qse.filebased;
 import cs.Main;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.TurtlePrettyFormatter;
-import cs.utils.*;
 import cs.qse.common.encoders.Encoder;
-import org.apache.commons.io.FilenameUtils;
+import cs.utils.*;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
@@ -26,8 +25,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
 import java.io.FileWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static org.eclipse.rdf4j.model.util.Values.bnode;
@@ -105,6 +102,7 @@ public class ShapesExtractor {
     
     
     private Model constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
+        
         Model m = null;
         ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
@@ -398,11 +396,11 @@ public class ShapesExtractor {
     }
     
     public void writeModelToFile(String fileIdentifier) {
-        Path path = Paths.get(Main.datasetPath);
-        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
-        System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
-        String outputPath = ConfigManager.getProperty("output_file_path") + fileName;
-        String outputPathPretty = ConfigManager.getProperty("output_file_path") + "Pretty_" + fileName;
+        //String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
+        String path = ConfigManager.getProperty("output_file_path");
+        String outputPath = path + Main.datasetName + "_" + fileIdentifier + "_SHACL.ttl";
+        String outputPathPretty = path + Main.datasetName + "_" + fileIdentifier + "_Pretty" + "_SHACL.ttl";
+        System.out.println("::: ShapesExtractor ~ WRITING MODEL TO FILE: " + outputPath);
         try {
             FileWriter fileWriter = new FileWriter(outputPath, false);
             Rio.write(model, fileWriter, RDFFormat.TURTLE);
@@ -455,4 +453,6 @@ public class ShapesExtractor {
     public String remAngBrackets(String typePredicate) {
         return typePredicate.replace("<", "").replace(">", "");
     }
+    
+    
 }

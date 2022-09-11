@@ -6,7 +6,7 @@ import cs.qse.filebased.SupportConfidence;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import cs.utils.graphdb.GraphDBUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -23,7 +23,7 @@ public class SubEntityPropDataCollector {
     private final GraphDBUtils graphDBUtils;
     Map<Integer, EntityData> subEntityDataMapContainer;
     String typePredicate;
-    ConcurrentEncoder prevEncoder;
+    ConcurrentStringEncoder prevEncoder;
     //currEncoder;
     NodeEncoder prevNodeEncoder;
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes;
@@ -39,7 +39,7 @@ public class SubEntityPropDataCollector {
         //this.currEncoder = new ConcurrentEncoder();
     }
     
-    public void setFeatures(String typePredicate, ConcurrentEncoder prevEncoder, NodeEncoder prevNodeEncoder) {
+    public void setFeatures(String typePredicate, ConcurrentStringEncoder prevEncoder, NodeEncoder prevNodeEncoder) {
         this.typePredicate = typePredicate;
         this.prevEncoder = prevEncoder;
         this.prevNodeEncoder = prevNodeEncoder;

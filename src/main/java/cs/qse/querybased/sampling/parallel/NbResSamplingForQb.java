@@ -4,7 +4,7 @@ import cs.qse.common.EntityData;
 import cs.qse.filebased.sampling.BinaryNode;
 import cs.qse.filebased.sampling.ReservoirSampling;
 import cs.utils.Utils;
-import cs.qse.common.encoders.ConcurrentEncoder;
+import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import org.semanticweb.yars.nx.Node;
 
@@ -16,9 +16,9 @@ public class NbResSamplingForQb implements ReservoirSampling {
     Map<Integer, List<Integer>> sampledEntitiesPerClass;
     Map<Integer, Integer> reservoirCapacityPerClass;
     NodeEncoder nodeEncoder;
-    ConcurrentEncoder encoder;
+    ConcurrentStringEncoder encoder;
     
-    public NbResSamplingForQb(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, ConcurrentEncoder encoder) {
+    public NbResSamplingForQb(Map<Integer, EntityData> entityDataMapContainer, Map<Integer, List<Integer>> sampledEntitiesPerClass, Map<Integer, Integer> reservoirCapacityPerClass, NodeEncoder nodeEncoder, ConcurrentStringEncoder encoder) {
         this.entityDataMapContainer = entityDataMapContainer;
         this.sampledEntitiesPerClass = sampledEntitiesPerClass;
         this.reservoirCapacityPerClass = reservoirCapacityPerClass;

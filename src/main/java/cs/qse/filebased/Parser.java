@@ -8,7 +8,7 @@ import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -31,7 +31,7 @@ public class Parser {
     String rdfFilePath;
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     StatsComputer statsComputer;
     String typePredicate;
     
@@ -55,7 +55,7 @@ public class Parser {
         this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
-        this.encoder = new Encoder();
+        this.stringEncoder = new StringEncoder();
     }
     
     public void run() {
@@ -84,7 +84,7 @@ public class Parser {
                     Node[] nodes = NxParser.parseNodes(line); // Get [S,P,O] as Node from triple
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         // Track classes per entity
-                        int objID = encoder.encode(nodes[2].getLabel());
+                        int objID = stringEncoder.encode(nodes[2].getLabel());
                         EntityData entityData = entityDataHashMap.get(nodes[0]);
                         if (entityData == null) {
                             entityData = new EntityData();
@@ -121,7 +121,7 @@ public class Parser {
                     Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     Node subject = nodes[0];
                     String objectType = extractObjectType(nodes[2].toString());
-                    int propID = encoder.encode(nodes[1].getLabel());
+                    int propID = stringEncoder.encode(nodes[1].getLabel());
                     if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                         EntityData currEntityData = entityDataHashMap.get(nodes[2]);
                         if (currEntityData != null) {
@@ -134,7 +134,7 @@ public class Parser {
                         /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
                         
                     } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                        int objID = encoder.encode(objectType);
+                        int objID = stringEncoder.encode(objectType);
                         //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
                         objTypes.add(objID);
                         prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
@@ -238,7 +238,7 @@ public class Parser {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
@@ -270,7 +270,7 @@ public class Parser {
     protected void assignCardinalityConstraints() {
         StopWatch watch = new StopWatch();
         watch.start();
-        MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(encoder, shapeTripletSupport, classEntityCount);
+        MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(stringEncoder, shapeTripletSupport, classEntityCount);
         minCardinalityExperiment.constructDefaultShapes(classToPropWithObjTypes);
         ExperimentsUtil.getMinCardinalitySupportConfRange().forEach((conf, supportRange) -> {
             supportRange.forEach(supp -> {

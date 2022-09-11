@@ -5,7 +5,7 @@ import cs.qse.filebased.SupportConfidence;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.Tuple3;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.StringEncoder;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
@@ -32,7 +32,7 @@ public class SHACLER {
     ValueFactory factory = SimpleValueFactory.getInstance();
     Model model = null;
     ModelBuilder builder = null;
-    Encoder encoder;
+    StringEncoder stringEncoder;
     HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
     String logfileAddress = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
@@ -42,8 +42,8 @@ public class SHACLER {
         builder.setNamespace("shape", Constants.SHAPES_NAMESPACE);
     }
     
-    public SHACLER(Encoder encoder, HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
-        this.encoder = encoder;
+    public SHACLER(StringEncoder stringEncoder, HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, HashMap<Integer, Integer> classInstanceCount) {
+        this.stringEncoder = stringEncoder;
         this.builder = new ModelBuilder();
         this.shapeTripletSupport = shapeTripletSupport;
         this.classInstanceCount = classInstanceCount;

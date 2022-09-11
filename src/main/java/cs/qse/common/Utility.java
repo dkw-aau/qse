@@ -1,7 +1,7 @@
 package cs.qse.common;
 
-import cs.qse.common.encoders.ConcurrentEncoder;
-import cs.qse.common.encoders.Encoder;
+import cs.qse.common.encoders.ConcurrentStringEncoder;
+import cs.qse.common.encoders.StringEncoder;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -73,7 +73,7 @@ public class Utility {
     }
     
     
-    public static void writeSupportToFile(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+    public static void writeSupportToFile(StringEncoder stringEncoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
         System.out.println("Started writeSupportToFile()");
         StopWatch watch = new StopWatch();
         watch.start();
@@ -84,8 +84,8 @@ public class Utility {
             for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : shapeTripletSupport.entrySet()) {
                 Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
                 Integer count = entry.getValue().getSupport();
-                String log = encoder.decode(tupl3._1) + "|" + encoder.decode(tupl3._2) + "|" +
-                        encoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
+                String log = stringEncoder.decode(tupl3._1) + "|" + stringEncoder.decode(tupl3._2) + "|" +
+                        stringEncoder.decode(tupl3._3) + "|" + count + "|" + sampledEntitiesPerClass.get(tupl3._1).size();
                 printWriter.println(log);
             }
             printWriter.close();
@@ -96,7 +96,7 @@ public class Utility {
         Utils.logTime("writeSupportToFile() ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    public static void writeSupportToFile(ConcurrentEncoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
+    public static void writeSupportToFile(ConcurrentStringEncoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
         System.out.println("Started writeSupportToFile()");
         StopWatch watch = new StopWatch();
         watch.start();

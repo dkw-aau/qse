@@ -50,7 +50,7 @@ public class RandomSamplingParser extends Parser {
                     if (nodes[1].toString().equals(typePredicate)) { // Check if predicate is rdf:type or equivalent
                         
                         int randomNumber = random.nextInt(100); //The nextInt(int n) is used to get a random number between 0 (inclusive) and the number passed in this argument(n), exclusive.
-                        int objID = encoder.encode(nodes[2].getLabel());
+                        int objID = stringEncoder.encode(nodes[2].getLabel());
                         //If the generated random number is less than randomSamplingThreshold, then we sample the entity
                         if (randomNumber < randomSamplingThreshold) {
                             // Track classes per entity
@@ -97,7 +97,7 @@ public class RandomSamplingParser extends Parser {
                     // if the entity is sampled, we go for it
                     if (entityDataHashMap.get(subject) != null) {
                         String objectType = extractObjectType(nodes[2].toString());
-                        int propID = encoder.encode(nodes[1].getLabel());
+                        int propID = stringEncoder.encode(nodes[1].getLabel());
                         if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                             EntityData currEntityData = entityDataHashMap.get(nodes[2]);
                             if (currEntityData != null) {
@@ -110,7 +110,7 @@ public class RandomSamplingParser extends Parser {
                             /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
                             
                         } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                            int objID = encoder.encode(objectType);
+                            int objID = stringEncoder.encode(objectType);
                             //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
                             objTypes.add(objID);
                             prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
