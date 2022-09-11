@@ -11,11 +11,11 @@ echo "------------------ WIKIDATA  WITHOUT MAX CARDINALITY CONSTRAINTS ---------
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QSE_Approx_WIKIDATA_ResSampEndpoint_4_Threads_1000_100
+container=QseApproxQbParallel
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx96g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git2/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataConfig.properties
+docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx96g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/wikiDataConfig.properties
 
 docker ps
 
