@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ..
+cd ../../
 
 ### Build Docker Image
 image=shacl:QSE-ApproxQbParallel
