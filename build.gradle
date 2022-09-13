@@ -118,6 +118,11 @@ dependencies {
     //    implementation("org.apache.jena:jena-arq:4.3.2")
     //    implementation("org.apache.jena:jena-core:4.2.0")
 
+    // https://mvnrepository.com/artifact/org.apache.jena/jena-shacl
+    implementation group: 'org.apache.jena', name: 'jena-shacl', version: '4.6.1'
+
+
+
     // https://mvnrepository.com/artifact/commons-io/commons-io
     //    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-rdf-api

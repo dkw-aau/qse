@@ -27,7 +27,7 @@ gradlew.bat
 .idea/
 classes
 
-
+Output/TEMP/
 settings.gradle
 
 # ignore files in folder foo

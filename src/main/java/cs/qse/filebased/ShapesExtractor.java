@@ -5,6 +5,8 @@ import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.TurtlePrettyFormatter;
 import cs.qse.common.encoders.Encoder;
 import cs.utils.*;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
@@ -25,7 +27,10 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
 import java.io.FileWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.eclipse.rdf4j.model.util.Values.bnode;
 
@@ -46,7 +51,6 @@ public class ShapesExtractor {
     Map<Integer, Integer> sampledPropCount;
     Map<Integer, List<Integer>> sampledEntitiesPerClass; // Size == O(T*entityThreshold)
     Map<Integer, List<Double>> supportToRelativeSupport = new HashMap<>();
-    
     String typePredicate;
     
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount, String typePredicate) {
@@ -77,7 +81,9 @@ public class ShapesExtractor {
         
         FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("DEFAULT");
+        String outputFilePath = this.writeModelToFile("DEFAULT");
+        this.prettyFormatTurtle(outputFilePath);
+        //FilesUtil.deleteFile(outputFilePath);
     }
     
     public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
@@ -95,7 +101,9 @@ public class ShapesExtractor {
             log = new StringBuilder(log.append(v).append(","));
         }
         FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-        this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        String outputFilePath = this.writeModelToFile("CUSTOM_" + confidence + "_" + support);
+        this.prettyFormatTurtle(outputFilePath);
+        //FilesUtil.deleteFile(outputFilePath);
         //System.out.println("RelativeSupportMap::");
         //supportToRelativeSupport.forEach((k, v) -> {System.out.println(k + " -> " + v);});
     }
@@ -172,6 +180,7 @@ public class ShapesExtractor {
     }
     
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
+        Map<String, Integer> propDuplicateDetector = new HashMap<>();
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             IRI property = factory.createIRI(encoder.decode(prop));
             String localName = property.getLocalName();
@@ -181,7 +190,15 @@ public class ShapesExtractor {
                 localName = "instantType";
             }
             
+            if (propDuplicateDetector.containsKey(localName)) {
+                int freq = propDuplicateDetector.get(localName);
+                propDuplicateDetector.put(localName, freq + 1);
+                localName = localName + "_" + freq;
+            }
+            propDuplicateDetector.putIfAbsent(localName, 1);
+            
             IRI propShape = factory.createIRI("sh:" + localName + subj.getLocalName() + "ShapeProperty");
+            
             b.subject(nodeShape)
                     .add(SHACL.PROPERTY, propShape);
             b.subject(propShape)
@@ -395,19 +412,37 @@ public class ShapesExtractor {
         return shapesStats;
     }
     
-    public void writeModelToFile(String fileIdentifier) {
-        //String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
+    public String writeModelToFile(String fileIdentifier) {
+        StopWatch watch = new StopWatch();
+        watch.start();
         String path = ConfigManager.getProperty("output_file_path");
         String outputPath = path + Main.datasetName + "_" + fileIdentifier + "_SHACL.ttl";
-        String outputPathPretty = path + Main.datasetName + "_" + fileIdentifier + "_Pretty" + "_SHACL.ttl";
         System.out.println("::: ShapesExtractor ~ WRITING MODEL TO FILE: " + outputPath);
         try {
             FileWriter fileWriter = new FileWriter(outputPath, false);
             Rio.write(model, fileWriter, RDFFormat.TURTLE);
-            new TurtlePrettyFormatter(outputPath).format(outputPathPretty);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        watch.stop();
+        System.out.println("writeModelToFile " + " - " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " - " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        return outputPath;
+    }
+    
+    public void prettyFormatTurtle(String inputFilePath) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Path path = Paths.get(inputFilePath);
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_Pretty_" + "SHACL.ttl";
+        String outputPath = ConfigManager.getProperty("output_file_path") + fileName;
+        System.out.println("::: ShapesExtractor ~ PRETTY FORMATTING TURTLE FILE: " + outputPath);
+        try {
+            new TurtlePrettyFormatter(inputFilePath).format(outputPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        watch.stop();
+        System.out.println("prettyFormatTurtle " + " - " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " - " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     private Value executeQuery(TupleQuery query, String bindingName) {
