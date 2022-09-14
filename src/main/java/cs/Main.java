@@ -10,6 +10,7 @@ import cs.utils.Constants;
 import cs.utils.Utils;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import cs.validation.QseSHACLValidator;
 import org.slf4j.LoggerFactory;
 
 public class Main {
@@ -80,6 +81,10 @@ public class Main {
                 ParallelQbSampling parallelQbSampling = new ParallelQbSampling(numberOfClasses, numberOfInstances, typeProperty, entitySamplingThreshold, numOfThreads);
                 parallelQbSampling.run();
             }
+            if (isActivated("qse_validation")) {
+                new QseSHACLValidator();
+            }
+            
         } catch (
                 Exception e) {
             e.printStackTrace();

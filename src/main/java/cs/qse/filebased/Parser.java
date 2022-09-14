@@ -66,7 +66,7 @@ public class Parser {
         firstPass();
         secondPass();
         computeSupportConfidence();
-        extractSHACLShapes(false);
+        extractSHACLShapes(true);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
