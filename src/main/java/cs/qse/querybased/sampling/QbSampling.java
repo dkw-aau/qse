@@ -3,6 +3,7 @@ package cs.qse.querybased.sampling;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.filebased.ShapesExtractor;
+import cs.qse.filebased.ShapesExtractorNativeStore;
 import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;
@@ -259,7 +260,7 @@ public class QbSampling {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
