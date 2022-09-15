@@ -25,6 +25,7 @@ public class QseSHACLValidator {
         if (!outputDir.exists())
             if (outputDir.mkdir())
                 System.out.println(outputDir.getAbsoluteFile() + " created successfully.");
+            else System.out.println("WARNING::directory creation failed");
         
         File inputDir = new File(inputFilesDirPath);
         for (final File fileEntry : Objects.requireNonNull(inputDir.listFiles())) {
@@ -51,10 +52,10 @@ public class QseSHACLValidator {
             //Write as CSV Output
             FileWriter fileWriter = new FileWriter(outputCSVFilePath, true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
-            String header = "SourceShape|FocusNode|ResultPath|SourceConstraintComponent|Value|Message";
+            String header = "SourceShape|FocusNode|ResultPath|Value|SourceConstraintComponent|Message";
             printWriter.println(header);
             report.getEntries().forEach(re -> {
-                String line = re.source() + "|" + re.focusNode() + "|" + re.resultPath() + "|" + re.sourceConstraintComponent() + "|" + re.value() + "|" + re.message();
+                String line = re.source() + "|" + re.focusNode() + "|" + re.resultPath() + "|" + re.value() + "|" + re.sourceConstraintComponent() + "|" + re.message();
                 printWriter.println(line);
             });
             printWriter.close();
