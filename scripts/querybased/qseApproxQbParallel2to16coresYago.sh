@@ -5,17 +5,17 @@ cd ../../
 image=shacl:QSE-ApproxQbParallel
 docker build . -t $image
 
-echo "------------------  wikiDataConfig2 ------------------"
+echo "------------------  yagoConfig2 ------------------"
 
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wikiDataConfig2
+container=QseApproxQbPar_1k_100_yagoConfig2
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/qse-endpoint/wikiDataConfig2.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/yago-qse-endpoint/yagoConfig2.properties
 
 docker ps
 
@@ -44,17 +44,17 @@ docker logs ${container} &> ${container}.logs
 
 
 
-echo "------------------  wikiDataConfig4 ------------------"
+echo "------------------  yagoConfig4 ------------------"
 
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wikiDataConfig4
+container=QseApproxQbPar_1k_100_yagoConfig4
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/qse-endpoint/wikiDataConfig4.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/yago-qse-endpoint/yagoConfig4.properties
 
 docker ps
 
@@ -83,17 +83,17 @@ docker logs ${container} &> ${container}.logs
 
 
 
-echo "------------------  wikiDataConfig8 ------------------"
+echo "------------------  yagoConfig8 ------------------"
 
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wikiDataConfig8
+container=QseApproxQbPar_1k_100_yagoConfig8
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/qse-endpoint/wikiDataConfig8.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/yago-qse-endpoint/yagoConfig8.properties
 
 docker ps
 
@@ -122,17 +122,17 @@ docker logs ${container} &> ${container}.logs
 
 
 
-echo "------------------  wikiDataConfig16 ------------------"
+echo "------------------  yagoConfig16 ------------------"
 
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wikiDataConfig16
+container=QseApproxQbPar_1k_100_yagoConfig16
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/qse-endpoint/wikiDataConfig16.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/yago-qse-endpoint/yagoConfig16.properties
 
 docker ps
 
@@ -159,17 +159,17 @@ echo "Status of the ${container} is ${status}" ### Container exited
 
 docker logs ${container} &> ${container}.logs
 
-echo "------------------  wikiDataConfig1 ------------------"
+echo "------------------  yagoConfig1 ------------------"
 
 ### Clear Cache
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wikiDataConfig1
+container=QseApproxQbPar_1k_100_yagoConfig1
 
 echo "About to run docker container: ${container}"
 
-docker run -m 128GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/qse-endpoint/wikiDataConfig1.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx16g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/yago-qse-endpoint/yagoConfig1.properties
 
 docker ps
 
