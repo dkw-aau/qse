@@ -121,7 +121,7 @@ public class ShapesExtractor {
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
                         //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
+                        .add(SHACL.CLOSED, true);
                 
                 if (propToObjectType != null) {
                     constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
@@ -171,7 +171,7 @@ public class ShapesExtractor {
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
                 .add(SHACL.TARGET_CLASS, subj)
                 //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                .add(SHACL.CLOSED, false);
+                .add(SHACL.CLOSED, true);
         
         if (propToObjectType != null) {
             Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
@@ -313,6 +313,13 @@ public class ShapesExtractor {
             Integer prop = entry.getKey();
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
+    
+            //Make sure instant type (either rdf:type or wdt:P31 of WikiData) is not pruned
+            IRI property = factory.createIRI(encoder.decode(prop));
+            boolean isInstantTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
+            if (isInstantTypeProperty) {
+                propToObjectTypesLocal.put(prop, objTypesSet);
+            }
             
             //compute Relative Support if sampling is on
             double relativeSupport = 0;

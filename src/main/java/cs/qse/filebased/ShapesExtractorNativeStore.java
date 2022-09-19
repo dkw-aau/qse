@@ -68,7 +68,7 @@ public class ShapesExtractorNativeStore {
             if (dbDir.mkdir())
                 System.out.println(dbDir.getAbsoluteFile() + " created successfully.");
             else System.out.println("WARNING::directory creation failed");
-    
+        
         // Create a new Repository.
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath())));
         
@@ -155,7 +155,7 @@ public class ShapesExtractorNativeStore {
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
                         //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        .add(SHACL.CLOSED, false);
+                        .add(SHACL.CLOSED, true);
                 
                 if (propToObjectType != null) {
                     constructNodePropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType);
@@ -205,7 +205,7 @@ public class ShapesExtractorNativeStore {
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
                 .add(SHACL.TARGET_CLASS, subj)
                 //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                .add(SHACL.CLOSED, false);
+                .add(SHACL.CLOSED, true);
         
         if (propToObjectType != null) {
             Map<Integer, Set<Integer>> propToObjectTypesLocal = performNodeShapePropPruning(encodedClassIRI, propToObjectType, confidence, support);
@@ -348,6 +348,13 @@ public class ShapesExtractorNativeStore {
             Set<Integer> propObjectTypes = entry.getValue();
             HashSet<Integer> objTypesSet = new HashSet<>();
             
+            //Make sure instant type (either rdf:type or wdt:P31 of WikiData) is not pruned
+            IRI property = factory.createIRI(encoder.decode(prop));
+            boolean isInstantTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
+            if (isInstantTypeProperty) {
+                propToObjectTypesLocal.put(prop, objTypesSet);
+            }
+            
             //compute Relative Support if sampling is on
             double relativeSupport = 0;
             if (isSamplingOn) {
@@ -363,6 +370,8 @@ public class ShapesExtractorNativeStore {
             
             for (Integer encodedObjectType : propObjectTypes) {
                 Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(classEncodedLabel, prop, encodedObjectType);
+                
+                
                 if (shapeTripletSupport.containsKey(tuple3)) {
                     SupportConfidence sc = shapeTripletSupport.get(tuple3);
                     
