@@ -38,7 +38,7 @@ public class QseSHACLValidator {
         }
     }
     
-    private void validate(String inputDataFilePath, String inputSHACLFilePath, String outputSHACLFilePath, String outputCSVFilePath) {
+    private static void validate(String inputDataFilePath, String inputSHACLFilePath, String outputSHACLFilePath, String outputCSVFilePath) {
         try {
             Graph shapesGraph = RDFDataMgr.loadGraph(inputSHACLFilePath);
             Graph dataGraph = RDFDataMgr.loadGraph(inputDataFilePath);
@@ -62,5 +62,18 @@ public class QseSHACLValidator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public static void testValidation() {
+        
+        String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_data.ttl";
+        String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_shapes.ttl";
+        String outputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.ttl";
+        String outputCSVFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.csv";
+        validate(inputDataFilePath, inputSHACLFilePath, outputSHACLFilePath, outputCSVFilePath);
+    }
+    
+    public static void main(String[] args) throws Exception {
+        testValidation();
     }
 }
