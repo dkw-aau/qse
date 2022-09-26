@@ -10,7 +10,10 @@ public class Constants {
     public static String INSTANCE_OF = "<http://www.wikidata.org/prop/direct/P31>";
     public static String INSTANCE_OF_ = "<http://www.wikidata.org/prop/direct/P31>";
     public static String SUB_CLASS_OF = "<http://www.w3.org/2000/01/rdf-schema#subClassOf>";
+    public static String OBJECT_UNDEFINED_TYPE = "http://shaclshapes.org/object-type/undefined";
     
+    public static String CONFIDENCE = "http://shaclshapes.org/quality#confidence";
+    public static String SUPPORT = "http://shaclshapes.org/quality#support";
     // some constant addresses of files
     public static String MG_VERTICES_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "mg_vertices.csv";
     public static String MG_EDGES_FILE = ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "mg_edges.csv";

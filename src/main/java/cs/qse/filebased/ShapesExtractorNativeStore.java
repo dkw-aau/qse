@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.RDFCollections;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -22,7 +23,6 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore;
 
 import java.io.File;
@@ -111,6 +111,11 @@ public class ShapesExtractorNativeStore {
         // Create a new Repository.
         File dbDir = new File(ConfigManager.getProperty("output_file_path") + "db_" + confidence + "_" + support);
         
+        if (dbDir.exists()) {
+            if (dbDir.delete())
+                System.out.println("Deleted already existing directory. This will avoid duplication.");
+        }
+        
         if (!dbDir.exists())
             if (dbDir.mkdir())
                 System.out.println(dbDir.getAbsoluteFile() + " created successfully.");
@@ -154,6 +159,7 @@ public class ShapesExtractorNativeStore {
                 b.subject(nodeShape)
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
+                        .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI))
                         //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                         .add(SHACL.CLOSED, true);
                 
@@ -216,6 +222,7 @@ public class ShapesExtractorNativeStore {
     private void constructNodePropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
         Map<String, Integer> propDuplicateDetector = new HashMap<>();
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
+            ModelBuilder localBuilder = new ModelBuilder();
             IRI property = factory.createIRI(encoder.decode(prop));
             String localName = property.getLocalName();
             
@@ -243,13 +250,25 @@ public class ShapesExtractorNativeStore {
                 Resource head = bnode();
                 List<Resource> members = Arrays.asList(new Resource[]{subj});
                 Model tempModel = RDFCollections.asRDF(members, head, new LinkedHashModel());
+                propObjectTypes.forEach(encodedObjectType -> {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
+                    annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
+                });
                 tempModel.add(propShape, SHACL.IN, head);
                 b.build().addAll(tempModel);
+                b.build().addAll(localBuilder.build());
             }
             
             int numberOfObjectTypes = propObjectTypes.size();
             
-            if (numberOfObjectTypes == 1) {
+//            if(localName.equals("successor")){
+//                System.out.println("Stop");
+//            }
+//            if(numberOfObjectTypes==0){
+//                System.out.println(subj + " -> " + property);
+//            }
+            
+            if (numberOfObjectTypes == 1 && !isInstantTypeProperty) {
                 propObjectTypes.forEach(encodedObjectType -> {
                     Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
                     if (shapeTripletSupport.containsKey(tuple3)) {
@@ -269,17 +288,20 @@ public class ShapesExtractorNativeStore {
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
                             b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                         } else {
                             //objectType = objectType.replace("<", "").replace(">", "");
-                            if (Utils.isValidIRI(objectType)) {
+                            if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
                                 b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                             } else {
                                 //IRI objectTypeIri = factory.createIRI(objectType);
                                 //b.subject(propShape).add(SHACL.CLASS, objectType);
-                                System.out.println("INVALID Object Type IRI: " + objectType);
+                                //System.out.println("INVALID Object Type IRI: " + objectType);
                                 b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                             }
                         }
                     } else {
@@ -287,11 +309,13 @@ public class ShapesExtractorNativeStore {
                         b.subject(propShape).add(SHACL.DATATYPE, XSD.STRING);
                     }
                 });
+                
+                b.build().addAll(localBuilder.build());
             }
             if (numberOfObjectTypes > 1) {
                 List<Resource> members = new ArrayList<>();
                 Resource headMember = bnode();
-                ModelBuilder localBuilder = new ModelBuilder();
+                
                 
                 for (Integer encodedObjectType : propObjectTypes) {
                     Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
@@ -316,14 +340,18 @@ public class ShapesExtractorNativeStore {
                             localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
                             localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
                             
+                            annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
+                            
                         } else {
-                            if (Utils.isValidIRI(objectType)) {
+                            if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
                                 localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             } else {
-                                System.out.println("INVALID Object Type IRI: " + objectType);
+                                //System.out.println("INVALID Object Type IRI: " + objectType);
                                 localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             }
                         }
                     } else {
@@ -339,6 +367,24 @@ public class ShapesExtractorNativeStore {
                 b.build().addAll(localModel);
             }
         });
+    }
+    
+    private void annotateWithSupportAndConfidence(Resource currentMember, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
+        if (shapeTripletSupport.containsKey(tuple3)) {
+            Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
+            localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
+            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
+        }
+    }
+    
+    private void annotateWithSupportAndConfidence(IRI propShape, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
+        if (shapeTripletSupport.containsKey(tuple3)) {
+            Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
+            localBuilder.subject(propShape).add(Constants.SUPPORT, entities);
+            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            localBuilder.subject(propShape).add(Constants.CONFIDENCE, confidence);
+        }
     }
     
     private Map<Integer, Set<Integer>> performNodeShapePropPruning(Integer classEncodedLabel, Map<Integer, Set<Integer>> propToObjectType, Double confidence, Integer support) {

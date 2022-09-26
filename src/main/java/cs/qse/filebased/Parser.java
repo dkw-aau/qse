@@ -121,10 +121,14 @@ public class Parser {
                     Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     Node subject = nodes[0];
                     String objectType = extractObjectType(nodes[2].toString());
+                    
+//                    if (nodes[1].toString().equals("<http://dbpedia.org/ontology/successor>") && nodes[0].toString().equals("<http://dbpedia.org/resource/Estel>")) {
+//                        System.out.println("Break");
+//                    }
                     int propID = stringEncoder.encode(nodes[1].getLabel());
                     if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                         EntityData currEntityData = entityDataHashMap.get(nodes[2]);
-                        if (currEntityData != null) {
+                        if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
                             objTypes = currEntityData.getClassTypes();
                             for (Integer node : objTypes) { // get classes of node2
                                 prop2objTypeTuples.add(new Tuple2<>(propID, node));
@@ -132,6 +136,12 @@ public class Parser {
                             addEntityToPropertyConstraints(prop2objTypeTuples, subject);
                         }
                         /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+                        else {
+                            int objID = stringEncoder.encode(Constants.OBJECT_UNDEFINED_TYPE);
+                            objTypes.add(objID);
+                            prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+                            addEntityToPropertyConstraints(prop2objTypeTuples, subject);
+                        }
                         
                     } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
                         int objID = stringEncoder.encode(objectType);
@@ -157,6 +167,8 @@ public class Parser {
                             }
                             
                             classObjTypes.addAll(objTypes);
+                            propToObjTypes.put(propID, classObjTypes);
+                            classToPropWithObjTypes.put(entityClass, propToObjTypes);
                         }
                     }
                 } catch (ParseException e) {
