@@ -4,11 +4,11 @@ import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.MinCardinalityExperiment;
+import cs.qse.common.encoders.StringEncoder;
 import cs.utils.Constants;
 import cs.utils.Tuple2;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
-import cs.qse.common.encoders.StringEncoder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -47,6 +47,9 @@ public class Parser {
     
     public Parser() {}
     
+    /**
+     * ============================================= Constructor ========================================
+     */
     public Parser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate) {
         this.rdfFilePath = filePath;
         this.expectedNumberOfClasses = expNoOfClasses;
@@ -58,13 +61,12 @@ public class Parser {
         this.stringEncoder = new StringEncoder();
     }
     
+    /**
+     * ============================================= Run Parser ========================================
+     */
     public void run() {
-        runParser();
-    }
-    
-    private void runParser() {
-        firstPass();
-        secondPass();
+        entityExtraction();
+        entityConstraintsExtraction();
         computeSupportConfidence();
         extractSHACLShapes(true);
         //assignCardinalityConstraints();
@@ -72,9 +74,11 @@ public class Parser {
     }
     
     /**
+     * ============================================= Phase 1: Entity Extraction ========================================
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
+     * =================================================================================================================
      */
-    protected void firstPass() {
+    protected void entityExtraction() {
         System.out.println("invoked::firstPass()");
         StopWatch watch = new StopWatch();
         watch.start();
@@ -105,72 +109,38 @@ public class Parser {
     }
     
     /**
+     * ============================================= Phase 2: Entity constraints extraction ============================
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to collect the constraints and the metadata required
      * to compute the support and confidence of each candidate shape.
+     * =================================================================================================================
      */
-    protected void secondPass() {
+    
+    protected void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
             Files.lines(Path.of(rdfFilePath)).forEach(line -> {
                 try {
                     //Declaring required sets
-                    Set<Integer> objTypes = new HashSet<>(10);
+                    Set<Integer> objTypesIDs = new HashSet<>(10);
                     Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
                     
-                    Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
-                    Node subject = nodes[0];
+                    // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
+                    Node[] nodes = NxParser.parseNodes(line);
+                    Node entityNode = nodes[0];
                     String objectType = extractObjectType(nodes[2].toString());
-                    
-//                    if (nodes[1].toString().equals("<http://dbpedia.org/ontology/successor>") && nodes[0].toString().equals("<http://dbpedia.org/resource/Estel>")) {
-//                        System.out.println("Break");
-//                    }
                     int propID = stringEncoder.encode(nodes[1].getLabel());
-                    if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                        EntityData currEntityData = entityDataHashMap.get(nodes[2]);
-                        if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
-                            objTypes = currEntityData.getClassTypes();
-                            for (Integer node : objTypes) { // get classes of node2
-                                prop2objTypeTuples.add(new Tuple2<>(propID, node));
-                            }
-                            addEntityToPropertyConstraints(prop2objTypeTuples, subject);
-                        }
-                        /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
-                        else {
-                            int objID = stringEncoder.encode(Constants.OBJECT_UNDEFINED_TYPE);
-                            objTypes.add(objID);
-                            prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
-                            addEntityToPropertyConstraints(prop2objTypeTuples, subject);
-                        }
-                        
-                    } else { // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                        int objID = stringEncoder.encode(objectType);
-                        //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
-                        objTypes.add(objID);
-                        prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
-                        addEntityToPropertyConstraints(prop2objTypeTuples, subject);
-                    }
                     
-                    EntityData entityData = entityDataHashMap.get(subject);
-                    if (entityData != null) {
-                        for (Integer entityClass : entityData.getClassTypes()) {
-                            Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.get(entityClass);
-                            if (propToObjTypes == null) {
-                                propToObjTypes = new HashMap<>();
-                                classToPropWithObjTypes.put(entityClass, propToObjTypes);
-                            }
-                            
-                            Set<Integer> classObjTypes = propToObjTypes.get(propID);
-                            if (classObjTypes == null) {
-                                classObjTypes = new HashSet<>();
-                                propToObjTypes.put(propID, classObjTypes);
-                            }
-                            
-                            classObjTypes.addAll(objTypes);
-                            propToObjTypes.put(propID, classObjTypes);
-                            classToPropWithObjTypes.put(entityClass, propToObjTypes);
-                        }
+                    // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+                    if (objectType.equals("IRI")) {
+                        objTypesIDs = parseIriTypeObject(objTypesIDs, prop2objTypeTuples, nodes, entityNode, propID);
                     }
+                    // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+                    else {
+                        parseLiteralTypeObject(objTypesIDs, entityNode, objectType, propID);
+                    }
+                    // for each type (class) of current entity -> append the property and object type in classToPropWithObjTypes HashMap
+                    updateClassToPropWithObjTypesMap(objTypesIDs, entityNode, propID);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -183,7 +153,104 @@ public class Parser {
     }
     
     /**
-     * A utility method to add property constraints of each entity in the 2nd pass
+     * ============================================= Phase 3: Support and Confidence Computation =======================
+     * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
+     * =================================================================================================================
+     */
+    public void computeSupportConfidence() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        statsComputer = new StatsComputer();
+        statsComputer.setShapeTripletSupport(shapeTripletSupport);
+        statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
+        watch.stop();
+        Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    /**
+     * ============================================= Phase 4: Shapes extraction ========================================
+     * Phase 4: Shapes extraction
+     * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
+     * =================================================================================================================
+     */
+    protected void extractSHACLShapes(Boolean performPruning) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:No Pruning";
+        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        if (performPruning) {
+            StopWatch watchForPruning = new StopWatch();
+            watchForPruning.start();
+            ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
+                supportRange.forEach(supp -> {
+                    StopWatch innerWatch = new StopWatch();
+                    innerWatch.start();
+                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    innerWatch.stop();
+                    Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
+                });
+            });
+            methodName = "extractSHACLShapes";
+            watchForPruning.stop();
+            Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
+        }
+        
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    
+    //============================================= Utility Methods ====================================================
+    
+    private Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
+        EntityData currEntityData = entityDataHashMap.get(nodes[2]);
+        if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
+            objTypesIDs = currEntityData.getClassTypes();
+            for (Integer node : objTypesIDs) { // get classes of node2
+                prop2objTypeTuples.add(new Tuple2<>(propID, node));
+            }
+            addEntityToPropertyConstraints(prop2objTypeTuples, subject);
+        }
+        /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
+        else {
+            int objID = stringEncoder.encode(Constants.OBJECT_UNDEFINED_TYPE);
+            objTypesIDs.add(objID);
+            prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+            addEntityToPropertyConstraints(prop2objTypeTuples, subject);
+        }
+        return objTypesIDs;
+    }
+    
+    private void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
+        Set<Tuple2<Integer, Integer>> prop2objTypeTuples;
+        int objID = stringEncoder.encode(objectType);
+        //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
+        objTypes.add(objID);
+        prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
+        addEntityToPropertyConstraints(prop2objTypeTuples, subject);
+    }
+    
+    private void updateClassToPropWithObjTypesMap(Set<Integer> objTypesIDs, Node entityNode, int propID) {
+        EntityData entityData = entityDataHashMap.get(entityNode);
+        if (entityData != null) {
+            for (Integer entityTypeID : entityData.getClassTypes()) {
+                Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.computeIfAbsent(entityTypeID, k -> new HashMap<>());
+                Set<Integer> classObjTypes = propToObjTypes.computeIfAbsent(propID, k -> new HashSet<>());
+                classObjTypes.addAll(objTypesIDs);
+                propToObjTypes.put(propID, classObjTypes);
+                classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+            }
+        }
+    }
+    
+    
+    /**
+     * A utility method to add property constraints of each entity in the 2nd phase
      *
      * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
      * @param subject            : Subject entity such as :Paris
@@ -219,8 +286,7 @@ public class Parser {
             type = "<" + RDF.LANGSTRING + ">"; //theLiteral.getLanguageTag(); will return the language tag
         } else {
             if (Utils.isValidIRI(literalIri)) {
-                if (SimpleValueFactory.getInstance().createIRI(literalIri).isIRI())
-                    type = "IRI";
+                if (SimpleValueFactory.getInstance().createIRI(literalIri).isIRI()) type = "IRI";
             } else {
                 type = "<" + XSD.STRING + ">";
             }
@@ -228,53 +294,10 @@ public class Parser {
         return type;
     }
     
-    /**
-     * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
-     */
-    public void computeSupportConfidence() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
-        statsComputer = new StatsComputer();
-        statsComputer.setShapeTripletSupport(shapeTripletSupport);
-        statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
-        watch.stop();
-        Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        
-    }
+    //--------------------------------------------------------------------------------
+    // End Utility Methods - Phase 2
+    //================================================================================
     
-    /**
-     * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
-     */
-    protected void extractSHACLShapes(Boolean performPruning) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
-        se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
-        if (performPruning) {
-            StopWatch watchForPruning = new StopWatch();
-            watchForPruning.start();
-            ExperimentsUtil.getSupportConfRange().forEach((conf, supportRange) -> {
-                supportRange.forEach(supp -> {
-                    StopWatch innerWatch = new StopWatch();
-                    innerWatch.start();
-                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
-                    innerWatch.stop();
-                    Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
-                });
-            });
-            methodName = "extractSHACLShapes";
-            watchForPruning.stop();
-            Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
-        }
-        
-        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
-        watch.stop();
-        
-        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
     
     /**
      * Assigning cardinality constraints  using various values for support and confidence thresholds
