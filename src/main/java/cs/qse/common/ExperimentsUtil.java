@@ -15,8 +15,7 @@ import java.util.List;
 public class ExperimentsUtil {
     
     public static HashMap<Double, List<Integer>> getSupportConfRange() {
-        //ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 10, 25, 50, 100, 150, 200, 250, 300, 350, 450, 500, 1000));
-        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 10, 25, 50, 100, 500, 1000));
+        ArrayList<Integer> supportRange = new ArrayList<>(Arrays.asList(1, 10, 25, 50, 100, 150, 200, 250, 300, 350, 450, 500, 1000));
         HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
         confSuppMap.put(0.05, supportRange);
         confSuppMap.put(0.10, supportRange);

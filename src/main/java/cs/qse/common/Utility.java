@@ -62,6 +62,21 @@ public class Utility {
         return query.toString();
     }
     
+    public static String buildBatchQuery(Set<String> types, Set<String> entities, String typePredicate) {
+        StringBuilder query = new StringBuilder("PREFIX onto: <http://www.ontotext.com/> \nSELECT * from onto:explicit WHERE { \n");
+        
+        for (String type : types) {
+            query.append("?entity ").append(typePredicate).append(" <").append(type).append("> .\n");
+        }
+        query.append("?entity ?p ?o . \n");
+        query.append("VALUES (?entity) { \n");
+        for (String entity: entities){
+            query.append("\t( ").append(entity).append(" ) \n");
+        }
+        query.append(" } \n} ");
+        return query.toString();
+    }
+    
     
     private static String buildQuery(String classIri, String property, String objectType, String queryFile, String typePredicate) {
         String query = (FilesUtil.readQuery(queryFile)

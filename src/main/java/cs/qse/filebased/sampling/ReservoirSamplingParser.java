@@ -74,7 +74,7 @@ public class ReservoirSamplingParser extends Parser {
         dynamicNbReservoirSampling();
         //prepareStatistics();
         //printSampledEntitiesLogs();
-        secondPass();
+        entityConstraintsExtraction();
         //printSampledEntitiesLogs();
         computeSupportConfidence();
         extractSHACLShapes(true);
@@ -202,7 +202,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     @Override
-    protected void secondPass() {
+    protected void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {

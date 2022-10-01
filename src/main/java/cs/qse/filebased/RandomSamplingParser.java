@@ -30,15 +30,15 @@ public class RandomSamplingParser extends Parser {
     
     private void runParser() {
         System.out.println("Entity Sampling Threshold : " + randomSamplingThreshold);
-        firstPass();
-        secondPass();
+        entityExtraction();
+        entityConstraintsExtraction();
         computeSupportConfidence();
         extractSHACLShapes(false);
         //assignCardinalityConstraints();
     }
     
     @Override
-    protected void firstPass() {
+    protected void entityExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -82,7 +82,7 @@ public class RandomSamplingParser extends Parser {
     }
     
     @Override
-    protected void secondPass() {
+    protected void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {

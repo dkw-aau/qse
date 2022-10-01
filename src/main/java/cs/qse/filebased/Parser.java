@@ -149,7 +149,7 @@ public class Parser {
             e.printStackTrace();
         }
         watch.stop();
-        Utils.logTime("secondPass", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("secondPhase", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
     /**
@@ -170,7 +170,6 @@ public class Parser {
     
     /**
      * ============================================= Phase 4: Shapes extraction ========================================
-     * Phase 4: Shapes extraction
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      * =================================================================================================================
      */
@@ -271,12 +270,7 @@ public class Parser {
         entityDataHashMap.put(subject, currentEntityData);
     }
     
-    /**
-     * A utility method to extract the literal object type
-     *
-     * @param literalIri : IRI for the literal object
-     * @return String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
-     */
+    //A utility method to extract the literal object type, returns String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
     protected String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
         String type = null;
@@ -293,11 +287,6 @@ public class Parser {
         }
         return type;
     }
-    
-    //--------------------------------------------------------------------------------
-    // End Utility Methods - Phase 2
-    //================================================================================
-    
     
     /**
      * Assigning cardinality constraints  using various values for support and confidence thresholds
