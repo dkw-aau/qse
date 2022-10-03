@@ -76,8 +76,8 @@ public class QbSampling {
         System.out.println("Started EndpointSampling ...");
         getNumberOfInstancesOfEachClass();
         dynamicNeighborBasedReservoirSampling(); //first pass here is to send a query to the endpoint and get all entities, parse the entities and sample using reservoir sampling
-        //entityConstraintsExtractionBatch();
-        entityConstraintsExtraction(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
+        entityConstraintsExtractionBatch();
+        //entityConstraintsExtraction(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
         writeSupportToFile(stringEncoder, this.shapeTripletSupport, this.sampledEntitiesPerClass);
         extractSHACLShapes(false);
     }
