@@ -185,8 +185,8 @@ public class QbSampling {
         }
         
         typesToEntities.forEach((types, entities) -> {
-            if (entities.size() > 100) {
-                List<List<String>> subEntities = Lists.partition(entities, 100);
+            if (entities.size() > 500) {
+                List<List<String>> subEntities = Lists.partition(entities, 500);
                 subEntities.forEach(listOfSubEntities -> {
                     String batchQuery = buildBatchQuery(types, listOfSubEntities, typePredicate); // ?p ?o are binding variables
                     iterateOverEntityTriples(types, batchQuery);
