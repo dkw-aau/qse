@@ -11,7 +11,7 @@ echo "------------------  dbpediaConfig1 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_dbpediaConfig_cold_nobtach_1
+container=QseApproxQbPar_1k_100_dbpediaConfig_cold_batch_1
 
 echo "About to run docker container: ${container}"
 
@@ -49,7 +49,7 @@ echo "------------------  lubmConfig1 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_lubmConfig_Cold_nobtach_1
+container=QseApproxQbPar_1k_100_lubmConfig_Cold_batch_1
 
 echo "About to run docker container: ${container}"
 
@@ -87,7 +87,7 @@ echo "------------------  yagoConfig1 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_yagoConfig_cold_nobtach_1
+container=QseApproxQbPar_1k_100_yagoConfig_cold_batch_1
 
 echo "About to run docker container: ${container}"
 
@@ -127,7 +127,7 @@ echo "------------------  wdt15Config1 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wdt15Config_cold_nobtach_1
+container=QseApproxQbPar_1k_100_wdt15Config_cold_batch_1
 
 echo "About to run docker container: ${container}"
 
@@ -165,11 +165,11 @@ echo "------------------  wdt21Config1 ------------------"
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=QseApproxQbPar_1k_100_wdt21Config_cold_nobtach_1
+container=QseApproxQbPar_1k_100_wdt21Config_cold_batch_1
 
 echo "About to run docker container: ${container}"
 
-docker run -m 80GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/wdt21-qse-endpoint/wikiDataConfig1.properties
+docker run -m 80GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx70g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/wdt21-qse-endpoint/wikiDataConfig1.properties
 
 docker ps
 
