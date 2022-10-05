@@ -226,9 +226,9 @@ public class ShapesExtractorNativeStore {
             IRI property = factory.createIRI(encoder.decode(prop));
             String localName = property.getLocalName();
             
-            boolean isInstantTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
-            if (isInstantTypeProperty) {
-                localName = "instantType";
+            boolean isInstanceTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
+            if (isInstanceTypeProperty) {
+                localName = "instanceType";
             }
             
             if (propDuplicateDetector.containsKey(localName)) {
@@ -246,7 +246,7 @@ public class ShapesExtractorNativeStore {
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
             
-            if (isInstantTypeProperty) {
+            if (isInstanceTypeProperty) {
                 Resource head = bnode();
                 List<Resource> members = Arrays.asList(new Resource[]{subj});
                 Model tempModel = RDFCollections.asRDF(members, head, new LinkedHashModel());
@@ -268,7 +268,7 @@ public class ShapesExtractorNativeStore {
 //                System.out.println(subj + " -> " + property);
 //            }
             
-            if (numberOfObjectTypes == 1 && !isInstantTypeProperty) {
+            if (numberOfObjectTypes == 1 && !isInstanceTypeProperty) {
                 propObjectTypes.forEach(encodedObjectType -> {
                     Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<>(encoder.encode(subj.stringValue()), prop, encodedObjectType);
                     if (shapeTripletSupport.containsKey(tuple3)) {

@@ -1,5 +1,6 @@
 package cs.qse.querybased.sampling;
 
+import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.filebased.ShapesExtractorNativeStore;
@@ -153,12 +154,20 @@ public class QbSampling {
     }
     
     
+    /**
+     * FIXME =================== Phase 2: BATCH Entity constraints extraction + Phase 3: Confidence & Support Computation ==========
+     * Querying to get properties and object types of each entity to collect the constraints and the metadata required
+     * to compute the support and confidence of each candidate shape.
+     * =================================================================================================================
+     */
+    
+    
     private void entityConstraintsExtractionBatch() {
         StopWatch watch = new StopWatch();
         watch.start();
         System.out.println("Started secondPhaseBatch()");
         
-        HashMap<Set<String>, Set<String>> typesToEntities = new HashMap<>();
+        HashMap<Set<String>, List<String>> typesToEntities = new HashMap<>();
         
         for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
             Integer entityID = entry.getKey();
@@ -168,69 +177,79 @@ public class QbSampling {
             for (Integer entityTypeID : entityData.getClassTypes()) {
                 entityTypes.add(stringEncoder.decode(entityTypeID));
             }
-            typesToEntities.computeIfAbsent(entityTypes, k -> new HashSet<>());
+            typesToEntities.computeIfAbsent(entityTypes, k -> new ArrayList<>());
             
-            Set<String> current = typesToEntities.get(entityTypes);
+            List<String> current = typesToEntities.get(entityTypes);
             current.add(nodeEncoder.decode(entityID).toString());
             typesToEntities.put(entityTypes, current);
         }
         
         typesToEntities.forEach((types, entities) -> {
-            String batchQuery = buildBatchQuery(types, entities, typePredicate);
-            
-            // ?p ?o are binding variables
-            for (BindingSet row : graphDBUtils.evaluateSelectQuery(batchQuery)) {
-                String entity = row.getValue("entity").stringValue();
-                Integer entityID = nodeEncoder.encode(Utils.IriToNode(entity));
-                String prop = row.getValue("p").stringValue();
-                //String propIri = "<" + prop + ">";
-                
-                int propID = stringEncoder.encode(prop);
-                
-                String obj = row.getValue("o").stringValue();
-                Node objNode = Utils.IriToNode(obj);
-                String objType = extractObjectType(obj); // find out if the object is literal or IRI
-                
-                Set<Integer> objTypesIDs = new HashSet<>(10);
-                Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
-                
-                // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                if (objType.equals("IRI")) {
-                    objTypesIDs = parseIriTypeObject(entityID, propID, objNode, objTypesIDs, prop2objTypeTuples);
-                }
-                // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                else {
-                    parseLiteralTypeObject(entityID, propID, objType, objTypesIDs);
-                }
-                // for each type (class) of current entity -> append the property and object type in classToPropWithObjTypes HashMap
-                // Also update shape triplet support map by computing support of triplets
-                //updateClassToPropWithObjTypesAndShapeTripletSupportMaps(entityData, propID, objTypesIDs);
-                
-                for (String entityTypeString : types) {
-                    Integer entityTypeID = stringEncoder.encode(entityTypeString);
-                    Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.computeIfAbsent(entityTypeID, k -> new HashMap<>());
-                    Set<Integer> classObjTypes = propToObjTypes.computeIfAbsent(propID, k -> new HashSet<>());
-                    
-                    classObjTypes.addAll(objTypesIDs);
-                    propToObjTypes.put(propID, classObjTypes);
-                    classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
-                    
-                    //Compute Support - <entityTypeID, propID, objTypesIDs
-                    objTypesIDs.forEach(objTypeID -> {
-                        Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
-                        if (shapeTripletSupport.containsKey(tuple3)) {
-                            Integer support = shapeTripletSupport.get(tuple3).getSupport();
-                            support++;
-                            shapeTripletSupport.put(tuple3, new SupportConfidence(support));
-                        } else {
-                            shapeTripletSupport.put(tuple3, new SupportConfidence(1));
-                        }
-                    });
-                }
+            if (entities.size() > 100) {
+                List<List<String>> subEntities = Lists.partition(entities, 100);
+                subEntities.forEach(listOfSubEntities -> {
+                    String batchQuery = buildBatchQuery(types, listOfSubEntities, typePredicate); // ?p ?o are binding variables
+                    iterateOverEntityTriples(types, batchQuery);
+                });
+            } else {
+                String batchQuery = buildBatchQuery(types, entities, typePredicate); // ?p ?o are binding variables
+                iterateOverEntityTriples(types, batchQuery);
             }
         });
         watch.stop();
         Utils.logTime("secondPhaseBatch:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    private void iterateOverEntityTriples(Set<String> types, String batchQuery) {
+        for (BindingSet row : graphDBUtils.evaluateSelectQuery(batchQuery)) {
+            String entity = row.getValue("entity").stringValue();
+            Integer entityID = nodeEncoder.encode(Utils.IriToNode(entity));
+            String prop = row.getValue("p").stringValue();
+            //String propIri = "<" + prop + ">";
+            
+            int propID = stringEncoder.encode(prop);
+            
+            String obj = row.getValue("o").stringValue();
+            Node objNode = Utils.IriToNode(obj);
+            String objType = extractObjectType(obj); // find out if the object is literal or IRI
+            
+            Set<Integer> objTypesIDs = new HashSet<>(10);
+            Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
+            
+            // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
+            if (objType.equals("IRI")) {
+                objTypesIDs = parseIriTypeObject(entityID, propID, objNode, objTypesIDs, prop2objTypeTuples);
+            }
+            // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
+            else {
+                parseLiteralTypeObject(entityID, propID, objType, objTypesIDs);
+            }
+            // for each type (class) of current entity -> append the property and object type in classToPropWithObjTypes HashMap
+            // Also update shape triplet support map by computing support of triplets
+            //updateClassToPropWithObjTypesAndShapeTripletSupportMaps(entityData, propID, objTypesIDs);
+            
+            for (String entityTypeString : types) {
+                Integer entityTypeID = stringEncoder.encode(entityTypeString);
+                Map<Integer, Set<Integer>> propToObjTypes = classToPropWithObjTypes.computeIfAbsent(entityTypeID, k -> new HashMap<>());
+                Set<Integer> classObjTypes = propToObjTypes.computeIfAbsent(propID, k -> new HashSet<>());
+                
+                classObjTypes.addAll(objTypesIDs);
+                propToObjTypes.put(propID, classObjTypes);
+                classToPropWithObjTypes.put(entityTypeID, propToObjTypes);
+                
+                //Compute Support - <entityTypeID, propID, objTypesIDs
+                objTypesIDs.forEach(objTypeID -> {
+                    Tuple3<Integer, Integer, Integer> tuple3 = new Tuple3<Integer, Integer, Integer>(entityTypeID, propID, objTypeID);
+                    if (shapeTripletSupport.containsKey(tuple3)) {
+                        Integer support = shapeTripletSupport.get(tuple3).getSupport();
+                        support++;
+                        shapeTripletSupport.put(tuple3, new SupportConfidence(support));
+                    } else {
+                        shapeTripletSupport.put(tuple3, new SupportConfidence(1));
+                    }
+                });
+            }
+        }
     }
     
     

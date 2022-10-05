@@ -62,7 +62,7 @@ public class Utility {
         return query.toString();
     }
     
-    public static String buildBatchQuery(Set<String> types, Set<String> entities, String typePredicate) {
+    public static String buildBatchQuery(Set<String> types, List<String> entities, String typePredicate) {
         StringBuilder query = new StringBuilder("PREFIX onto: <http://www.ontotext.com/> \nSELECT * from onto:explicit WHERE { \n");
         
         for (String type : types) {

@@ -185,9 +185,9 @@ public class ShapesExtractor {
             IRI property = factory.createIRI(encoder.decode(prop));
             String localName = property.getLocalName();
             
-            boolean isInstantTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
-            if (isInstantTypeProperty) {
-                localName = "instantType";
+            boolean isInstanceTypeProperty = property.toString().equals(remAngBrackets(typePredicate));
+            if (isInstanceTypeProperty) {
+                localName = "instanceType";
             }
             
             if (propDuplicateDetector.containsKey(localName)) {
@@ -205,7 +205,7 @@ public class ShapesExtractor {
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
             
-            if (isInstantTypeProperty) {
+            if (isInstanceTypeProperty) {
                 Resource head = bnode();
                 List<Resource> members = Arrays.asList(new Resource[]{subj});
                 Model tempModel = RDFCollections.asRDF(members, head, new LinkedHashModel());
