@@ -181,7 +181,7 @@ public class Parser {
         ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         
-        classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
+        //classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
         
         
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
