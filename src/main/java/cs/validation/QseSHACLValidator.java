@@ -60,14 +60,10 @@ public class QseSHACLValidator {
         try {
             Graph shapesGraph = RDFDataMgr.loadGraph(inputSHACLFilePath);
             Graph dataGraph = RDFDataMgr.loadGraph(inputDataFilePath);
-            
             Shapes shapes = Shapes.parse(shapesGraph);
             
-            //ValidationReport report = ShaclValidator.get().validate(shapes, dataGraph);
-            Node city = createResource("http://schema.org/Aalborg");
-            ValidationReport report = ShaclValidator.get().validate(shapes, dataGraph, city);
+            ValidationReport report = ShaclValidator.get().validate(shapes, dataGraph);
             
-            //ShLib.printReport(report);
             //Write as TTL Output
             OutputStream out = new FileOutputStream(outputSHACLFilePath, false);
             RDFDataMgr.write(out, report.getModel(), Lang.TTL);
@@ -168,11 +164,11 @@ public class QseSHACLValidator {
     }
     
     public static void testValidation() {
-        //String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/data/CityDBpedia.nt";
-        //String inputSHACLFilePath =  "/Users/kashifrabbani/Documents/GitHub/shacl/Output/TEMP/positiveAndNegativeWithShNot/DBPEDIA_ML_CUSTOM_0.25_25_SHACL_Pretty_SHACL.ttl";
+        String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/data/CityDBpedia.nt";
+        String inputSHACLFilePath =  "/Users/kashifrabbani/Documents/GitHub/shacl/Output/TEMP/DBPEDIA_ML_CUSTOM_0.25_100_SHACL_Pretty_SHACL.ttl";
         
-        String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_data.ttl";
-        String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_shapes.ttl";
+        //String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_data.ttl";
+        //String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_shapes.ttl";
         String outputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.ttl";
         String outputCSVFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.csv";
         
