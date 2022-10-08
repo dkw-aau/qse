@@ -4,6 +4,7 @@ import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.MinCardinalityExperiment;
+import cs.qse.common.Utility;
 import cs.qse.common.encoders.StringEncoder;
 import cs.utils.Constants;
 import cs.utils.Tuple2;
@@ -179,6 +180,10 @@ public class Parser {
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        
+        classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
+        
+        
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();

@@ -7,6 +7,7 @@ import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.Tuple3;
 import cs.utils.Utils;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,7 +72,7 @@ public class Utility {
         }
         query.append("?entity ?p ?o . \n");
         query.append("VALUES (?entity) { \n");
-        for (String entity: entities){
+        for (String entity : entities) {
             query.append("\t( ").append(entity).append(" ) \n");
         }
         query.append(" } \n} ");
@@ -132,5 +134,16 @@ public class Utility {
         }
         watch.stop();
         Utils.logTime("writeSupportToFile() ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, StringEncoder stringEncoder) {
+        Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes = new HashMap<>();
+        List<String> classes = FilesUtil.readAllLinesFromFile("src/main/resources/classes.txt");
+        classes.forEach(classIri -> {
+            int key = stringEncoder.encode(classIri);
+            Map<Integer, Set<Integer>> value = classToPropWithObjTypes.get(key);
+            filteredClassToPropWithObjTypes.put(key, value);
+        });
+        return filteredClassToPropWithObjTypes;
     }
 }

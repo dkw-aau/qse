@@ -8,6 +8,7 @@ import com.opencsv.CSVReaderBuilder;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,6 +56,7 @@ public class FilesUtil {
         }
         return allData;
     }
+    
     public static List<String[]> readCsvAllDataOnceWithCustomSeparator(String fileAddress, char separator) {
         List<String[]> allData = null;
         try {
@@ -101,6 +103,16 @@ public class FilesUtil {
             e.printStackTrace();
         }
         return q;
+    }
+    
+    public static List<String> readAllLinesFromFile(String fileAddress) {
+        List<String> allLines = new ArrayList<>();
+        try {
+            allLines = Files.readAllLines(Paths.get(fileAddress));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return allLines;
     }
     
 }
