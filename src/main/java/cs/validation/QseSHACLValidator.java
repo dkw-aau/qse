@@ -51,8 +51,8 @@ public class QseSHACLValidator {
                 System.out.println(fileEntry.getName());
                 String outputFilePath = outputDir.getAbsolutePath() + "/" + FilenameUtils.removeExtension(fileEntry.getName()) + "_Validation";
                 System.out.println("Validating data graph using " + fileEntry.getName());
-                //validate(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
-                validateWithListener(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
+                validate(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
+                //validateWithListener(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
             }
         }
     }
