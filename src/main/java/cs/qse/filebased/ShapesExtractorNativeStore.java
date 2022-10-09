@@ -77,10 +77,10 @@ public class ShapesExtractorNativeStore {
         
         try (RepositoryConnection conn = db.getConnection()) { // Open a connection to the database
             
-            Model defaultShapes = constructShapeWithoutPruning(classToPropWithObjTypes);
-            defaultShapes.setNamespace("shape", Constants.SHAPES_NAMESPACE);
-            defaultShapes.setNamespace("shape", Constants.SHACL_NAMESPACE);
-            conn.add(defaultShapes);
+            constructShapeWithoutPruning(classToPropWithObjTypes, conn);
+            conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
+            conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
+            //conn.add(defaultShapes);
             
             // Compute Statistics and prepare logs
             System.out.println("MODEL:: DEFAULT - SIZE: " + conn.size());
@@ -108,11 +108,14 @@ public class ShapesExtractorNativeStore {
     /**
      * QSE-Default sub-method to construct Node and Property shapes without pruning
      */
-    private Model constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
-        Model m = null;
-        ModelBuilder b = new ModelBuilder();
+    private void constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, RepositoryConnection conn) {
+        //Model m = null;
+        //ModelBuilder b = new ModelBuilder();
         classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
             if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+                Model m = null;
+                ModelBuilder b = new ModelBuilder();
+                
                 IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                 //String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                 String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
@@ -126,12 +129,15 @@ public class ShapesExtractorNativeStore {
                 if (propToObjectType != null) {
                     constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
                 }
+                m = b.build();
+                conn.add(m);
+                System.out.println(encoder.decode(encodedClassIRI) + " -> conn.size() = " + conn.size());
             } else {
                 System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
             }
         });
-        m = b.build();
-        return m;
+        //m = b.build();
+        //return m;
     }
     
     

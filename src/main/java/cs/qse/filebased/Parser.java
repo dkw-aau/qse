@@ -69,7 +69,7 @@ public class Parser {
         entityExtraction();
         entityConstraintsExtraction();
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(false);
         //assignCardinalityConstraints();
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
@@ -181,8 +181,8 @@ public class Parser {
         ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         
+        //====================== Enable shapes extraction for specific classes ======================
         //classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
-        
         
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
