@@ -51,7 +51,8 @@ public class QseSHACLValidator {
                 System.out.println(fileEntry.getName());
                 String outputFilePath = outputDir.getAbsolutePath() + "/" + FilenameUtils.removeExtension(fileEntry.getName()) + "_Validation";
                 System.out.println("Validating data graph using " + fileEntry.getName());
-                validate(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
+                //validate(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
+                validateWithListener(dataFilePath, fileEntry.getAbsolutePath(), outputFilePath + ".ttl", outputFilePath + ".csv");
             }
         }
     }
@@ -113,24 +114,28 @@ public class QseSHACLValidator {
             
             ValidationContext vCtx = ValidationContext.create(shapes, dataGraph, listener); // pass listener here
             for (Shape shape : shapes.getTargetShapes()) {
-                shape.getPropertyShapes().forEach(propertyShape -> {
-                    propertyShape.getConstraints();
-                });
                 Collection<Node> focusNodes = VLib.focusNodes(dataGraph, shape);
                 for (Node focusNode : focusNodes) {
                     vCtx.setVerbose(true);
                     VLib.validateShape(vCtx, dataGraph, shape, focusNode);
                 }
             }
-            System.out.println("--- ");
+            
+           /* System.out.println(" --- Print entries ---  ");
             vCtx.generateReport().getEntries().forEach(entry -> {
                 System.out.println(entry.toString());
                 System.out.println();
-            });
+            });*/
+    
+            System.out.println(" --- Writing to file ---  ");
+            //Write as TTL Output
+            OutputStream out = new FileOutputStream(outputSHACLFilePath, false);
+            RDFDataMgr.write(out, vCtx.generateReport().getModel(), Lang.TTL);
+            
             //System.out.println(vCtx.generateReport().getEntries().toString());
             
-            Set<ValidationEvent> actualEvents = listener.getEvents(); // all events have been recorded
-            System.out.println(actualEvents.size());
+            //Set<ValidationEvent> actualEvents = listener.getEvents(); // all events have been recorded
+            //System.out.println(actualEvents.size());
             /*
             actualEvents.forEach(event -> {
                 //System.out.println(event.getValidationContext().generateReport().getEntries().toString());

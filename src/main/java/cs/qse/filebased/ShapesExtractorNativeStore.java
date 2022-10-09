@@ -120,8 +120,8 @@ public class ShapesExtractorNativeStore {
                         .add(RDF.TYPE, SHACL.NODE_SHAPE)
                         .add(SHACL.TARGET_CLASS, subj)
                         .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
-                        //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                        //.add(SHACL.CLOSED, true);
+                //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                //.add(SHACL.CLOSED, true);
                 
                 if (propToObjectType != null) {
                     constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
@@ -211,14 +211,14 @@ public class ShapesExtractorNativeStore {
         b.subject(nodeShape)
                 .add(RDF.TYPE, SHACL.NODE_SHAPE)
                 .add(SHACL.TARGET_CLASS, subj);
-                //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                //.add(SHACL.CLOSED, true);
+        //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+        //.add(SHACL.CLOSED, true);
         
         if (propToObjectType != null) {
             Map<Integer, Set<Integer>> propToObjectTypesLocalPositive = performPropShapePruningPositive(encodedClassIRI, propToObjectType, confidence, support);
-            //Map<Integer, Set<Integer>> propToObjectTypesLocalNegative = performPropShapePruningNegative(encodedClassIRI, propToObjectType, confidence, support);
-            constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive);// call this with positive only
-            //constructPropertyShapesWithShNot(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, propToObjectTypesLocalNegative); // call this to capture negative as sh:not
+            Map<Integer, Set<Integer>> propToObjectTypesLocalNegative = performPropShapePruningNegative(encodedClassIRI, propToObjectType, confidence, support);
+            //constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive);// call this with positive only
+            constructPropertyShapesWithShNot(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, propToObjectTypesLocalNegative); // call this to capture negative as sh:not
         }
     }
     
@@ -675,12 +675,12 @@ public class ShapesExtractorNativeStore {
             
             //create node shape IRI for each property shape
             IRI shNotNodeShapeIriForPropShape = factory.createIRI(Constants.SHAPES_NAMESPACE + localName + subj.getLocalName() + "_PS_NotShape");
-       
+            
             // add sh:not to current node shape
             b.subject(nodeShape).add(SHACL.NOT, shNotNodeShapeIriForPropShape);
             
             // create node shape
-            b.subject(shNotNodeShapeIriForPropShape).add(RDF.TYPE,SHACL.NODE_SHAPE );
+            b.subject(shNotNodeShapeIriForPropShape).add(RDF.TYPE, SHACL.NODE_SHAPE);
             
             //add property shape to current sh:not node shape -> shNotNodeShapeIriForPropShape
             IRI propShape = factory.createIRI(Constants.SHAPES_NAMESPACE + localName + subj.getLocalName() + "ShapeProperty");
