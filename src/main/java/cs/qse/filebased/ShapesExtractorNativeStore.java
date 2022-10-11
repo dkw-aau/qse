@@ -115,12 +115,11 @@ public class ShapesExtractorNativeStore {
         List<Integer> classesList = new ArrayList<>(classToPropWithObjTypes.keySet());
         List<List<Integer>> classesPartition = Lists.partition(classesList, classToPropWithObjTypes.size() / 4);
         classesPartition.forEach(partition -> {
+            Model m = null;
+            ModelBuilder b = new ModelBuilder();
             partition.forEach(encodedClassIRI -> {
                 Map<Integer, Set<Integer>> propToObjectType = classToPropWithObjTypes.get(encodedClassIRI);
                 if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-                    Model m = null;
-                    ModelBuilder b = new ModelBuilder();
-        
                     IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
                     //String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
@@ -134,12 +133,12 @@ public class ShapesExtractorNativeStore {
                     if (propToObjectType != null) {
                         constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
                     }
-                    m = b.build();
-                    conn.add(m);
                 } else {
                     System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 }
             });
+            m = b.build();
+            conn.add(m);
             System.out.println("Partition size" + partition.size() + " conn.size() = " + conn.size());
         });
         /*        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
