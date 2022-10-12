@@ -82,7 +82,7 @@ public class Main {
                 parallelQbSampling.run();
             }
             if (isActivated("qse_validation")) {
-                new QseSHACLValidator();
+                new QseSHACLValidator(true);
             }
             
         } catch (
