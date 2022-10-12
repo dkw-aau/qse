@@ -110,18 +110,41 @@ public class ShapesExtractorNativeStore {
      * QSE-Default sub-method to construct Node and Property shapes without pruning
      */
     private void constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, RepositoryConnection conn) {
-        //Model m = null;
-        //ModelBuilder b = new ModelBuilder();
-        List<Integer> classesList = new ArrayList<>(classToPropWithObjTypes.keySet());
-        List<List<Integer>> classesPartition = Lists.partition(classesList, classToPropWithObjTypes.size() / 4);
-        classesPartition.forEach(partition -> {
+        if (classToPropWithObjTypes.size() > 10000) { // partition to reduce memory consumption
+            List<Integer> classesList = new ArrayList<>(classToPropWithObjTypes.keySet());
+            List<List<Integer>> classesPartition = Lists.partition(classesList, classToPropWithObjTypes.size() / 4);
+            classesPartition.forEach(partition -> {
+                Model m = null;
+                ModelBuilder b = new ModelBuilder();
+                partition.forEach(encodedClassIRI -> {
+                    Map<Integer, Set<Integer>> propToObjectType = classToPropWithObjTypes.get(encodedClassIRI);
+                    if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
+                        IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
+                        String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
+                        b.subject(nodeShape)
+                                .add(RDF.TYPE, SHACL.NODE_SHAPE)
+                                .add(SHACL.TARGET_CLASS, subj)
+                                .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
+                        //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
+                        //.add(SHACL.CLOSED, true);
+                        
+                        if (propToObjectType != null) {
+                            constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
+                        }
+                    } else {
+                        System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
+                    }
+                });
+                m = b.build();
+                conn.add(m);
+                System.out.println("Partition size" + partition.size() + " conn.size() = " + conn.size());
+            });
+        } else {
             Model m = null;
             ModelBuilder b = new ModelBuilder();
-            partition.forEach(encodedClassIRI -> {
-                Map<Integer, Set<Integer>> propToObjectType = classToPropWithObjTypes.get(encodedClassIRI);
+            classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
                 if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
                     IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                    //String nodeShape = "shape:" + subj.getLocalName() + "Shape";
                     String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
                     b.subject(nodeShape)
                             .add(RDF.TYPE, SHACL.NODE_SHAPE)
@@ -129,45 +152,18 @@ public class ShapesExtractorNativeStore {
                             .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
                     //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
                     //.add(SHACL.CLOSED, true);
-        
+                    
                     if (propToObjectType != null) {
                         constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
                     }
+                    System.out.println(encoder.decode(encodedClassIRI) + " -> conn.size() = " + conn.size());
                 } else {
                     System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
                 }
             });
             m = b.build();
             conn.add(m);
-            System.out.println("Partition size" + partition.size() + " conn.size() = " + conn.size());
-        });
-        /*        classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-            if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
-                Model m = null;
-                ModelBuilder b = new ModelBuilder();
-                
-                IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
-                //String nodeShape = "shape:" + subj.getLocalName() + "Shape";
-                String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
-                b.subject(nodeShape)
-                        .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                        .add(SHACL.TARGET_CLASS, subj)
-                        .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
-                //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
-                //.add(SHACL.CLOSED, true);
-                
-                if (propToObjectType != null) {
-                    constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
-                }
-                m = b.build();
-                conn.add(m);
-                System.out.println(encoder.decode(encodedClassIRI) + " -> conn.size() = " + conn.size());
-            } else {
-                System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
-            }
-        });*/
-        //m = b.build();
-        //return m;
+        }
     }
     
     
