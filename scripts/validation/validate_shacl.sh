@@ -15,7 +15,7 @@ container=QseValidation
 
 echo "About to run docker container: ${container}"
 
-docker run -m 80GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx64g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/dbpediaConfig.properties
+docker run -m 150GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx120g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git3/shacl/,target=/app/local $image /app/local/config/wo-max-card/dbpediaConfig.properties
 
 docker ps
 
