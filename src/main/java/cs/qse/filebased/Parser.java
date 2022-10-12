@@ -182,7 +182,7 @@ public class Parser {
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         
         //====================== Enable shapes extraction for specific classes ======================
-        //classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
+        classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
         
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
