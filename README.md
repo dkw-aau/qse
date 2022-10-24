@@ -3,7 +3,7 @@
 This repository contains the source code, resources, and instructions to reproduce the experiments performed for the following research paper under submission in VLDB - July 2022:
 > **Extraction of Validating Shapes from very large Knowledge Graphs [Scalable Data Science]**
 
-**The extended version of the paper is available [here](https://github.com/Kashif-Rabbani/shacl/blob/main/qse-extended.pdf).**
+**The extended version of the paper is available [here](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).**
 
 -------
 
@@ -12,17 +12,17 @@ Please follow these steps to get the code and data to reproduce the results:
 ### 1. Getting the code
 Clone the GitHub repository using the following url.
 ```
-git clone https://github.com/Kashif-Rabbani/shacl.git
+git clone https://github.com/dkw-aau/qse.git
 ```
 
 ### 2. Getting the data
 We have used WikiData, DBpedia, YAGO-4, and LUBM datasets. Details on how to download these datasets are given below:
 
-1. **DBPedia:** We used our [dbpedia script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/dbpedia/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/dkw/qse/blob/main/scripts/dbpedia/dbpedia-files.txt).
+1. **DBPedia:** We used our [dbpedia script](https://github.com/dkw-aau/qse/blob/main/scripts/dbpedia/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/dkw/qse/blob/main/scripts/dbpedia/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
 4. **WikiData (Wdt15):** We downloaded a WikiData dump from 2015 form [this](https://archive.org/details/wikidata-json-20150518) link.
-5. **WikiData (Wdt21):** We downloaded the [truthy dump](https://dumps.wikimedia.org/wikidatawiki/entities/) of WikiData (2021) and then used our [wikidata python script](https://github.com/Kashif-Rabbani/shacl/blob/main/scripts/wikidata/filter_WikiData.py) to remove labels, descriptions, and non-English strings.
+5. **WikiData (Wdt21):** We downloaded the [truthy dump](https://dumps.wikimedia.org/wikidatawiki/entities/) of WikiData (2021) and then used our [wikidata python script](https://github.com/dkw-aau/qse/blob/main/scripts/wikidata/filter_WikiData.py) to remove labels, descriptions, and non-English strings.
 
 We provide a copy of some of these  datasets in a [single archive](http://130.226.98.152/www_datasets/).
 You should download these datasets in `data` directory. You can check the size and number of lines (triples) with the commands:
@@ -71,7 +71,7 @@ Depending on the approach you have chosen from one of the above, you have to set
 
 
 #### 3.3. Shell Scripts
-Assuming that you are in the project's directory, you have updated the configuration file(s), and docker is installed on your machine, move into [scripts](https://github.com/Kashif-Rabbani/shacl/tree/main/scripts) directory using the command ``` cd scripts ``` and then execute one of the following shell scripts files:
+Assuming that you are in the project's directory, you have updated the configuration file(s), and docker is installed on your machine, move into [scripts](https://github.com/dkw-aau/qse/tree/main/scripts) directory using the command ``` cd scripts ``` and then execute one of the following shell scripts files:
 ``` ./dbpedia.sh ``` ,
 ``` ./yago.sh ``` ,
 ``` ./lubm.sh ``` ,
@@ -80,7 +80,7 @@ Assuming that you are in the project's directory, you have updated the configura
 
 You will see logs and the output will be stored in the path of the output directory specified in the config file.
 
-*Note: You may have to execute ```chmod +rwx ``` for each script to solve the permissions issue. In case you want to run the experiments without script, please follow the instructions on [this](https://github.com/Kashif-Rabbani/shacl/blob/main/README-withoutScript.md) page.*
+*Note: You may have to execute ```chmod +rwx ``` for each script to solve the permissions issue. In case you want to run the experiments without script, please follow the instructions on [this](https://github.com/dkw-aau/qse/blob/main/README-withoutScript.md) page.*
 
 
 
