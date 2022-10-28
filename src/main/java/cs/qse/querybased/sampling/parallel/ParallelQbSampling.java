@@ -6,7 +6,7 @@ import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
-import cs.qse.filebased.ShapesExtractor;
+import cs.qse.common.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;

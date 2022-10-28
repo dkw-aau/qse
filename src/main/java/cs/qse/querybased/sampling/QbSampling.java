@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.Utility;
-import cs.qse.filebased.ShapesExtractor;
+import cs.qse.common.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;

@@ -1,10 +1,11 @@
-package cs.qse.filebased;
+package cs.qse.common;
 
 import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.TurtlePrettyFormatter;
 import cs.qse.common.encoders.Encoder;
+import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;

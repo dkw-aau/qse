@@ -3,7 +3,7 @@ package cs.qse.querybased.nonsampling;
 import cs.Main;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.Utility;
-import cs.qse.filebased.ShapesExtractor;
+import cs.qse.common.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
 import cs.qse.common.encoders.StringEncoder;

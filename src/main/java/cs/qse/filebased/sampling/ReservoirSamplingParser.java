@@ -3,6 +3,7 @@ package cs.qse.filebased.sampling;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
+import cs.qse.common.ShapesExtractor;
 import cs.qse.common.Utility;
 import cs.qse.filebased.*;
 import cs.utils.Constants;
