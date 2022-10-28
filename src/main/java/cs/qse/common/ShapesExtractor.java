@@ -256,10 +256,10 @@ public class ShapesExtractor {
         
         if (propToObjectType != null) {
             Map<Integer, Set<Integer>> propToObjectTypesLocalPositive = performPropShapePruningPositive(encodedClassIRI, propToObjectType, confidence, support);
-            Map<Integer, Set<Integer>> propToObjectTypesLocalNegative = performPropShapePruningNegative(encodedClassIRI, propToObjectType, confidence, support);
             
             if (ConfigManager.getProperty("qse_validation_with_shNot") != null) {
                 if (Boolean.parseBoolean(ConfigManager.getProperty("qse_validation_with_shNot"))) {
+                    Map<Integer, Set<Integer>> propToObjectTypesLocalNegative = performPropShapePruningNegative(encodedClassIRI, propToObjectType, confidence, support);
                     constructPropertyShapesWithShNot(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, propToObjectTypesLocalNegative); // call this to capture negative as sh:not
                 } else {
                     constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive);// call this for positive only
@@ -299,11 +299,8 @@ public class ShapesExtractor {
                     supportToRelativeSupport.put(support, list);
                 }
             }
-            //FIXME: Positive and Negative Pruning
             
             positivePruning(classEncodedLabel, confidence, support, prop, propObjectTypes, objTypesSet, relativeSupport);
-            //negativePruning(classEncodedLabel, confidence, support, prop, propObjectTypes, objTypesSet, relativeSupport);
-            
             if (objTypesSet.size() != 0) {
                 propToObjectTypesLocal.put(prop, objTypesSet);
             }
@@ -337,9 +334,7 @@ public class ShapesExtractor {
                     supportToRelativeSupport.put(support, list);
                 }
             }
-            //FIXME: Positive and Negative Pruning
             
-            //positivePruning(classEncodedLabel, confidence, support, prop, propObjectTypes, objTypesSet, relativeSupport);
             negativePruning(classEncodedLabel, confidence, support, prop, propObjectTypes, objTypesSet, relativeSupport);
             
             if (objTypesSet.size() != 0) {
@@ -564,7 +559,7 @@ public class ShapesExtractor {
     private void constructPropertyShapesWithShNot(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> PropToObjectTypesPositive, Map<Integer, Set<Integer>> propToObjectTypesNegative) {
         Map<String, Integer> propDuplicateDetector = new HashMap<>();
         
-        //FIXME: handle positive property shapes
+        //handle positive property shapes
         PropToObjectTypesPositive.forEach((prop, propObjectTypes) -> {
             ModelBuilder localBuilder = new ModelBuilder();
             IRI property = factory.createIRI(encoder.decode(prop));
@@ -705,7 +700,7 @@ public class ShapesExtractor {
             }
         });
         
-        //FIXME: handle negative property shapes to annotate with sh:not
+        //handle negative property shapes to annotate with sh:not
         propToObjectTypesNegative.forEach((prop, propObjectTypes) -> {
             ModelBuilder localBuilder = new ModelBuilder();
             IRI property = factory.createIRI(encoder.decode(prop));
