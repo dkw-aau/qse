@@ -23,29 +23,19 @@ public class Main {
     public static int entitySamplingTargetPercentage;
     public static boolean extractMaxCardConstraints;
     public static boolean isWikiData;
+    public static boolean qseFromSpecificClasses;
     
     
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        
-        datasetPath = paramVal("dataset_path");
-        datasetName = paramVal("dataset_name");
-        numberOfClasses = Integer.parseInt(paramVal("expected_number_classes")); // expected or estimated numberOfClasses
-        numberOfInstances = Integer.parseInt(paramVal("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
-        extractMaxCardConstraints = isActivated("max_cardinality");
-        isWikiData = isActivated("is_wikidata");
-        entitySamplingThreshold = Integer.parseInt(paramVal("entity_sampling_threshold"));
-        entitySamplingTargetPercentage = Integer.parseInt(paramVal("entity_sampling_target_percentage"));
-        execute();
-    }
-    
-    private static void execute() {
+        readConfig();
         benchmark();
         //new PrecisionRecallComputer();
     }
     
+
     private static void benchmark() {
         System.out.println("Benchmark Initiated for " + paramVal("dataset_path"));
         Utils.log("Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath");
@@ -90,6 +80,18 @@ public class Main {
             e.printStackTrace();
         }
         Utils.getCurrentTimeStamp();
+    }
+    
+    private static void readConfig() {
+        datasetPath = paramVal("dataset_path");
+        datasetName = paramVal("dataset_name");
+        numberOfClasses = Integer.parseInt(paramVal("expected_number_classes")); // expected or estimated numberOfClasses
+        numberOfInstances = Integer.parseInt(paramVal("expected_number_of_lines")) / 2; // expected or estimated numberOfInstances
+        extractMaxCardConstraints = isActivated("max_cardinality");
+        isWikiData = isActivated("is_wikidata");
+        entitySamplingThreshold = Integer.parseInt(paramVal("entity_sampling_threshold"));
+        entitySamplingTargetPercentage = Integer.parseInt(paramVal("entity_sampling_target_percentage"));
+        qseFromSpecificClasses = isActivated("qse_specific_classes");
     }
     
     private static boolean isActivated(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}

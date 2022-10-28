@@ -6,10 +6,7 @@ import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.MinCardinalityExperiment;
 import cs.qse.common.Utility;
 import cs.qse.common.encoders.StringEncoder;
-import cs.utils.Constants;
-import cs.utils.Tuple2;
-import cs.utils.Tuple3;
-import cs.utils.Utils;
+import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -69,8 +66,9 @@ public class Parser {
         entityExtraction();
         entityConstraintsExtraction();
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(true, Main.qseFromSpecificClasses);
         //assignCardinalityConstraints();
+        Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
     
@@ -174,15 +172,16 @@ public class Parser {
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      * =================================================================================================================
      */
-    protected void extractSHACLShapes(Boolean performPruning) {
+    protected void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         
         //====================== Enable shapes extraction for specific classes ======================
-        classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, stringEncoder);
+        if (qseFromSpecificClasses)
+            classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
         
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {

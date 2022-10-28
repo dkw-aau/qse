@@ -3,6 +3,7 @@ package cs.qse.filebased.sampling;
 import cs.Main;
 import cs.qse.common.EntityData;
 import cs.qse.common.ExperimentsUtil;
+import cs.qse.common.Utility;
 import cs.qse.filebased.*;
 import cs.utils.Constants;
 import cs.utils.Tuple2;
@@ -69,15 +70,11 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     private void runParser() {
-        //standardReservoirSampling();
-        //neighborBasedReservoirSampling();
         dynamicNbReservoirSampling();
-        //prepareStatistics();
-        //printSampledEntitiesLogs();
         entityConstraintsExtraction();
-        //printSampledEntitiesLogs();
         computeSupportConfidence();
-        extractSHACLShapes(true);
+        extractSHACLShapes(true, Main.qseFromSpecificClasses);
+        Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
     }
     
     protected void standardReservoirSampling() {
@@ -305,12 +302,15 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     @Override
-    protected void extractSHACLShapes(Boolean performPruning) {
+    protected void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling: No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        //====================== Enable shapes extraction for specific classes ======================
+        if (qseFromSpecificClasses)
+            classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         se.setPropCount(propCount);
         se.setSampledPropCount(sampledPropCount);

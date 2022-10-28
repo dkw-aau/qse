@@ -7,7 +7,6 @@ import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
 import cs.qse.filebased.ShapesExtractor;
-import cs.qse.filebased.ShapesExtractorNativeStore;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
@@ -240,7 +239,7 @@ public class ParallelQbSampling {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(encoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         

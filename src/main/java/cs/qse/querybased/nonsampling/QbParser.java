@@ -1,6 +1,8 @@
 package cs.qse.querybased.nonsampling;
 
+import cs.Main;
 import cs.qse.common.ExperimentsUtil;
+import cs.qse.common.Utility;
 import cs.qse.filebased.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
@@ -10,7 +12,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.jetbrains.annotations.NotNull;
-import org.semanticweb.yars.nx.Node;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,11 +28,13 @@ import java.util.concurrent.TimeUnit;
 public class QbParser {
     private final GraphDBUtils graphDBUtils;
     HashMap<Integer, Integer> classEntityCount;
-    HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+    //HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
+    Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes;
     HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
     Set<Integer> classes;
     StringEncoder stringEncoder;
     String instantiationProperty;
+    Boolean qseFromSpecificClasses;
     long globalComputeSupportMethodTime = 0L;
     
     public QbParser(String typeProperty) {
@@ -42,6 +45,7 @@ public class QbParser {
         this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.stringEncoder = new StringEncoder();
         this.instantiationProperty = typeProperty;
+        this.qseFromSpecificClasses = Main.qseFromSpecificClasses;
     }
     
     public void run() {
@@ -53,24 +57,41 @@ public class QbParser {
         getDistinctClasses();
         getShapesInfoAndComputeSupport();
         System.out.println("globalComputeSupportMethodTime: " + globalComputeSupportMethodTime);
-        populateShapes();
+        extractSHACLShapes(true);
         writeSupportToFile();
+        Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("Size: classToPropWithObjTypes :: " + classToPropWithObjTypes.size() + " , Size: shapeTripletSupport :: " + shapeTripletSupport.size());
     }
     
     private void getNumberOfInstancesOfEachClass() {
         StopWatch watch = new StopWatch();
         watch.start();
-        //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
-        graphDBUtils.runSelectQuery(setProperty(FilesUtil.readQuery("query2"))).forEach(result -> {
-            String c = result.getValue("class").stringValue();
-            int classCount = 0;
-            if (result.getBinding("classCount").getValue().isLiteral()) {
-                Literal literalClassCount = (Literal) result.getBinding("classCount").getValue();
-                classCount = literalClassCount.intValue();
+        if (qseFromSpecificClasses) {
+            List<String> classes = Utility.getListOfClasses();
+            for (String classIri : classes) {
+                //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
+                graphDBUtils.runSelectQuery(setProperty(FilesUtil.readQuery("query2_")).replace(":Class", "<" + classIri + "> ")).forEach(result -> {
+                    int classCount = 0;
+                    if (result.getBinding("classCount").getValue().isLiteral()) {
+                        Literal literalClassCount = (Literal) result.getBinding("classCount").getValue();
+                        classCount = literalClassCount.intValue();
+                    }
+                    classEntityCount.put(stringEncoder.encode(classIri), classCount);
+                });
             }
-            classEntityCount.put(stringEncoder.encode(c), classCount);
-        });
+            
+        } else {
+            //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
+            graphDBUtils.runSelectQuery(setProperty(FilesUtil.readQuery("query2"))).forEach(result -> {
+                String c = result.getValue("class").stringValue();
+                int classCount = 0;
+                if (result.getBinding("classCount").getValue().isLiteral()) {
+                    Literal literalClassCount = (Literal) result.getBinding("classCount").getValue();
+                    classCount = literalClassCount.intValue();
+                }
+                classEntityCount.put(stringEncoder.encode(c), classCount);
+            });
+        }
         watch.stop();
         System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         Utils.logTime("getNumberOfInstancesOfEachClass ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
@@ -88,10 +109,10 @@ public class QbParser {
             queryToGetProperties = setProperty(queryToGetProperties);
             HashSet<String> props = getPropertiesOfClass(queryToGetProperties);
             
-            HashMap<Node, HashSet<String>> propToObjTypes = new HashMap<>();
+            HashMap<Integer, Set<Integer>> propToObjTypes = new HashMap<>();
             
             for (String property : props) {
-                HashSet<String> objectTypes = new HashSet<>();
+                HashSet<Integer> objectTypes = new HashSet<>();
                 String queryToVerifyLiteralObjectType = buildQuery(classIri, property, "query5");
                 queryToVerifyLiteralObjectType = setProperty(queryToVerifyLiteralObjectType);
                 //Literal Type Object
@@ -102,7 +123,7 @@ public class QbParser {
                         results.forEach(row -> {
                             if (row.getValue("objDataType") != null) {
                                 String objectType = row.getValue("objDataType").stringValue();
-                                objectTypes.add(objectType);
+                                objectTypes.add(stringEncoder.encode(objectType));
                                 String queryToComputeSupportForLiteralTypeObjects = buildQuery(classIri, property, objectType, "query8");
                                 queryToComputeSupportForLiteralTypeObjects = setProperty(queryToComputeSupportForLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForLiteralTypeObjects);
@@ -122,7 +143,7 @@ public class QbParser {
                         results.forEach(row -> {
                             if (row.getValue("objDataType") != null) {
                                 String objectType = row.getValue("objDataType").stringValue();
-                                objectTypes.add(objectType);
+                                objectTypes.add(stringEncoder.encode(objectType));
                                 String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, objectType, "query9");
                                 queryToComputeSupportForNonLiteralTypeObjects = setProperty(queryToComputeSupportForNonLiteralTypeObjects);
                                 computeSupport(classIri, property, objectType, queryToComputeSupportForNonLiteralTypeObjects);
@@ -132,9 +153,9 @@ public class QbParser {
                         });
                     }
                 }
-                propToObjTypes.put(Utils.IriToNode(property), objectTypes);
+                propToObjTypes.put(stringEncoder.encode(property), objectTypes);
             }
-            classToPropWithObjTypes.put(stringEncoder.decode(classIri), propToObjTypes);
+            classToPropWithObjTypes.put(classIri, propToObjTypes);
             System.out.println(".. globalComputeSupportMethodTime: " + globalComputeSupportMethodTime);
             
         }
@@ -144,7 +165,6 @@ public class QbParser {
     }
     
     private void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
-        //System.out.println(supportQuery);
         StopWatch watcher = new StopWatch();
         watcher.start();
         graphDBUtils.runSelectQuery(supportQuery).forEach(countRow -> {
@@ -159,31 +179,14 @@ public class QbParser {
         globalComputeSupportMethodTime = globalComputeSupportMethodTime + time;
     }
     
-    private void populateShapes() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        SHACLER shacler = new SHACLER();
-        classToPropWithObjTypes.forEach((c, p) -> {
-            shacler.setParams(c, p);
-            shacler.constructShape();
-        });
-        System.out.println("Writing shapes into a file...");
-        shacler.writeModelToFile();
-        watch.stop();
-        System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-        Utils.logTime("populateShapes ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    //TODO: Fix type mismatch and test, then remove populateShapes() method and delete class SHACLER.
     protected void extractSHACLShapes(Boolean performPruning) {
-        System.out.println("Started extractSHACLShapes()");
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, instantiationProperty);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        //FIXME: TODO: Types Mismatch Required type: Map<Integer,Map<Integer, Set<Integer>>>
-        // Provided: HashMap<String,HashMap<Node, HashSet<String>>>
-        //se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        
+        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
             watchForPruning.start();
@@ -191,8 +194,7 @@ public class QbParser {
                 supportRange.forEach(supp -> {
                     StopWatch innerWatch = new StopWatch();
                     innerWatch.start();
-                    //FIXME: Types mismatch as above.
-                    //se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
                     innerWatch.stop();
                     Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
                 });
@@ -208,7 +210,6 @@ public class QbParser {
     }
     
     public void writeSupportToFile() {
-        //System.out.println("Writing Support to File ...");
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
@@ -256,3 +257,20 @@ public class QbParser {
         return query.replace(":instantiationProperty", instantiationProperty);
     }
 }
+
+
+/*    private void populateShapes() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        SHACLER shacler = new SHACLER();
+        classToPropWithObjTypes.forEach((c, p) -> {
+            shacler.setParams(c, p);
+            shacler.constructShape();
+        });
+        System.out.println("Writing shapes into a file...");
+        shacler.writeModelToFile();
+        watch.stop();
+        System.out.println("Time Elapsed populateShapes: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        Utils.logTime("populateShapes ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    */

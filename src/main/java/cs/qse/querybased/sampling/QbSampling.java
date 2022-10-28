@@ -3,7 +3,8 @@ package cs.qse.querybased.sampling;
 import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
-import cs.qse.filebased.ShapesExtractorNativeStore;
+import cs.qse.common.Utility;
+import cs.qse.filebased.ShapesExtractor;
 import cs.qse.filebased.SupportConfidence;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;
@@ -80,7 +81,8 @@ public class QbSampling {
         entityConstraintsExtractionBatch();
         //entityConstraintsExtraction(); //In the 2nd pass you run query for each sampled entity to get the property metadata ...
         writeSupportToFile(stringEncoder, this.shapeTripletSupport, this.sampledEntitiesPerClass);
-        extractSHACLShapes(false);
+        extractSHACLShapes(true, Main.qseFromSpecificClasses);
+        Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
     }
     
     /**
@@ -155,12 +157,11 @@ public class QbSampling {
     
     
     /**
-     * FIXME =================== Phase 2: BATCH Entity constraints extraction + Phase 3: Confidence & Support Computation ==========
+     * =================== Phase 2 & 3: BATCH Entity constraints extraction + Confidence and Support Computation ==========
      * Querying to get properties and object types of each entity to collect the constraints and the metadata required
      * to compute the support and confidence of each candidate shape.
      * =================================================================================================================
      */
-    
     
     private void entityConstraintsExtractionBatch() {
         StopWatch watch = new StopWatch();
@@ -252,75 +253,22 @@ public class QbSampling {
         }
     }
     
-    
-    /**
-     * =================== Phase 2: Entity constraints extraction + Phase 3: Confidence & Support Computation ==========
-     * Querying to get properties and object types of each entity to collect the constraints and the metadata required
-     * to compute the support and confidence of each candidate shape.
-     * =================================================================================================================
-     */
-    private void entityConstraintsExtraction() {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.out.println("Started secondPhase()");
-        try {
-            for (Map.Entry<Integer, EntityData> entry : entityDataMapContainer.entrySet()) {
-                Integer entityID = entry.getKey();
-                EntityData entityData = entry.getValue();
-                Set<String> entityTypes = new HashSet<>();
-                for (Integer entityTypeID : entityData.getClassTypes()) {
-                    entityTypes.add(stringEncoder.decode(entityTypeID));
-                }
-                String entity = nodeEncoder.decode(entityID).getLabel();
-                String query = buildQuery(entity, entityTypes, typePredicate); // query to get ?p ?o of entity
-                
-                // ?p ?o are binding variables
-                for (BindingSet row : graphDBUtils.evaluateSelectQuery(query)) {
-                    String prop = row.getValue("p").stringValue();
-                    //String propIri = "<" + prop + ">";
-                    
-                    int propID = stringEncoder.encode(prop);
-                    
-                    String obj = row.getValue("o").stringValue();
-                    Node objNode = Utils.IriToNode(obj);
-                    String objType = extractObjectType(obj); // find out if the object is literal or IRI
-                    
-                    Set<Integer> objTypesIDs = new HashSet<>(10);
-                    Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
-                    
-                    // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                    if (objType.equals("IRI")) {
-                        objTypesIDs = parseIriTypeObject(entityID, propID, objNode, objTypesIDs, prop2objTypeTuples);
-                    }
-                    // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                    else {
-                        parseLiteralTypeObject(entityID, propID, objType, objTypesIDs);
-                    }
-                    // for each type (class) of current entity -> append the property and object type in classToPropWithObjTypes HashMap
-                    // Also update shape triplet support map by computing support of triplets
-                    updateClassToPropWithObjTypesAndShapeTripletSupportMaps(entityData, propID, objTypesIDs);
-                    
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        watch.stop();
-        Utils.logTime("secondPhase:cs.qse.endpoint.EndpointSampling", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
-    }
-    
     /**
      * ============================================= Phase 4: Shapes extraction ========================================
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      * =================================================================================================================
      */
-    protected void extractSHACLShapes(Boolean performPruning) {
+    protected void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         System.out.println("Started extractSHACLShapes()");
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractorNativeStore se = new ShapesExtractorNativeStore(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        //====================== Enable shapes extraction for specific classes ======================
+        if (qseFromSpecificClasses)
+            classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
+        
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();

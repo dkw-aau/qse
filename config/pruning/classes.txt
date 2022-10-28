@@ -1,0 +1,10 @@
+http://dbpedia.org/ontology/City
+http://dbpedia.org/ontology/Cricketer
+http://dbpedia.org/ontology/Software
+http://dbpedia.org/ontology/Automobile
+http://dbpedia.org/ontology/Drug
+http://dbpedia.org/ontology/Village
+http://dbpedia.org/ontology/Film
+http://dbpedia.org/ontology/Book
+http://dbpedia.org/ontology/Song
+http://dbpedia.org/ontology/Organisation

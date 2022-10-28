@@ -220,12 +220,12 @@ public class QseSHACLValidator {
     
     public static void testValidation() {
         String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/data/CityDBpedia.nt";
-        String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/Output/TEMP/dbpedia_city.ttl";
+        String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/qse/Output/TEMP/dbpedia_city.ttl";
         
-        //String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_data.ttl";
-        //String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/example_shapes.ttl";
-        String outputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.ttl";
-        String outputCSVFilePath = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/Output/valid.csv";
+        //String inputDataFilePath = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/example_data.ttl";
+        //String inputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/example_shapes.ttl";
+        String outputSHACLFilePath = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/Output/valid.ttl";
+        String outputCSVFilePath = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/Output/valid.csv";
         
         FilesUtil.deleteFile(outputSHACLFilePath);
         FilesUtil.deleteFile(outputCSVFilePath);

@@ -4,7 +4,6 @@ import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.StringEncoder;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -133,15 +132,36 @@ public class Utility {
         Utils.logTime("writeSupportToFile() ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
-    public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, StringEncoder stringEncoder) {
+    public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder) {
         Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes = new HashMap<>();
-        String fileAddress = ConfigManager.getProperty("list_of_classes");  //"src/main/resources/classes.txt"
+        String fileAddress = ConfigManager.getProperty("config_dir") + "/pruning/classes.txt";
         List<String> classes = FilesUtil.readAllLinesFromFile(fileAddress);
         classes.forEach(classIri -> {
             int key = stringEncoder.encode(classIri);
             Map<Integer, Set<Integer>> value = classToPropWithObjTypes.get(key);
-            filteredClassToPropWithObjTypes.put(key, value);
+            if (classEntityCount.containsKey(key))
+                filteredClassToPropWithObjTypes.put(key, value);
         });
         return filteredClassToPropWithObjTypes;
+    }
+    
+    public static List<String> getListOfClasses() {
+        String fileAddress = ConfigManager.getProperty("config_dir") + "/pruning/classes.txt";
+        return FilesUtil.readAllLinesFromFile(fileAddress);
+    }
+    
+    public static void writeClassFrequencyInFile(Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder) {
+        String fileNameAndPath = ConfigManager.getProperty("output_file_path") + "/classFrequency.csv";
+        try {
+            FileWriter fileWriter = new FileWriter(fileNameAndPath, false);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            printWriter.println("Class,Frequency");
+            classEntityCount.forEach((classVal, entityCount) -> {
+                printWriter.println(stringEncoder.decode(classVal) + "," + entityCount);
+            });
+            printWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

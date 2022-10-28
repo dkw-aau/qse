@@ -13,7 +13,7 @@ public class Analysis {
     public static void main(String[] args) throws Exception {
         HashMap<String, String> psMap = new HashMap<>();
         
-        String psAll = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/test/city_ps_all.csv";
+        String psAll = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/test/city_ps_all.csv";
         
         List<String[]> psAllData = FilesUtil.readCsvAllDataOnceWithCustomSeparator(psAll, ',');
         
@@ -23,7 +23,7 @@ public class Analysis {
             psMap.put(val[0], null);
         });
         
-        String psSuppConfA = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/test/city_ps_supconf_a.csv";
+        String psSuppConfA = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/test/city_ps_supconf_a.csv";
         
         List<String[]> psSuppConfAData = FilesUtil.readCsvAllDataOnceWithCustomSeparator(psSuppConfA, ',');
         
@@ -37,7 +37,7 @@ public class Analysis {
         });
         
         
-        String psSuppConfB = "/Users/kashifrabbani/Documents/GitHub/shacl/validation/example/test/city_ps_supconf_b.csv";
+        String psSuppConfB = "/Users/kashifrabbani/Documents/GitHub/qse/validation/example/test/city_ps_supconf_b.csv";
         
         List<String[]> psSuppConfBData = FilesUtil.readCsvAllDataOnceWithCustomSeparator(psSuppConfB, ',');
         

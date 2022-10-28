@@ -1,5 +1,6 @@
 package cs.qse.filebased;
 
+import cs.Main;
 import cs.qse.common.EntityData;
 import cs.utils.Tuple2;
 import cs.utils.Utils;
@@ -33,7 +34,7 @@ public class RandomSamplingParser extends Parser {
         entityExtraction();
         entityConstraintsExtraction();
         computeSupportConfidence();
-        extractSHACLShapes(false);
+        extractSHACLShapes(false, Main.qseFromSpecificClasses);
         //assignCardinalityConstraints();
     }
     
