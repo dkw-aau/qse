@@ -17,7 +17,7 @@ public class ExperimentsUtil {
     
     public static HashMap<Double, List<Integer>> getSupportConfRange() {
         HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
-        String fileAddress = ConfigManager.getProperty("config_dir") + "/pruning/pruning_thresholds.csv";
+        String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/pruning_thresholds.csv";
         List<String[]> config = FilesUtil.readCsvAllDataOnceWithCustomSeparator(fileAddress, ',');
         config.remove(0); // remove the headers
         

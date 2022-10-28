@@ -134,7 +134,7 @@ public class Utility {
     
     public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder) {
         Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes = new HashMap<>();
-        String fileAddress = ConfigManager.getProperty("config_dir") + "/pruning/classes.txt";
+        String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/classes.txt";
         List<String> classes = FilesUtil.readAllLinesFromFile(fileAddress);
         classes.forEach(classIri -> {
             int key = stringEncoder.encode(classIri);
@@ -146,7 +146,7 @@ public class Utility {
     }
     
     public static List<String> getListOfClasses() {
-        String fileAddress = ConfigManager.getProperty("config_dir") + "/pruning/classes.txt";
+        String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/classes.txt";
         return FilesUtil.readAllLinesFromFile(fileAddress);
     }
     
