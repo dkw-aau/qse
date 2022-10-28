@@ -18,7 +18,7 @@ git clone https://github.com/dkw-aau/qse.git
 ### 2. Getting the data
 We have used WikiData, DBpedia, YAGO-4, and LUBM datasets. Details on how to download these datasets are given below:
 
-1. **DBPedia:** We used our [dbpedia script](https://github.com/dkw-aau/qse/blob/main/scripts/dbpedia/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/dkw/qse/blob/main/scripts/dbpedia/dbpedia-files.txt).
+1. **DBPedia:** We used our [dbpedia script](https://github.com/dkw-aau/qse/blob/main/scripts/dbpedia/download-dbpedia.sh) to download the dbpedia files listed [here](https://github.com/dkw-aau/qse/blob/main/scripts/dbpedia/dbpedia-files.txt).
 2. **YAGO-4:** We downloaded YAGO-4 English version from [https://yago-knowledge.org/data/yago4/en/](https://yago-knowledge.org/data/yago4/en/).
 3. **LUBM:** We used [LUBM-Generator](https://github.com/rvesse/lubm-uba) to generate LUBM-500.
 4. **WikiData (Wdt15):** We downloaded a WikiData dump from 2015 form [this](https://archive.org/details/wikidata-json-20150518) link.
@@ -34,21 +34,22 @@ You should download these datasets in `data` directory. You can check the size a
 We used Docker and shell scripts to build and run the code on different datasets. We allow users to specify the configuration parameters in the config files depending on the dataset and user's requirement.
 
 
-####  3.1. Requirements
+#### 3.1. Requirements
 The experiments run on a _single machine_. To reproduce the experiments the software used are *a GNU/Linux distribution (with git, bash, make, and wget)*, Docker,  and Java  *version 15.0.2.fx-zulu*
 having a machine with 256 GB (minimum required 16GB) and CPU with 16 cores (minimum required 1 core).
 
 We have prepared shell scripts and configuration files for each dataset to make the process of running experiments as much easy as possible.
 
 #### 3.2. Configuration Parameters
-Please update the configuration file for each dataset available in the [config](https://github.com/dkw/qse/tree/main/config) directory, i.e., `dbpediaConfig`, `yagoConfig`, `lubmConfig`, `wdt15Config`, and `wdt21Config` to set the correct paths for your machine.
+Please update the configuration file for each dataset available in the [config](https://github.com/dkw-aau/qse/tree/main/config) directory, i.e., `dbpediaConfig`, `yagoConfig`, `lubmConfig`, `wdt15Config`, and `wdt21Config` to set the correct paths for your machine.
 You have to choose from one of these options to either extract shapes using QSE-Exact (file or query-based) or QSE-Approximate.
 
-| Parameter             | Description                                                                       | Options           |
-|-----------------------|-----------------------------------------------------------------------------------|-------------------|
-| qse_exact_file        | set the value to extract shapes from a file using QSE-Exact                       | `true` or `false` |
-| qse_exact_query_based | set the value to extract shapes from an endpoint using QSE-Exact                  | `true` or `false` |
-| qse_approximate_file  | set the value to extract shapes from a file using QSE-Approximate                 | `true` or `false` |
+| Parameter                   | Description                                                                       | Options           |
+|-----------------------------|-----------------------------------------------------------------------------------|-------------------|
+| qse_exact_file              | set the value to extract shapes from a file using QSE-Exact                       | `true` or `false` |
+| qse_exact_query_based       | set the value to extract shapes from an endpoint using QSE-Exact                  | `true` or `false` |
+| qse_approximate_file        | set the value to extract shapes from a file using QSE-Approximate                 | `true` or `false` |
+| qse_approximate_query_based | set the value to extract shapes from an endpoint using QSE-Approximate                  | `true` or `false` |
 
 
 Depending on the approach you have chosen from one of the above, you have to set the value for the following parameters:
@@ -65,12 +66,20 @@ Depending on the approach you have chosen from one of the above, you have to set
 | entity_sampling_target_percentage | set the entity sampling percentage for qse_approximate                                                                           | default `75`                  |
 | default_directory                 | set the directory where output of qse_exact is stored to compute precision and recall in comparison to output of qse_approximate | `qse/output/dbpedia/default/` |
 | is_wikidata                       | set if the dataset is WikiData or any of its version                                                                             | `true` or  `false`            |
+| config_dir_path                   | set the path of config directory where configuration for pruning and other configs like list of specific classes is available    | `qse/config/`                 |
+| qse_validation                    | set if you want to use this dataset for validation using shapes available in `validation_input_dir`                              | `true` or  `false`            |
+| validation_input_dir              | set the path of directory where SHACL shapes are available to be used for validation                                             | `qse/validation`              |
+| qse_validation_with_shNot         | set if you want to use `sh:Not` constraint for finding errors during validation                                                  | `true` or  `false`            |
 
 
+#### 3.3. Pruning Thresholds
+You can define various values of pruning thresholds in the `pruning_thresholds.csv` available in [config/pruning/](https://github.com/dkw-aau/qse/tree/main/config/pruning) directory.
+
+#### 3.4. Shapes Extraction for Specific Classes
+You can specify the classes in `classes.txt` file available in [config/pruning/](https://github.com/dkw-aau/qse/tree/main/config/pruning) directory. Then QSE will only extract shapes for the classes specified in the file.
 
 
-
-#### 3.3. Shell Scripts
+#### 3.5. Shell Scripts
 Assuming that you are in the project's directory, you have updated the configuration file(s), and docker is installed on your machine, move into [scripts](https://github.com/dkw-aau/qse/tree/main/scripts) directory using the command ``` cd scripts ``` and then execute one of the following shell scripts files:
 ``` ./dbpedia.sh ``` ,
 ``` ./yago.sh ``` ,
@@ -116,3 +125,8 @@ java -jar -Xmx10g  build/libs/qse.jar config/lubmConfig.properties &> lubm.logs
 java -jar -Xmx16g  build/libs/qse.jar config/wdt15Config.properties &> wdt15.logs
 java -jar -Xmx32g  build/libs/qse.jar config/wdt21Config.properties &> wdt21.logs
 ```
+---------
+
+### 5. QSE Output
+
+QSE will output SHACL shapes in the `output_file_path` directory along with `classFrequency.csv` file containing number of instances (nodes) of each class in the dataset.
