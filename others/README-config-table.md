@@ -3,12 +3,12 @@
 Please update the configuration file for each dataset available in the [config](https://github.com/dkw-aau/qse/tree/main/config) directory, i.e., `dbpediaConfig`, `yagoConfig`, `lubmConfig`, `wdt15Config`, and `wdt21Config` to set the correct paths for your machine.
 You have to choose from one of these options to either extract shapes using QSE-Exact (file or query-based) or QSE-Approximate.
 
-| Parameter                   | Description                                                                       | Options           |
-|-----------------------------|-----------------------------------------------------------------------------------|-------------------|
-| qse_exact_file              | set the value to extract shapes from a file using QSE-Exact                       | `true` or `false` |
-| qse_exact_query_based       | set the value to extract shapes from an endpoint using QSE-Exact                  | `true` or `false` |
-| qse_approximate_file        | set the value to extract shapes from a file using QSE-Approximate                 | `true` or `false` |
-| qse_approximate_query_based | set the value to extract shapes from an endpoint using QSE-Approximate                  | `true` or `false` |
+| Parameter                   | Description                                                            | Options           |
+|-----------------------------|------------------------------------------------------------------------|-------------------|
+| qse_exact_file              | set the value to extract shapes from a file using QSE-Exact            | `true` or `false` |
+| qse_exact_query_based       | set the value to extract shapes from an endpoint using QSE-Exact       | `true` or `false` |
+| qse_approximate_file        | set the value to extract shapes from a file using QSE-Approximate      | `true` or `false` |
+| qse_approximate_query_based | set the value to extract shapes from an endpoint using QSE-Approximate | `true` or `false` |
 
 
 Depending on the approach you have chosen from one of the above, you have to set the value for the following parameters:
