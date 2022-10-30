@@ -25,7 +25,7 @@ We have used WikiData, DBpedia, YAGO-4, and LUBM datasets. Details on how to dow
 5. **WikiData (Wdt21):** We downloaded the [truthy dump](https://dumps.wikimedia.org/wikidatawiki/entities/) of WikiData (2021) and then used our [wikidata python script](https://github.com/dkw-aau/qse/blob/main/scripts/wikidata/filter_WikiData.py) to remove labels, descriptions, and non-English strings.
 
 We provide a copy of some of these  datasets in a [single archive](http://130.226.98.152/www_datasets/).
-You should download these datasets in `data` directory. You can check the size and number of lines (triples) with the commands:
+You can check the size and number of lines (triples) with the commands:
 ``` cd data; du -sh yago.n3; wc -l yago.n3 ```, etc.
 
 
@@ -52,7 +52,7 @@ You have to choose from one of these options to either extract shapes using QSE-
 | qse_approximate_query_based | set the value to extract shapes from an endpoint using QSE-Approximate            | `true` or `false` |
 
 
-Depending on the approach you have chosen from one of the above, you have to set parameters listed in this [table](https://github.com/dkw-aau/qse/blob/main/README-config-table.md) to run QSE.
+Depending on the approach you have chosen from one of the above, you have to set parameters listed in this [table](https://github.com/dkw-aau/qse/blob/main/others/README-config-table.md) to run QSE.
 
 #### 3.3. Pruning Thresholds
 You can define various values of pruning thresholds in the `pruning_thresholds.csv` available in [config/pruning/](https://github.com/dkw-aau/qse/tree/main/config/pruning) directory.
@@ -71,7 +71,7 @@ Assuming that you are in the project's directory, you have updated the configura
 
 You will see logs and the output will be stored in the path of the output directory specified in the config file.
 
-*Note: You may have to execute ```chmod +rwx ``` for each script to solve the permissions issue. In case you want to run the experiments without script, please follow the instructions on [this](https://github.com/dkw-aau/qse/blob/main/README-withoutScript.md) page.*
+*Note: You may have to execute ```chmod +rwx ``` for each script to solve the permissions issue. In case you want to run the experiments without script, please follow the instructions on [this](https://github.com/dkw-aau/qse/blob/main/others/README-withoutScript.md) page.*
 
 
 
