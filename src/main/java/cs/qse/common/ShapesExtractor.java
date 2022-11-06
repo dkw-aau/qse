@@ -58,6 +58,9 @@ public class ShapesExtractor {
     /**
      * ============================================= Constructor =======================================================
      */
+    
+    public ShapesExtractor() {}
+    
     public ShapesExtractor(Encoder encoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, Integer> classInstanceCount, String typePredicate) {
         this.encoder = encoder;
         this.builder = new ModelBuilder();
@@ -82,6 +85,9 @@ public class ShapesExtractor {
             constructShapeWithoutPruning(classToPropWithObjTypes, conn);
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
+            
+            PostConstraintsAnnotator pca =  new PostConstraintsAnnotator(conn);
+            pca.addShNodeConstraint();
             
             // Compute Statistics and prepare logs
             System.out.println("MODEL:: DEFAULT - SIZE: " + conn.size());
@@ -165,12 +171,12 @@ public class ShapesExtractor {
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath()))); // Create a new Repository.
         
         try (RepositoryConnection conn = db.getConnection()) { // Open a connection to the database
-            
-            //Model prunedShapes = constructShapesWithPruning(classToPropWithObjTypes, confidence, support, conn);
             constructShapesWithPruning(classToPropWithObjTypes, confidence, support, conn);
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
-            //conn.add(prunedShapes);
+    
+            PostConstraintsAnnotator pca_pruned =  new PostConstraintsAnnotator(conn);
+            pca_pruned.addShNodeConstraint();
             
             System.out.println("MODEL:: CUSTOM - SIZE: " + conn.size() + " | PARAMS: " + confidence * 100 + " - " + support);
             

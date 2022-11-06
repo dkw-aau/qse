@@ -1,0 +1,5 @@
+# Query to get node shape of a specific class
+SELECT ?nodeShape WHERE {
+    ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
+    ?nodeShape <http://www.w3.org/ns/shacl#targetClass> <SHACL_CLASS> .
+}

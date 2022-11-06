@@ -5,15 +5,19 @@ import cs.qse.common.encoders.StringEncoder;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
+import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.semanticweb.yars.nx.Literal;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +79,6 @@ public class Utility {
         return query.toString();
     }
     
-    
     private static String buildQuery(String classIri, String property, String objectType, String queryFile, String typePredicate) {
         String query = (FilesUtil.readQuery(queryFile)
                 .replace(":Class", " <" + classIri + "> "))
@@ -84,7 +87,6 @@ public class Utility {
         query = query.replace(":instantiationProperty", typePredicate);
         return query;
     }
-    
     
     public static void writeSupportToFile(StringEncoder stringEncoder, Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport, Map<Integer, List<Integer>> sampledEntitiesPerClass) {
         System.out.println("Started writeSupportToFile()");
@@ -163,5 +165,20 @@ public class Utility {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static RepositoryConnection readFileAsRdf4JModel(String inputFileAddress) {
+        RepositoryConnection conn = null;
+        try {
+            InputStream input = new FileInputStream(inputFileAddress);
+            Model model = Rio.parse(input, "", RDFFormat.TURTLE);
+            Repository db = new SailRepository(new MemoryStore());
+            conn = db.getConnection();
+            conn.add(model);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return conn;
     }
 }

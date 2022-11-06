@@ -93,6 +93,16 @@ public class FilesUtil {
         return q;
     }
     
+    public static String readShaclQuery(String query) {
+        String q = null;
+        try {
+            String queriesDirectory = ConfigManager.getProperty("resources_path") + "/shacl_queries/";
+            q = new String(Files.readAllBytes(Paths.get(queriesDirectory + query + ".txt")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return q;
+    }
     
     public static String readShaclStatsQuery(String query, String type) {
         String q = null;

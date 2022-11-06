@@ -1,0 +1,17 @@
+# Query to get sh:class attribute value for highest support PS for a specific NS
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?propertyShape ?path ?class (max(?support) As ?maxSupport) where {
+ 	BIND(<NODE_SHAPE> AS ?nodeShape)
+    BIND(<PROPERTY_SHAPE> AS ?propertyShape)
+	?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
+    ?nodeShape <http://www.w3.org/ns/shacl#property> ?propertyShape .
+    ?propertyShape a <http://www.w3.org/ns/shacl#PropertyShape> .
+    ?propertyShape <http://www.w3.org/ns/shacl#path> ?path .
+    ?propertyShape <http://www.w3.org/ns/shacl#or>/rdf:rest*/rdf:first  ?shOrRdfList.
+	?shOrRdfList <http://shaclshapes.org/support> ?support.
+	?shOrRdfList  <http://www.w3.org/ns/shacl#class> ?class .
+}
+GROUP BY  ?propertyShape ?path ?class
+ORDER BY DESC(?maxSupport) LIMIT 1

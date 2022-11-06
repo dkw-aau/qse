@@ -101,6 +101,17 @@ public class GraphDBUtils {
         }
     }
     
+    public void runUpdateQuery(String query) {
+        try {
+            Update updateQuery = repositoryConnection.prepareUpdate(query);
+            updateQuery.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (repositoryConnection.isActive())
+                repositoryConnection.rollback();
+        }
+    }
+    
     public void runGraphQuery(String query, String address) {
         try {
             GraphQuery graphQuery = repositoryConnection.prepareGraphQuery(QueryLanguage.SPARQL, query);

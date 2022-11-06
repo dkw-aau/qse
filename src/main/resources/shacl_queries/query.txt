@@ -1,0 +1,14 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+select distinct *  where {
+    ?s a <http://www.w3.org/ns/shacl#NodeShape> .
+     ?s <http://www.w3.org/ns/shacl#targetClass> <CLASS_IRI> .
+    ?s <http://www.w3.org/ns/shacl#property> ?p .
+    ?p a <http://www.w3.org/ns/shacl#PropertyShape> .
+    ?p <http://www.w3.org/ns/shacl#path> ?path .
+    ?p <http://www.w3.org/ns/shacl#or>/rdf:rest*/rdf:first  ?shOrRdfList.
+	?shOrRdfList <http://shaclshapes.org/support> ?support.
+    ?shOrRdfList <http://shaclshapes.org/confidence> ?conf.
+	?shOrRdfList  <http://www.w3.org/ns/shacl#class> ?class .
+    FILTER(?support < SUPPORT_VAL)
+    FILTER(?conf > CONFIDENCE_VAL)
+}
