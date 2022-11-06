@@ -97,7 +97,7 @@ public class PostConstraintsAnnotator {
             // Annotate with sh:node
             String insertStatement = "INSERT { <" + bindings.getValue("propertyShape").stringValue() + "> <" + SHACL.NODE + "> <" + getNodeShape(classVal) + "> } " +
                     " WHERE { <" + bindings.getValue("propertyShape") + "> a <http://www.w3.org/ns/shacl#PropertyShape> . " + " }";
-            System.out.println(insertStatement);
+            //System.out.println(insertStatement);
             Update updateQuery = conn.prepareUpdate(insertStatement);
             updateQuery.execute();
         }
