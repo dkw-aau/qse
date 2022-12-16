@@ -1,7 +1,7 @@
 # Quality Shapes Extraction (QSE)
 
-This repository contains the source code, resources, and instructions to reproduce the experiments performed for the following research paper under submission in VLDB - July 2022:
-> **Extraction of Validating Shapes from very large Knowledge Graphs [Scalable Data Science]**
+This repository contains the source code, resources, and instructions to reproduce the experiments performed for the following research paper accepted in VLDB-2023:
+> **Extraction of Validating Shapes from very large Knowledge Graphs**
 
 **The extended version of the paper is available [here](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).**
 
