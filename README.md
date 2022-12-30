@@ -6,7 +6,7 @@ This repository contains the source code, resources, and instructions to run or 
 
 Experimental results and other details are available on our website [https://relweb.cs.aau.dk/qse/](https://relweb.cs.aau.dk/qse/).
 
-The **extended version** of the paper is also available [here](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).
+Read the **extended version** of our paper our [website](https://relweb.cs.aau.dk/qse/files/qse-extended.pdf) or [GitHub](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).
 
 ### Reproducibility Instructions for VLDB
 Detailed reproducibility instructions are available in  [VLDB_Reproducibility_README](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility_README.md) file.
@@ -18,7 +18,7 @@ Detailed reproducibility instructions are available in  [VLDB_Reproducibility_RE
 We provide a JAR file to help user easily extract SHACL 
 shapes given: 
 
-1. the input knowledge graph is in '.nt' format and 
+1. the input knowledge graph is in `.nt` format and 
 2. the config file contains correct parameters. 
 
 #### Set Config Params: 
