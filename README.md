@@ -5,6 +5,7 @@ This repository contains the source code, resources, and instructions to run or 
 >  Rabbani, Kashif; Lissandrini, Matteo; and Hose, Katja. **Extraction of Validating Shapes from very large Knowledge Graphs**. In Proceedings of the Very Large Databases 2023 (Volume 16), August 28 - Sept 02, 2023, Vancouver, Canada.
 
 Experimental results and other details are available on our website [https://relweb.cs.aau.dk/qse/](https://relweb.cs.aau.dk/qse/).
+
 The **extended version** of the paper is also available [here](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).
 
 ### Reproducibility Instructions for VLDB
