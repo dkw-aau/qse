@@ -55,7 +55,7 @@ You can change the value for Xmx16g according to your machine's specification. I
 
 #### Output:
 QSE will output SHACL shapes in the `output_file_path` directory along with `classFrequency.csv` file containing number of instances (nodes) of each class in the dataset and some other logs.
-- The file with suffix '_QSE_FULL_SHACL.ttl' contains the full set of SHACL shapes using the configuration provided in config.properties file. 
-- The file with suffix '_QSE_0.1_100_SHACL.ttl' contains the set of SHACL shapes pruned using confidence 0.1 and support 100 using the configuration provided in config.properties file.
+- The file with suffix `_QSE_FULL_SHACL.ttl` contains the full set of SHACL shapes using the configuration provided in config.properties file. 
+- The file with suffix `_QSE_0.1_100_SHACL.ttl` contains the set of SHACL shapes pruned using confidence 0.1 and support 100 using the configuration provided in config.properties file.
 
 
