@@ -1,5 +1,6 @@
 package cs.qse.common;
 
+import cs.Main;
 import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.StringEncoder;
 import cs.qse.filebased.SupportConfidence;
@@ -153,7 +154,7 @@ public class Utility {
     }
     
     public static void writeClassFrequencyInFile(Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder) {
-        String fileNameAndPath = ConfigManager.getProperty("output_file_path") + "/classFrequency.csv";
+        String fileNameAndPath = Main.outputFilePath + "/classFrequency.csv";
         try {
             FileWriter fileWriter = new FileWriter(fileNameAndPath, false);
             PrintWriter printWriter = new PrintWriter(fileWriter);

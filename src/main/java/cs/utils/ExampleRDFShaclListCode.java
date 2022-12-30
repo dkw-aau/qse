@@ -47,7 +47,7 @@ public class ExampleRDFShaclListCode {
         //Model aboutJohn = RDFCollections.asRDF(statements, head, new LinkedHashModel());
         //aboutJohn.add(john, SHACL.OR, head);
         try {
-            //FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            //FileWriter fileWriter = new FileWriter(Main.outputFilePath + fileName, false);
             Rio.write(aboutJohn, System.out, RDFFormat.TURTLE);
         } catch (Exception e) {
             e.printStackTrace();

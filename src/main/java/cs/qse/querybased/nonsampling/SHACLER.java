@@ -35,7 +35,7 @@ public class SHACLER {
     StringEncoder stringEncoder;
     HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
     HashMap<Integer, Integer> classInstanceCount;
-    String logfileAddress = ConfigManager.getProperty("output_file_path") + ConfigManager.getProperty("dataset_name") + ".csv";
+    String logfileAddress = Main.outputFilePath + Main.datasetName + ".csv";
     
     public SHACLER() {
         this.builder = new ModelBuilder();
@@ -123,7 +123,7 @@ public class SHACLER {
         String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + "SHACL.ttl";
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
         try {
-            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            FileWriter fileWriter = new FileWriter(Main.outputFilePath + fileName, false);
             Rio.write(model, fileWriter, RDFFormat.TURTLE);
         } catch (Exception e) {
             e.printStackTrace();

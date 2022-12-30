@@ -76,7 +76,7 @@ public class ShapesExtractor {
      */
     
     public void constructDefaultShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
-        File dbDir = new File(ConfigManager.getProperty("output_file_path") + "db_default");
+        File dbDir = new File(Main.outputFilePath + "db_default");
         performDirCheck(dbDir);
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath()))); // Create a new Repository.
         
@@ -94,7 +94,7 @@ public class ShapesExtractor {
             HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(conn);
             
             StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
-            StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
+            StringBuilder log = new StringBuilder(Main.datasetName + ", > " + 1.0 + "%, > " + 1.0 + ",");
             for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
                 String v = entry.getValue();
                 log = new StringBuilder(log.append(v).append(","));
@@ -104,7 +104,7 @@ public class ShapesExtractor {
             FilesUtil.writeToFileInAppendMode(header.toString(), logfileAddress);
             FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
             
-            String outputFilePath = this.writeModelToFile("DEFAULT", conn);
+            String outputFilePath = this.writeModelToFile("QSE_FULL", conn);
             this.prettyFormatTurtle(outputFilePath);
             FilesUtil.deleteFile(outputFilePath);
         } finally {
@@ -166,7 +166,7 @@ public class ShapesExtractor {
      */
     public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
         
-        File dbDir = new File(ConfigManager.getProperty("output_file_path") + "db_" + confidence + "_" + support);
+        File dbDir = new File(Main.outputFilePath + "db_" + confidence + "_" + support);
         performDirCheck(dbDir);
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath()))); // Create a new Repository.
         
@@ -181,13 +181,13 @@ public class ShapesExtractor {
             System.out.println("MODEL:: CUSTOM - SIZE: " + conn.size() + " | PARAMS: " + confidence * 100 + " - " + support);
             
             HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(conn);
-            StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
+            StringBuilder log = new StringBuilder(Main.datasetName + ", > " + confidence * 100 + "%, > " + support + ",");
             for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
                 String v = entry.getValue();
                 log = new StringBuilder(log.append(v).append(","));
             }
             FilesUtil.writeToFileInAppendMode(log.toString(), logfileAddress);
-            String outputFilePath = this.writeModelToFile("CUSTOM_" + confidence + "_" + support, conn);
+            String outputFilePath = this.writeModelToFile("QSE_" + confidence + "_" + support, conn);
             this.prettyFormatTurtle(outputFilePath);
             FilesUtil.deleteFile(outputFilePath);
         } finally {
@@ -978,8 +978,8 @@ public class ShapesExtractor {
     public String writeModelToFile(String fileIdentifier, RepositoryConnection conn) {
         StopWatch watch = new StopWatch();
         watch.start();
-        String path = ConfigManager.getProperty("output_file_path");
-        String outputPath = path + Main.datasetName + "_" + fileIdentifier + "_SHACL.ttl";
+        String path = Main.outputFilePath;
+        String outputPath = path + Main.datasetName + "_" + fileIdentifier + ".ttl";
         System.out.println("::: ShapesExtractor ~ WRITING MODEL TO FILE: " + outputPath);
         
         GraphQuery query = conn.prepareGraphQuery("CONSTRUCT WHERE { ?s ?p ?o .}");
@@ -999,8 +999,8 @@ public class ShapesExtractor {
         StopWatch watch = new StopWatch();
         watch.start();
         Path path = Paths.get(inputFilePath);
-        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_Pretty_" + "SHACL.ttl";
-        String outputPath = ConfigManager.getProperty("output_file_path") + fileName;
+        String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_SHACL.ttl";
+        String outputPath = Main.outputFilePath + fileName;
         System.out.println("::: ShapesExtractor ~ PRETTY FORMATTING TURTLE FILE: " + outputPath);
         try {
             new TurtlePrettyFormatter(inputFilePath).format(outputPath);

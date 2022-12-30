@@ -46,14 +46,14 @@ public class PrecisionRecallComputer {
         computePrecisionRecallForPrunedModels();
         
         precisionRecallCSV.forEach(line -> {
-            String fileAddress = outputFilePath + ConfigManager.getProperty("dataset_name") + "_PrecisionRecall.csv";
+            String fileAddress = outputFilePath + Main.datasetName + "_PrecisionRecall.csv";
             Utils.writeLineToFile(line, fileAddress);
         });
     }
     
     private void getBaseAddress() {
         Path path = Paths.get(Main.datasetPath);
-        outputFilePath = ConfigManager.getProperty("output_file_path");
+        outputFilePath = Main.outputFilePath;
         baseAddressA = ConfigManager.getProperty("default_directory") + FilenameUtils.removeExtension(path.getFileName().toString());
         baseAddressB = outputFilePath + FilenameUtils.removeExtension(path.getFileName().toString());
     }

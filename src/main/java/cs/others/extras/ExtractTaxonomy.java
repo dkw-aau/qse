@@ -1,5 +1,6 @@
 package cs.others.extras;
 
+import cs.Main;
 import cs.qse.querybased.nonsampling.SHACLER;
 import cs.utils.ConfigManager;
 import org.apache.commons.lang3.time.StopWatch;
@@ -122,7 +123,7 @@ public class ExtractTaxonomy {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + "dump.n3", false);
+            FileWriter fileWriter = new FileWriter(Main.outputFilePath + "dump.n3", false);
             Files.lines(Path.of(rdfFile))                           // - Stream of lines ~ Stream <String>
                     //.filter(line -> !line.contains(RDFType))        // - Exclude RDF type triples
                     .forEach(line -> {                              // - A terminal operation

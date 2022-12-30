@@ -23,7 +23,7 @@ public class DegreeDistribution {
             degrees.add(directedGraph.degreeOf(v));
             inDegrees.add(directedGraph.inDegreeOf(v));
             outDegrees.add(directedGraph.outDegreeOf(v));
-            //FilesUtil.writeToFileInAppendMode(v + "," + directedGraph.degreeOf(v), ConfigManager.getProperty("output_file_path") + "/" + ConfigManager.getProperty("dataset_name") + "_" + "degreeDistribution.csv");
+            //FilesUtil.writeToFileInAppendMode(v + "," + directedGraph.degreeOf(v), Main.outputFilePath + "/" + Main.datasetName + "_" + "degreeDistribution.csv");
         });
     }
     

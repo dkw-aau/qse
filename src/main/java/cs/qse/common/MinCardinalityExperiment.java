@@ -59,7 +59,7 @@ public class MinCardinalityExperiment {
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
         //System.out.println(currentShapesModelStats);
         StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + 1.0 + "%, > " + 1.0 + ",");
+        StringBuilder log = new StringBuilder(Main.datasetName + ", > " + 1.0 + "%, > " + 1.0 + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
             log = new StringBuilder(log.append(v) + ",");
@@ -78,7 +78,7 @@ public class MinCardinalityExperiment {
         System.out.println("MODEL:: CUSTOM - SIZE: " + this.model.size() + " | PARAMS: " + confidence * 100 + " - " + support);
         
         HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(this.model);
-        StringBuilder log = new StringBuilder(ConfigManager.getProperty("dataset_name") + ", > " + confidence * 100 + "%, > " + support + ",");
+        StringBuilder log = new StringBuilder(Main.datasetName + ", > " + confidence * 100 + "%, > " + support + ",");
         for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
             String v = entry.getValue();
             log = new StringBuilder(log.append(v) + ",");
@@ -289,7 +289,7 @@ public class MinCardinalityExperiment {
         String fileName = FilenameUtils.removeExtension(path.getFileName().toString()) + "_" + fileIdentifier + "_SHACL.ttl";
         System.out.println("::: SHACLER ~ WRITING MODEL TO FILE: " + fileName);
         try {
-            FileWriter fileWriter = new FileWriter(ConfigManager.getProperty("output_file_path") + fileName, false);
+            FileWriter fileWriter = new FileWriter(Main.outputFilePath + fileName, false);
             Rio.write(model, fileWriter, RDFFormat.TURTLE);
         } catch (Exception e) {
             e.printStackTrace();
