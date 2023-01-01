@@ -28,7 +28,7 @@ you only need to update the following parameters to get started:
       dataset_path=/dir_path/knowledge_graph.nt
       resources_path=/dir_path/qse/src/main/resources
       config_dir_path=/dir_path/qse/config/
-      output_file_path=/dir_path/qse/Output/TEMP/
+      output_file_path=/dir_path/qse/Output/
 
 Please replace the `dir_path` with respect to your directory. 
 
