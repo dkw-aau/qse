@@ -2,7 +2,6 @@ package cs.utils;
 
 import cs.Main;
 
-import javax.validation.constraints.NotNull;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -10,7 +9,7 @@ import java.io.IOException;
  * This class is used to configure the input params provided in the config file
  */
 public class ConfigManager {
-    @NotNull
+    
     public static String getProperty(String property) {
         java.util.Properties prop = new java.util.Properties();
         try {

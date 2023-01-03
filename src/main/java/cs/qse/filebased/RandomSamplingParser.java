@@ -39,7 +39,7 @@ public class RandomSamplingParser extends Parser {
     }
     
     @Override
-    protected void entityExtraction() {
+    public void entityExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -83,7 +83,7 @@ public class RandomSamplingParser extends Parser {
     }
     
     @Override
-    protected void entityConstraintsExtraction() {
+    public void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {

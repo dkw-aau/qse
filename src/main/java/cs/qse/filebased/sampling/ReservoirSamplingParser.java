@@ -78,7 +78,7 @@ public class ReservoirSamplingParser extends Parser {
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
     }
     
-    protected void standardReservoirSampling() {
+    public void standardReservoirSampling() {
         StopWatch watch = new StopWatch();
         watch.start();
         Random random = new Random(100);
@@ -200,7 +200,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     @Override
-    protected void entityConstraintsExtraction() {
+    public void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -303,7 +303,7 @@ public class ReservoirSamplingParser extends Parser {
     }
     
     @Override
-    protected void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
+    public void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:cs.qse.filebased.sampling.ReservoirSampling: No Pruning";

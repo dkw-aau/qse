@@ -35,10 +35,10 @@ public class Parser {
     // T = number of distinct types
     // P = number of distinct predicates
     
-    Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
-    Map<Integer, Integer> classEntityCount; // Size == T
-    Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
-    Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
+    public Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
+    public Map<Integer, Integer> classEntityCount; // Size == T
+    public Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
+    public Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
     public Parser() {}
     
@@ -74,7 +74,7 @@ public class Parser {
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
      * =================================================================================================================
      */
-    protected void entityExtraction() {
+    public void entityExtraction() {
         System.out.println("invoked::firstPass()");
         StopWatch watch = new StopWatch();
         watch.start();
@@ -111,7 +111,7 @@ public class Parser {
      * =================================================================================================================
      */
     
-    protected void entityConstraintsExtraction() {
+    public void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
@@ -169,7 +169,7 @@ public class Parser {
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      * =================================================================================================================
      */
-    protected void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
+    public void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
@@ -255,7 +255,7 @@ public class Parser {
      * @param prop2objTypeTuples : Tuples containing property and its object type, e.g., Tuple2<livesIn, :City>, Tuple2<livesIn, :Capital>
      * @param subject            : Subject entity such as :Paris
      */
-    protected void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node subject) {
+    public void addEntityToPropertyConstraints(Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node subject) {
         EntityData currentEntityData = entityDataHashMap.get(subject);
         if (currentEntityData == null) {
             currentEntityData = new EntityData();
@@ -272,7 +272,7 @@ public class Parser {
     }
     
     //A utility method to extract the literal object type, returns String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
-    protected String extractObjectType(String literalIri) {
+    public String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
         String type = null;
         if (theLiteral.getDatatype() != null) {   // is literal type
@@ -292,7 +292,7 @@ public class Parser {
     /**
      * Assigning cardinality constraints  using various values for support and confidence thresholds
      */
-    protected void assignCardinalityConstraints() {
+    public void assignCardinalityConstraints() {
         StopWatch watch = new StopWatch();
         watch.start();
         MinCardinalityExperiment minCardinalityExperiment = new MinCardinalityExperiment(stringEncoder, shapeTripletSupport, classEntityCount);
