@@ -1,5 +1,6 @@
 # Quality Shapes Extraction (QSE)
 
+Changing for Demo Paper.
 
 This repository contains the source code, resources, and instructions to run or reproduce the experiments performed for the following research paper:
 >  Rabbani, Kashif; Lissandrini, Matteo; and Hose, Katja. **Extraction of Validating Shapes from very large Knowledge Graphs**. In Proceedings of the Very Large Databases 2023 (Volume 16), August 28 - Sept 02, 2023, Vancouver, Canada.
