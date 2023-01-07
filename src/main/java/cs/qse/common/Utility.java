@@ -137,8 +137,12 @@ public class Utility {
     
     public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder) {
         Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes = new HashMap<>();
-        String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/classes.txt";
+        String fileAddress = Main.configDirPath + "pruning/classes.txt";
         List<String> classes = FilesUtil.readAllLinesFromFile(fileAddress);
+        return processClasses(classToPropWithObjTypes, classEntityCount, stringEncoder, filteredClassToPropWithObjTypes, classes);
+    }
+    
+    private static Map<Integer, Map<Integer, Set<Integer>>> processClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder, Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes, List<String> classes) {
         classes.forEach(classIri -> {
             int key = stringEncoder.encode(classIri);
             Map<Integer, Set<Integer>> value = classToPropWithObjTypes.get(key);
@@ -148,8 +152,14 @@ public class Utility {
         return filteredClassToPropWithObjTypes;
     }
     
+    public static Map<Integer, Map<Integer, Set<Integer>>> extractShapesForSpecificClasses(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Map<Integer, Integer> classEntityCount, StringEncoder stringEncoder, List<String> classes) {
+        Map<Integer, Map<Integer, Set<Integer>>> filteredClassToPropWithObjTypes = new HashMap<>();
+        return processClasses(classToPropWithObjTypes, classEntityCount, stringEncoder, filteredClassToPropWithObjTypes, classes);
+    }
+    
+    
     public static List<String> getListOfClasses() {
-        String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/classes.txt";
+        String fileAddress = Main.configDirPath + "pruning/classes.txt";
         return FilesUtil.readAllLinesFromFile(fileAddress);
     }
     

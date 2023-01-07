@@ -4,6 +4,7 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import cs.Main;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
@@ -86,7 +87,7 @@ public class FilesUtil {
     public static String readQuery(String query) {
         String q = null;
         try {
-            String queriesDirectory = ConfigManager.getProperty("resources_path") + "/queries/";
+            String queriesDirectory = Main.resourcesPath + "/queries/";
             q = new String(Files.readAllBytes(Paths.get(queriesDirectory + query + ".txt")));
         } catch (IOException e) {
             e.printStackTrace();
@@ -97,7 +98,7 @@ public class FilesUtil {
     public static String readShaclQuery(String query) {
         String q = null;
         try {
-            String queriesDirectory = ConfigManager.getProperty("resources_path") + "/shacl_queries/";
+            String queriesDirectory = Main.resourcesPath + "/shacl_queries/";
             q = new String(Files.readAllBytes(Paths.get(queriesDirectory + query + ".txt")));
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,7 +109,7 @@ public class FilesUtil {
     public static String readShaclStatsQuery(String query, String type) {
         String q = null;
         try {
-            String queriesDirectory = ConfigManager.getProperty("resources_path") + "/shacl_stats_queries/" + type + "/";
+            String queriesDirectory = Main.resourcesPath + "/shacl_stats_queries/" + type + "/";
             q = new String(Files.readAllBytes(Paths.get(queriesDirectory + query + ".txt")));
         } catch (IOException e) {
             e.printStackTrace();

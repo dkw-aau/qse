@@ -3,6 +3,7 @@ package cs.qse.filebased;
 import cs.Main;
 import cs.qse.common.*;
 import cs.qse.common.encoders.StringEncoder;
+import cs.qse.common.structure.NS;
 import cs.utils.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -40,6 +41,8 @@ public class Parser {
     public Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     public Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
     
+    public ShapesExtractor shapesExtractor;
+    
     public Parser() {}
     
     /**
@@ -63,7 +66,7 @@ public class Parser {
         entityExtraction();
         entityConstraintsExtraction();
         computeSupportConfidence();
-        extractSHACLShapes(true, Main.qseFromSpecificClasses);
+        extractSHACLShapes(false, Main.qseFromSpecificClasses);
         //assignCardinalityConstraints();
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
@@ -169,18 +172,19 @@ public class Parser {
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
      * =================================================================================================================
      */
+ 
     public void extractSHACLShapes(Boolean performPruning, Boolean qseFromSpecificClasses) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
-        ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
-        se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        shapesExtractor = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        shapesExtractor.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
         
         //====================== Enable shapes extraction for specific classes ======================
         if (qseFromSpecificClasses)
             classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
         
-        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
             watchForPruning.start();
@@ -188,7 +192,7 @@ public class Parser {
                 supportRange.forEach(supp -> {
                     StopWatch innerWatch = new StopWatch();
                     innerWatch.start();
-                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
                     innerWatch.stop();
                     Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
                 });
@@ -200,10 +204,52 @@ public class Parser {
         
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    public void extractSHACLShapes(Boolean qseFromSpecificClasses, List<String> classes) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:No Pruning";
+        shapesExtractor = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        shapesExtractor.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        
+        //====================== Enable shapes extraction for specific classes ======================
+        if (qseFromSpecificClasses)
+            classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder, classes);
+        
+        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
         
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
     
+    public void extractSHACLShapesWithPruning(Boolean qseFromSpecificClasses, Double conf, Integer supp, List<String> classes) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:WithPruning";
+        //ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
+        //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
+        
+        //====================== Enable shapes extraction for specific classes ======================
+        if (qseFromSpecificClasses)
+            classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder, classes);
+        
+        StopWatch watchForPruning = new StopWatch();
+        watchForPruning.start();
+        shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+        watchForPruning.stop();
+        
+        Utils.logTime(conf + "_" + supp + " " + methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
+        
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    
+ 
     
     //============================================= Utility Methods ====================================================
     
@@ -304,5 +350,43 @@ public class Parser {
         });
         watch.stop();
         Utils.logTime("assignCardinalityConstraints", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+    }
+    
+    // getter methods
+    
+    public String getRdfFilePath() {
+        return rdfFilePath;
+    }
+    
+    public Integer getExpectedNumberOfClasses() {
+        return expectedNumberOfClasses;
+    }
+    
+    public StringEncoder getStringEncoder() {
+        return stringEncoder;
+    }
+    
+    public StatsComputer getStatsComputer() {
+        return statsComputer;
+    }
+    
+    public String getTypePredicate() {
+        return typePredicate;
+    }
+    
+    public Map<Node, EntityData> getEntityDataHashMap() {
+        return entityDataHashMap;
+    }
+    
+    public Map<Integer, Integer> getClassEntityCount() {
+        return classEntityCount;
+    }
+    
+    public Map<Integer, Map<Integer, Set<Integer>>> getClassToPropWithObjTypes() {
+        return classToPropWithObjTypes;
+    }
+    
+    public Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> getShapeTripletSupport() {
+        return shapeTripletSupport;
     }
 }
