@@ -5,6 +5,11 @@ public class ShaclOrListItem {
     String dataTypeOrClass;
     Integer support;
     Double confidence;
+    Boolean pruneFlag = false;
+    
+    public Boolean getPruneFlag() {return pruneFlag;}
+    
+    public void setPruneFlag(Boolean pruneFlag) {this.pruneFlag = pruneFlag;}
     
     public String getNodeKind() {
         return nodeKind;

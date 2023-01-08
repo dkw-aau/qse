@@ -181,9 +181,9 @@ public class ShapesExtractor {
                     .add(SHACL.TARGET_CLASS, subj)
                     .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
             
-            ns.setIri(nodeShape);
+            ns.setIri(factory.createIRI(nodeShape));
             ns.setSupport(classInstanceCount.get(encodedClassIRI));
-            ns.setTargetClass(subj.stringValue());
+            ns.setTargetClass(subj);
             currNodeShape = ns;
             if (propToObjectType != null) {
                 constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
@@ -476,7 +476,7 @@ public class ShapesExtractor {
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
             
-            ps.setIri(propShape.stringValue());
+            ps.setIri(propShape);
             ps.setPath(property.toString());
             
             if (isInstanceTypeProperty) {

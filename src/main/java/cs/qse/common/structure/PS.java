@@ -1,23 +1,39 @@
 package cs.qse.common.structure;
 
+import org.eclipse.rdf4j.model.IRI;
+
 import java.util.List;
 
 public class PS {
-    String iri;
+    IRI iri;
     String path;
     String nodeKind;
     
     String dataTypeOrClass;
-    Boolean hasOrList;
     Integer support;
     Double confidence;
     List<ShaclOrListItem> shaclOrListItems;
     
-    public String getIri() {
+    Boolean hasOrList = false;
+    Boolean pruneFlag = false;
+    
+    public String getLocalNameFromIri() {
+        return iri.getLocalName();
+    }
+    
+    public Boolean getPruneFlag() {
+        return pruneFlag;
+    }
+    
+    public void setPruneFlag(Boolean pruneFlag) {
+        this.pruneFlag = pruneFlag;
+    }
+    
+    public IRI getIri() {
         return iri;
     }
     
-    public void setIri(String iri) {
+    public void setIri(IRI iri) {
         this.iri = iri;
     }
     
