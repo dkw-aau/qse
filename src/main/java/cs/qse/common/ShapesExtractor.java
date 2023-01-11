@@ -64,10 +64,11 @@ public class ShapesExtractor {
     PS currPropertyShape;
     ShaclOrListItem currShaclOrListItem;
     Repository defaultShapesDb;
+    HashMap<String, String> currentShapesModelStats;
     
-    public List<NS> getNodeShapes() {
-        return nodeShapes;
-    }
+    public HashMap<String, String> getCurrentShapesModelStats() {return currentShapesModelStats;}
+    
+    public List<NS> getNodeShapes() {return nodeShapes;}
     
     public Repository getDefaultShapesDb() {return defaultShapesDb;}
     
@@ -115,7 +116,7 @@ public class ShapesExtractor {
             
             // Compute Statistics and prepare logs
             System.out.println("MODEL:: DEFAULT - SIZE: " + conn.size());
-            HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(conn);
+            currentShapesModelStats = this.computeShapeStatistics(conn);
             
             StringBuilder header = new StringBuilder("DATASET,Confidence,Support,");
             StringBuilder log = new StringBuilder(Main.datasetName + ", > " + 1.0 + "%, > " + 1.0 + ",");
@@ -214,7 +215,7 @@ public class ShapesExtractor {
             
             System.out.println("MODEL:: CUSTOM - SIZE: " + conn.size() + " | PARAMS: " + confidence * 100 + " - " + support);
             
-            HashMap<String, String> currentShapesModelStats = this.computeShapeStatistics(conn);
+            currentShapesModelStats = this.computeShapeStatistics(conn);
             StringBuilder log = new StringBuilder(Main.datasetName + ", > " + confidence * 100 + "%, > " + support + ",");
             for (Map.Entry<String, String> entry : currentShapesModelStats.entrySet()) {
                 String v = entry.getValue();
@@ -592,7 +593,7 @@ public class ShapesExtractor {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
                                 localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
-    
+                                
                                 shaclOrListItem.setDataTypeOrClass(objectTypeIri.toString());
                                 shaclOrListItem.setNodeKind(SHACL.IRI.getLocalName());
                                 
@@ -937,7 +938,7 @@ public class ShapesExtractor {
             localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
             Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
             localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
-    
+            
             currShaclOrListItem.setConfidence(confidence.doubleValue());
             currShaclOrListItem.setSupport(entities.intValue());
         }

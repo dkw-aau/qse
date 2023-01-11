@@ -6,6 +6,24 @@ public class ShaclOrListItem {
     Integer support;
     Double confidence;
     Boolean pruneFlag = false;
+    Boolean supportPruneFlag = false;
+    Boolean confidencePruneFlag = false;
+    
+    public Boolean getSupportPruneFlag() {
+        return supportPruneFlag;
+    }
+    
+    public void setSupportPruneFlag(Boolean supportPruneFlag) {
+        this.supportPruneFlag = supportPruneFlag;
+    }
+    
+    public Boolean getConfidencePruneFlag() {
+        return confidencePruneFlag;
+    }
+    
+    public void setConfidencePruneFlag(Boolean confidencePruneFlag) {
+        this.confidencePruneFlag = confidencePruneFlag;
+    }
     
     public Boolean getPruneFlag() {return pruneFlag;}
     
@@ -37,6 +55,15 @@ public class ShaclOrListItem {
     
     public Double getConfidence() {
         return confidence;
+    }
+    
+    public String getConfidenceInPercentage() {
+        if(this.confidence!=null){
+            int c = (int) (confidence * 100);
+            return c + " %";
+        } else {
+            return "-";
+        }
     }
     
     public void setConfidence(Double confidence) {

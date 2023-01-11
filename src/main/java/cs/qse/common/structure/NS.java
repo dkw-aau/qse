@@ -11,13 +11,40 @@ public class NS {
     List<PS> propertyShapes;
     Integer countPropertyShapes;
     Boolean pruneFlag = false;
+    
     Integer countPsWithPruneFlag;
     Integer countPscWithPruneFlag;
+    
+    Integer countPsWithSupportPruneFlag;
+    Integer countPscWithSupportPruneFlag;
+    
+    Integer countPsWithConfidencePruneFlag;
+    Integer countPscWithConfidencePruneFlag;
     
     public Integer getCountPsWithPruneFlag() {
         Integer count = 0;
         for (PS ps : this.getPropertyShapes()) {
             if (ps.getPruneFlag()) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    public Integer getCountPsWithSupportPruneFlag() {
+        Integer count = 0;
+        for (PS ps : this.getPropertyShapes()) {
+            if (ps.getSupportPruneFlag()) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    public Integer getCountPsWithConfidencePruneFlag() {
+        Integer count = 0;
+        for (PS ps : this.getPropertyShapes()) {
+            if (ps.getConfidencePruneFlag()) {
                 count++;
             }
         }
@@ -30,6 +57,35 @@ public class NS {
             if (ps.getShaclOrListItems() != null) {
                 for (ShaclOrListItem item : ps.getShaclOrListItems()) {
                     if (item.getPruneFlag()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+    
+    public Integer getCountPscWithSupportPruneFlag() {
+        Integer count = 0;
+        for (PS ps : this.getPropertyShapes()) {
+            if (ps.getShaclOrListItems() != null) {
+                for (ShaclOrListItem item : ps.getShaclOrListItems()) {
+                    if (item.getSupportPruneFlag()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+    
+    
+    public Integer getCountPscWithConfidencePruneFlag() {
+        Integer count = 0;
+        for (PS ps : this.getPropertyShapes()) {
+            if (ps.getShaclOrListItems() != null) {
+                for (ShaclOrListItem item : ps.getShaclOrListItems()) {
+                    if (item.getConfidencePruneFlag()) {
                         count++;
                     }
                 }

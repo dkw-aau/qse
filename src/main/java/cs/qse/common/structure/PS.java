@@ -17,6 +17,19 @@ public class PS {
     Boolean hasOrList = false;
     Boolean pruneFlag = false;
     
+    Boolean supportPruneFlag = false;
+    Boolean confidencePruneFlag = false;
+    
+    
+    public Boolean getSupportPruneFlag() {return supportPruneFlag;}
+    
+    public void setSupportPruneFlag(Boolean supportPruneFlag) {this.supportPruneFlag = supportPruneFlag;}
+    
+    public Boolean getConfidencePruneFlag() {return confidencePruneFlag;}
+    
+    public void setConfidencePruneFlag(Boolean confidencePruneFlag) {this.confidencePruneFlag = confidencePruneFlag;}
+    
+    
     public String getLocalNameFromIri() {
         return iri.getLocalName();
     }
@@ -79,6 +92,15 @@ public class PS {
     
     public Double getConfidence() {
         return confidence;
+    }
+    
+    public String getConfidenceInPercentage() {
+        if(this.confidence!=null){
+            int c = (int) (confidence * 100);
+            return c + " %";
+        } else {
+            return "-";
+        }
     }
     
     public void setConfidence(Double confidence) {
