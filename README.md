@@ -48,7 +48,7 @@ QSE will output SHACL shapes in the `output_file_path` directory along with `cla
 
 ---
 ### Reproducibility 
-If you want to reproduce the results of the paper, please read  [VLDB_Reproducibility_README](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility_README.md) file.
+If you want to reproduce the results of the paper, please read  [VLDB_Reproducibility](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility.md) readme file.
 
 ### Citation
 
