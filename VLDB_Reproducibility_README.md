@@ -54,7 +54,7 @@ You have to choose from one of these options to either extract shapes using QSE-
 Depending on the approach you have chosen from one of the above, you have to set parameters listed in this [table](https://github.com/dkw-aau/qse/blob/main/others/README-config-table.md) to run QSE.
 
 #### 3.3. Pruning Thresholds
-You can define various values of pruning thresholds in the `pruning_thresholds.csv` available in [config/pruning/](https://github.com/dkw-aau/qse/tree/main/config/pruning) directory.
+You can define various values of pruning thresholds (Support and Confidence) in the config file for each dataset.
 
 #### 3.4. Shapes Extraction for Specific Classes
 You can specify the classes in `classes.txt` file available in [config/pruning/](https://github.com/dkw-aau/qse/tree/main/config/pruning) directory. Then QSE will only extract shapes for the classes specified in the file.

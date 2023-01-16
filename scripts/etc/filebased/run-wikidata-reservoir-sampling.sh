@@ -49,7 +49,7 @@ echo "Status of the ${container} is ${status}" ### Container exited
 #
 #echo "About to run docker container: ${container}"
 #
-#docker run -m 200GB -d --name QSE_WIKIDATA_ReservoirSampling_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx150g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-DynamicBullyReservoirSampling-WIKIDATA /app/local/config/wd-max-card/wikiDataConfig.properties
+#docker run -m 200GB -d --name QSE_WIKIDATA_ReservoirSampling_wd_maxCard -e "JAVA_TOOL_OPTIONS=-Xmx150g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/shacl/,target=/app/local shacl:QSE-DynamicBullyReservoirSampling-WIKIDATA /app/local/config/wd-max-card/wdt21Config.properties
 #
 #docker ps
 #
