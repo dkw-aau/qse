@@ -11,7 +11,7 @@ Please follow these steps to get the code and data to reproduce the results:
 ### 1. Getting the code
 Clone the GitHub repository using the following url.
 ```
-git clone https://github.com/dkw-aau/qse.git
+git clone -b vldb https://github.com/dkw-aau/qse .
 ```
 
 ### 2. Getting the data
