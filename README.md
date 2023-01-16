@@ -1,7 +1,7 @@
 # Quality Shapes Extraction (QSE)
 
 QSE is a scalable shapes extraction tool which helps you extract validating shapes (SHACL) from large knowledge graphs.
-Please read our [research paper](https://relweb.cs.aau.dk/qse/extended.pdf) for details.
+Please read our [research paper](https://relweb.cs.aau.dk/qse/) for more details.
 
 
 ### Instructions to extract SHACL shapes from your Knowledge Graph
@@ -27,7 +27,7 @@ By default, QSE uses confidence 0.1 and support 100 to prune the extracted shape
 
 
 #### Run Jar file:
-The jar file is located in [jar](https://github.com/dkw-aau/qse/tree/shactor/jar) directory. Please execute the following command to run the jar: 
+The jar file is located in [jar](https://github.com/dkw-aau/qse/tree/main/jar) directory. Please execute the following command to run the jar: 
 
 ```
 java -jar -Xmx16g  build/libs/qse.jar config.properties &> output.logs
