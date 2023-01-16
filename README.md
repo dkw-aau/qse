@@ -1,17 +1,8 @@
 # Quality Shapes Extraction (QSE)
 
+QSE is a scalable shapes extraction tool which helps you extract validating shapes (SHACL) from large knowledge graphs.
+Please read our [research paper](https://relweb.cs.aau.dk/qse/extended.pdf) for details.
 
-This repository contains the source code, resources, and instructions to run or reproduce the experiments performed for the following research paper:
->  Rabbani, Kashif; Lissandrini, Matteo; and Hose, Katja. **Extraction of Validating Shapes from very large Knowledge Graphs**. In Proceedings of the Very Large Databases 2023 (Volume 16), August 28 - Sept 02, 2023, Vancouver, Canada.
-
-Experimental results and other details are available on our website [https://relweb.cs.aau.dk/qse/](https://relweb.cs.aau.dk/qse/).
-
-Read the **extended version** of paper on our [website](https://relweb.cs.aau.dk/qse/extended.pdf) or [GitHub](https://github.com/dkw-aau/qse/blob/main/qse-extended.pdf).
-
-### Reproducibility Instructions for VLDB
-Detailed reproducibility instructions are available in  [VLDB_Reproducibility_README](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility_README.md) file.
-
--------
 
 ### Instructions to extract SHACL shapes from your Knowledge Graph
 
@@ -36,8 +27,7 @@ By default, QSE uses confidence 0.1 and support 100 to prune the extracted shape
 
 
 #### Run Jar file:
-You need to download the Jar file from our website [https://relweb.cs.aau.dk/qse/jar/qse.jar](https://relweb.cs.aau.dk/qse/jar/qse.jar) 
-to project main directory and run the following command:
+The jar file is located in [jar](https://github.com/dkw-aau/qse/tree/shactor/jar) directory. Please execute the following command to run the jar: 
 
 ```
 java -jar -Xmx16g  build/libs/qse.jar config.properties &> output.logs
@@ -58,4 +48,11 @@ QSE will output SHACL shapes in the `output_file_path` directory along with `cla
 - The file with suffix `_QSE_FULL_SHACL.ttl` contains the full set of SHACL shapes using the configuration provided in config.properties file. 
 - The file with suffix `_QSE_0.1_100_SHACL.ttl` contains the set of SHACL shapes pruned using confidence 0.1 and support 100 using the configuration provided in config.properties file.
 
+---
+### Reproducibility 
+If you want to reproduce the results of the paper, please read  [VLDB_Reproducibility_README](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility_README.md) file.
 
+### Citation
+
+If you use this tool please reference:
+>  Rabbani, Kashif; Lissandrini, Matteo; and Hose, Katja. **Extraction of Validating Shapes from very large Knowledge Graphs**. In Proceedings of the Very Large Databases 2023 (Volume 16), August 28 - Sept 02, 2023, Vancouver, Canada.
