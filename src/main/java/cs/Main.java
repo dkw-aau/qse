@@ -1,16 +1,16 @@
 package cs;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import cs.qse.filebased.Parser;
+import cs.qse.filebased.sampling.ReservoirSamplingParser;
 import cs.qse.querybased.nonsampling.QbParser;
 import cs.qse.querybased.sampling.QbSampling;
 import cs.qse.querybased.sampling.parallel.ParallelQbSampling;
-import cs.qse.filebased.sampling.ReservoirSamplingParser;
 import cs.utils.ConfigManager;
 import cs.utils.Constants;
 import cs.utils.FilesUtil;
 import cs.utils.Utils;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import cs.validation.QseSHACLValidator;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +32,7 @@ public class Main {
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
         qseExactExecutionWithMinimumParams();
+        
         //readConfig();
         //benchmark();
         //new PrecisionRecallComputer();

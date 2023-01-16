@@ -12,11 +12,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExperimentsUtil {
     
     public static HashMap<Double, List<Integer>> getSupportConfRange() {
-        HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
+        /*
         String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/pruning_thresholds.csv";
         List<String[]> config = FilesUtil.readCsvAllDataOnceWithCustomSeparator(fileAddress, ',');
         config.remove(0); // remove the headers
@@ -26,7 +28,20 @@ public class ExperimentsUtil {
             List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
             supportValues.add(Integer.parseInt(row[1]));
             confSuppMap.put(conf, supportValues);
-        });
+        });*/
+        
+        HashMap<Double, List<Integer>> confSuppMap = new HashMap<>();
+        String pruningThresholds = ConfigManager.getProperty("pruning_thresholds");
+        assert pruningThresholds != null;
+        Matcher m = Pattern.compile("\\((.*?)\\)").matcher(pruningThresholds);
+        while (m.find()) {
+            String[] pair = m.group(1).split(",");
+            Double conf = Double.parseDouble(pair[0]);
+            List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
+            supportValues.add(Integer.parseInt(pair[1]));
+            confSuppMap.put(conf, supportValues);
+        }
+        
         return confSuppMap;
     }
     
