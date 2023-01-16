@@ -18,12 +18,10 @@ you only need to update the following parameters to get started:
 
       dataset_path=/dir_path/knowledge_graph.nt
       resources_path=/dir_path/qse/src/main/resources
-      config_dir_path=/dir_path/qse/config/
       output_file_path=/dir_path/qse/Output/
 
-Please replace the `dir_path` with respect to your directory. 
-
-By default, QSE uses confidence 0.1 and support 100 to prune the extracted shapes. You can specify more values of support and range in [this](https://github.com/dkw-aau/qse/blob/main/config/pruning/pruning_thresholds.csv) file.
+Please replace the `dir_path` with respect to your directory.
+You can specify values of support and range (as pruning thresholds) in the config file as pairs.
 
 
 #### Run Jar file:
