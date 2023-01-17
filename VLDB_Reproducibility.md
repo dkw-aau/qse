@@ -9,9 +9,10 @@ Experimental results and other details are also available on our [website](https
 Please follow these steps to get the code and data to reproduce the results:
 
 ### 1. Getting the code
-Clone the GitHub repository using the following url.
+Clone the GitHub repository using the following commands and checkout to the vldb release tag.
 ```
-git clone -b vldb https://github.com/dkw-aau/qse .
+git clone https://github.com/dkw-aau/qse.git
+git checkout tags/vldb -b vldb
 ```
 
 ### 2. Getting the data
