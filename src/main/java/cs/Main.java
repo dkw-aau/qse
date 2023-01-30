@@ -31,10 +31,10 @@ public class Main {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        qseExactExecutionWithMinimumParams();
+        //qseExactExecutionWithMinimumParams();
         
-        //readConfig();
-        //benchmark();
+        readConfig();
+        benchmark();
         //new PrecisionRecallComputer();
     }
     

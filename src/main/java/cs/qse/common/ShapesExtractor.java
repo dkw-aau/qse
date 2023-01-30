@@ -18,6 +18,7 @@ import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
+import org.eclipse.rdf4j.model.vocabulary.VOID;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
@@ -86,7 +87,7 @@ public class ShapesExtractor {
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
             
-            PostConstraintsAnnotator pca =  new PostConstraintsAnnotator(conn);
+            PostConstraintsAnnotator pca = new PostConstraintsAnnotator(conn);
             pca.addShNodeConstraint();
             
             // Compute Statistics and prepare logs
@@ -147,10 +148,13 @@ public class ShapesExtractor {
             String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
             b.subject(nodeShape)
                     .add(RDF.TYPE, SHACL.NODE_SHAPE)
-                    .add(SHACL.TARGET_CLASS, subj)
-                    .add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
+                    .add(SHACL.TARGET_CLASS, subj);
             //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
             //.add(SHACL.CLOSED, true);
+            if(isAnnotationOfSupportConfidenceActivated()){
+                //b.subject(nodeShape).add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
+                b.subject(nodeShape).add(VOID.ENTITIES, classInstanceCount.get(encodedClassIRI));
+            }
             
             if (propToObjectType != null) {
                 constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
@@ -174,8 +178,8 @@ public class ShapesExtractor {
             constructShapesWithPruning(classToPropWithObjTypes, confidence, support, conn);
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
-    
-            PostConstraintsAnnotator pca_pruned =  new PostConstraintsAnnotator(conn);
+            
+            PostConstraintsAnnotator pca_pruned = new PostConstraintsAnnotator(conn);
             pca_pruned.addShNodeConstraint();
             
             System.out.println("MODEL:: CUSTOM - SIZE: " + conn.size() + " | PARAMS: " + confidence * 100 + " - " + support);
@@ -864,11 +868,12 @@ public class ShapesExtractor {
      * SHARED METHOD (QSE-Default & QSE-Pruned) : to annotate shapes with support and confidence
      */
     private void annotateWithSupportAndConfidence(Resource currentMember, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
-        if (shapeTripletSupport.containsKey(tuple3)) {
+        if (shapeTripletSupport.containsKey(tuple3) && isAnnotationOfSupportConfidenceActivated()) {
             Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
-            localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
-            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
-            localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
+            //localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
+            localBuilder.subject(currentMember).add(VOID.ENTITIES, entities);
+            //Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            //localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
         }
     }
     
@@ -876,11 +881,12 @@ public class ShapesExtractor {
      * SHARED METHOD (QSE-Default & QSE-Pruned) : to annotate shapes with support and confidence
      */
     private void annotateWithSupportAndConfidence(IRI propShape, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
-        if (shapeTripletSupport.containsKey(tuple3)) {
+        if (shapeTripletSupport.containsKey(tuple3) && isAnnotationOfSupportConfidenceActivated()) {
             Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
-            localBuilder.subject(propShape).add(Constants.SUPPORT, entities);
-            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
-            localBuilder.subject(propShape).add(Constants.CONFIDENCE, confidence);
+            //localBuilder.subject(propShape).add(Constants.SUPPORT, entities);
+            localBuilder.subject(propShape).add(VOID.ENTITIES, entities);
+            //Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            //localBuilder.subject(propShape).add(Constants.CONFIDENCE, confidence);
         }
     }
     
@@ -1038,5 +1044,13 @@ public class ShapesExtractor {
     
     public void setSampledPropCount(Map<Integer, Integer> sampledPropCount) {
         this.sampledPropCount = propCount;
+    }
+    
+    private boolean isAnnotationOfSupportConfidenceActivated() {
+        boolean flag = true;
+        if (ConfigManager.getProperty("annotateSupportConfidence") != null) {
+            flag = Boolean.parseBoolean(ConfigManager.getProperty("annotateSupportConfidence"));
+        }
+        return flag;
     }
 }
