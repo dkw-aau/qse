@@ -7,7 +7,7 @@ cd ..
 
 
 ### Build Docker Image
-image=qse:QSE-Exact
+image=qse:QSE-Exact-VLDB
 docker build . -t $image
 
 
