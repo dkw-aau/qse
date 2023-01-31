@@ -164,7 +164,7 @@ container=QSE_Exact_WDT21_MoreMem
 
 echo "About to run docker container: ${container}"
 
-docker run -m 250GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx225g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/qse/,target=/app/local $image /app/local/config/wdt21Config.properties
+docker run -m 250GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx225g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git2/qse/,target=/app/local $image /app/local/config/wdt21Config.properties
 
 docker ps
 
