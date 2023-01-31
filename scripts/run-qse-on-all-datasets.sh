@@ -164,7 +164,8 @@ container=QSE_Exact_WDT21_MoreMem
 
 echo "About to run docker container: ${container}"
 
-docker run -m 250GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx225g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git2/qse/,target=/app/local $image /app/local/config/wdt21Config.properties
+#docker run -m 250GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx225g" --mount type=bind,source=/srv/data/iq26og/data/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git2/qse/,target=/app/local $image /app/local/config/wdt21Config.properties
+docker run -m 750GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx550g" --mount type=bind,source=/user/cs.aau.dk/iq26og/data/,target=/app/data --mount type=bind,source=/user/cs.aau.dk/iq26og/git/qse/,target=/app/local $image /app/local/config/wdt21Config.properties
 
 docker ps
 
@@ -188,4 +189,6 @@ done
 status=$(docker container inspect -f '{{.State.Status}}' $container)
 
 echo "Status of the ${container} is ${status}" ### Container exited
+
+
 
