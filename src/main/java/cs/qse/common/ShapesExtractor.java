@@ -152,8 +152,8 @@ public class ShapesExtractor {
             //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
             //.add(SHACL.CLOSED, true);
             if(isAnnotationOfSupportConfidenceActivated()){
-                //b.subject(nodeShape).add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
-                b.subject(nodeShape).add(VOID.ENTITIES, classInstanceCount.get(encodedClassIRI));
+                b.subject(nodeShape).add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
+                //b.subject(nodeShape).add(VOID.ENTITIES, classInstanceCount.get(encodedClassIRI));
             }
             
             if (propToObjectType != null) {
@@ -870,10 +870,10 @@ public class ShapesExtractor {
     private void annotateWithSupportAndConfidence(Resource currentMember, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
         if (shapeTripletSupport.containsKey(tuple3) && isAnnotationOfSupportConfidenceActivated()) {
             Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
-            //localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
-            localBuilder.subject(currentMember).add(VOID.ENTITIES, entities);
-            //Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
-            //localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
+            localBuilder.subject(currentMember).add(Constants.SUPPORT, entities);
+            //localBuilder.subject(currentMember).add(VOID.ENTITIES, entities);
+            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            localBuilder.subject(currentMember).add(Constants.CONFIDENCE, confidence);
         }
     }
     
@@ -883,10 +883,10 @@ public class ShapesExtractor {
     private void annotateWithSupportAndConfidence(IRI propShape, ModelBuilder localBuilder, Tuple3<Integer, Integer, Integer> tuple3) {
         if (shapeTripletSupport.containsKey(tuple3) && isAnnotationOfSupportConfidenceActivated()) {
             Literal entities = Values.literal(shapeTripletSupport.get(tuple3).getSupport()); // support value
-            //localBuilder.subject(propShape).add(Constants.SUPPORT, entities);
-            localBuilder.subject(propShape).add(VOID.ENTITIES, entities);
-            //Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
-            //localBuilder.subject(propShape).add(Constants.CONFIDENCE, confidence);
+            localBuilder.subject(propShape).add(Constants.SUPPORT, entities);
+            //localBuilder.subject(propShape).add(VOID.ENTITIES, entities);
+            Literal confidence = Values.literal(shapeTripletSupport.get(tuple3).getConfidence()); // confidence value
+            localBuilder.subject(propShape).add(Constants.CONFIDENCE, confidence);
         }
     }
     
