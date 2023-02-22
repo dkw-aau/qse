@@ -8,14 +8,23 @@ import java.util.HashMap;
 public class StringEncoder implements Encoder {
     int counter;
     HashMap<Integer, String> table;
+
+
+
     HashMap<String, Integer> reverseTable;
-    
+
     public StringEncoder() {
         this.counter = -1;
         this.table = new HashMap<>();
         this.reverseTable = new HashMap<>();
     }
-    
+
+    public StringEncoder(int counter, HashMap<Integer, String> table, HashMap<String, Integer> reverseTable) {
+        this.counter = counter;
+        this.table = table;
+        this.reverseTable = reverseTable;
+    }
+
     public int encode(String val) {
         if (reverseTable.containsKey(val)) {
             return reverseTable.get(val);
@@ -41,6 +50,10 @@ public class StringEncoder implements Encoder {
     }
     
     public HashMap<String, Integer> getRevTable() {
+        return reverseTable;
+    }
+
+    public HashMap<String, Integer> getReverseTable() {
         return reverseTable;
     }
 }

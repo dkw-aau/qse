@@ -34,9 +34,22 @@ dependencies {
     implementation group: 'com.ontotext.graphdb', name: 'graphdb-free-runtime', version: '9.3.0'
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.1'
 
+
+    implementation group: 'org.apache.jena', name: 'jena-shacl', version: '4.6.1'
+
+    //    Importing libraries for membership graph
+
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-core
+    implementation group: 'org.jgrapht', name: 'jgrapht-core', version: '1.5.1'
+
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-ext
+    //implementation group: 'org.jgrapht', name: 'jgrapht-ext', version: '1.5.1'
+
+    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-io
+    implementation group: 'org.jgrapht', name: 'jgrapht-io', version: '1.5.1'
+
     //implementation files('address/file.jar')
     implementation files('libs/turtle-formatter-snapshot.jar') // Customized turtle-formatter
-    implementation group: 'org.apache.jena', name: 'jena-shacl', version: '4.6.1'
 }
 
 
