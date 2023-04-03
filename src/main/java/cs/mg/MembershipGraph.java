@@ -16,6 +16,9 @@ import org.semanticweb.yars.nx.parser.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * https://github.com/Kashif-Rabbani/shacl/tree/9926b56d922c3a6d872d05df49fae8728c990eb4/src/main/java/cs/others/parsers/mg
+ */
 public class MembershipGraph {
     DefaultDirectedGraph<Integer, DefaultEdge> membershipGraph;
     //NodeEncoder encoder;
@@ -115,6 +118,10 @@ public class MembershipGraph {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void visualizeMg(){
+        new MembershipGraphVisualizer().createIntegerNodesGraph(this.membershipGraph);
     }
 
     public void membershipGraphCompression(Integer threshold) {

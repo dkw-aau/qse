@@ -31,12 +31,15 @@ public class QbParser {
     //HashMap<String, HashMap<Node, HashSet<String>>> classToPropWithObjTypes;
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes;
     HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport;
+
     Set<Integer> classes;
     StringEncoder stringEncoder;
     String instantiationProperty;
     Boolean qseFromSpecificClasses;
+
     long globalComputeSupportMethodTime = 0L;
-    
+    public ShapesExtractor shapesExtractor;
+
     public QbParser(String typeProperty) {
         this.graphDBUtils = new GraphDBUtils();
         int expectedNumberOfClasses = Integer.parseInt(ConfigManager.getProperty("expected_number_classes"));
@@ -47,11 +50,22 @@ public class QbParser {
         this.instantiationProperty = typeProperty;
         this.qseFromSpecificClasses = Main.qseFromSpecificClasses;
     }
-    
+
+    // This constructor will be called from SHACTOR DEMO
+    public QbParser(int expectedNumberOfClasses, String typePredicate, String graphdbUrl, String graphdbRepository) {
+        this.graphDBUtils = new GraphDBUtils(graphdbUrl, graphdbRepository);
+        this.classEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.classToPropWithObjTypes = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.shapeTripletSupport = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
+        this.stringEncoder = new StringEncoder();
+        this.instantiationProperty = typePredicate;
+        this.qseFromSpecificClasses = false;
+    }
+
     public void run() {
         runParser();
     }
-    
+
     private void runParser() {
         getNumberOfInstancesOfEachClass();
         getDistinctClasses();
@@ -62,8 +76,8 @@ public class QbParser {
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("Size: classToPropWithObjTypes :: " + classToPropWithObjTypes.size() + " , Size: shapeTripletSupport :: " + shapeTripletSupport.size());
     }
-    
-    private void getNumberOfInstancesOfEachClass() {
+
+    public void getNumberOfInstancesOfEachClass() {
         StopWatch watch = new StopWatch();
         watch.start();
         if (qseFromSpecificClasses) {
@@ -79,7 +93,7 @@ public class QbParser {
                     classEntityCount.put(stringEncoder.encode(classIri), classCount);
                 });
             }
-            
+
         } else {
             //This query will return a table having two columns class: IRI of the class, classCount: number of instances of class
             graphDBUtils.runSelectQuery(setProperty(FilesUtil.readQuery("query2"))).forEach(result -> {
@@ -96,21 +110,25 @@ public class QbParser {
         System.out.println("Time Elapsed getNumberOfInstancesOfEachClass: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         Utils.logTime("getNumberOfInstancesOfEachClass ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
-    private void getDistinctClasses() {
+
+    public void getDistinctClasses() {
         classes = classEntityCount.keySet();
     }
-    
-    private void getShapesInfoAndComputeSupport() {
+
+    public void setClasses(Set<Integer> values) {
+        classes = values;
+    }
+
+    public void getShapesInfoAndComputeSupport() {
         StopWatch watch = new StopWatch();
         watch.start();
-        for (Integer classIri : this.classes) {
+        for (Integer classIri : classes) {
             String queryToGetProperties = FilesUtil.readQuery("query4").replace(":Class", " <" + stringEncoder.decode(classIri) + "> ");
             queryToGetProperties = setProperty(queryToGetProperties);
             HashSet<String> props = getPropertiesOfClass(queryToGetProperties);
-            
+
             HashMap<Integer, Set<Integer>> propToObjTypes = new HashMap<>();
-            
+
             for (String property : props) {
                 HashSet<Integer> objectTypes = new HashSet<>();
                 String queryToVerifyLiteralObjectType = buildQuery(classIri, property, "query5");
@@ -132,7 +150,7 @@ public class QbParser {
                             }
                         });
                     }
-                    
+
                 }
                 //Non-Literal Type Object
                 else {
@@ -152,40 +170,53 @@ public class QbParser {
                             }
                         });
                     }
+
+                    String queryToGetUndefinedNonLiteralObjects = buildQuery(classIri, property, "query7_");
+                    queryToGetUndefinedNonLiteralObjects = setProperty(queryToGetUndefinedNonLiteralObjects);
+                    List<BindingSet> resultsUndefinedTriples = graphDBUtils.runSelectQuery(queryToGetUndefinedNonLiteralObjects);
+                    if (resultsUndefinedTriples != null && resultsUndefinedTriples.size() > 0) {
+                        String undefinedObjType = "http://shaclshapes.org/undefined";
+                        objectTypes.add(stringEncoder.encode(undefinedObjType));
+                        String queryToComputeSupportForNonLiteralTypeObjects = buildQuery(classIri, property, undefinedObjType, "query9_");
+                        queryToComputeSupportForNonLiteralTypeObjects = setProperty(queryToComputeSupportForNonLiteralTypeObjects);
+                        computeSupport(classIri, property, undefinedObjType, queryToComputeSupportForNonLiteralTypeObjects);
+                    }
                 }
                 propToObjTypes.put(stringEncoder.encode(property), objectTypes);
             }
             classToPropWithObjTypes.put(classIri, propToObjTypes);
             System.out.println(".. globalComputeSupportMethodTime: " + globalComputeSupportMethodTime);
-            
+
         }
         watch.stop();
         System.out.println("Time Elapsed getShapesInfoAndComputeSupport: " + TimeUnit.MILLISECONDS.toSeconds(watch.getTime()) + " : " + TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
         Utils.logTime("getShapesInfoAndComputeSupport ", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
-    private void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
+
+    public void computeSupport(Integer classIri, String property, String objectType, String supportQuery) {
         StopWatch watcher = new StopWatch();
         watcher.start();
-        graphDBUtils.runSelectQuery(supportQuery).forEach(countRow -> {
+        for (BindingSet countRow : graphDBUtils.runSelectQuery(supportQuery)) {
             if (countRow.getBinding("count").getValue().isLiteral()) {
                 Literal literalCount = (Literal) countRow.getBinding("count").getValue();
-                int count = literalCount.intValue();
-                shapeTripletSupport.put(new Tuple3<>(classIri, stringEncoder.encode(property), stringEncoder.encode(objectType)), new SupportConfidence(count));
+                int support = literalCount.intValue();
+                int clasEntityCount = classEntityCount.get(classIri);
+                Double confidence = ((double) support / (double) clasEntityCount);
+                shapeTripletSupport.put(new Tuple3<>(classIri, stringEncoder.encode(property), stringEncoder.encode(objectType)), new SupportConfidence(support, confidence));
             }
-        });
+        }
         watcher.stop();
         long time = watcher.getTime();
         globalComputeSupportMethodTime = globalComputeSupportMethodTime + time;
     }
-    
-    protected void extractSHACLShapes(Boolean performPruning) {
+
+    public void extractSHACLShapes(Boolean performPruning) {
         StopWatch watch = new StopWatch();
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, instantiationProperty);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        
+
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
@@ -203,17 +234,50 @@ public class QbParser {
             watchForPruning.stop();
             Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }
-        
+
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
+
+
+    public String extractSHACLShapes() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:No Pruning";
+        shapesExtractor = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, instantiationProperty);
+        shapesExtractor.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        return shapesExtractor.getOutputFileAddress();
+    }
+
+    /*
+        Used in SHACTOR Demo - Invoked from Extraction View (with support and confidence thresholds)
+     */
+    public String extractSHACLShapesWithPruning(Double conf, Integer supp) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        String methodName = "extractSHACLShapes:WithPruning";
+        StopWatch watchForPruning = new StopWatch();
+        watchForPruning.start();
+        shapesExtractor.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+        watchForPruning.stop();
+
+        Utils.logTime(conf + "_" + supp + " " + methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
+
+        ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
+        watch.stop();
+        Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+        return shapesExtractor.getOutputFileAddress();
+    }
+
     public void writeSupportToFile() {
         try {
             FileWriter fileWriter = new FileWriter(new File(Constants.TEMP_DATASET_FILE), true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
-            
+
             for (Map.Entry<Tuple3<Integer, Integer, Integer>, SupportConfidence> entry : this.shapeTripletSupport.entrySet()) {
                 Tuple3<Integer, Integer, Integer> tupl3 = entry.getKey();
                 Integer count = entry.getValue().getSupport();
@@ -226,14 +290,14 @@ public class QbParser {
             e.printStackTrace();
         }
     }
-    
+
     @NotNull
     private String buildQuery(Integer classIri, String property, String queryFile) {
         return (FilesUtil.readQuery(queryFile)
                 .replace(":Class", " <" + stringEncoder.decode(classIri) + "> "))
                 .replace(":Prop", " <" + property + "> ");
     }
-    
+
     @NotNull
     private String buildQuery(Integer classIri, String property, String objectType, String queryFile) {
         return (FilesUtil.readQuery(queryFile)
@@ -241,7 +305,7 @@ public class QbParser {
                 .replace(":Prop", " <" + property + "> ")
                 .replace(":ObjectType", " <" + objectType + "> ");
     }
-    
+
     @NotNull
     private HashSet<String> getPropertiesOfClass(String query) {
         HashSet<String> props = new HashSet<>();
@@ -252,9 +316,45 @@ public class QbParser {
         });
         return props;
     }
-    
+
     private String setProperty(String query) {
         return query.replace(":instantiationProperty", instantiationProperty);
+    }
+
+    public StringEncoder getStringEncoder() {
+        return stringEncoder;
+    }
+
+    public GraphDBUtils getGraphDBUtils() {
+        return graphDBUtils;
+    }
+
+    public HashMap<Integer, Integer> getClassEntityCount() {
+        return classEntityCount;
+    }
+
+    public Map<Integer, Map<Integer, Set<Integer>>> getClassToPropWithObjTypes() {
+        return classToPropWithObjTypes;
+    }
+
+    public HashMap<Tuple3<Integer, Integer, Integer>, SupportConfidence> getShapeTripletSupport() {
+        return shapeTripletSupport;
+    }
+
+    public Set<Integer> getClasses() {
+        return classes;
+    }
+
+    public String getInstantiationProperty() {
+        return instantiationProperty;
+    }
+
+    public Boolean getQseFromSpecificClasses() {
+        return qseFromSpecificClasses;
+    }
+
+    public long getGlobalComputeSupportMethodTime() {
+        return globalComputeSupportMethodTime;
     }
 }
 

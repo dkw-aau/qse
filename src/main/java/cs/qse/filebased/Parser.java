@@ -72,6 +72,7 @@ public class Parser {
         //assignCardinalityConstraints();
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
+        createMembershipGraph();
     }
 
     /**
@@ -167,6 +168,12 @@ public class Parser {
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
         watch.stop();
         Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
+
+//        shapeTripletSupport.forEach((triplet, supportConfidence) -> {
+//            System.out.println(stringEncoder.decode(triplet._1) + " " +
+//                    stringEncoder.decode(triplet._2)+ " " +
+//                    stringEncoder.decode(triplet._3)+ " " + supportConfidence.toString());
+//        });
     }
 
     /**
@@ -264,6 +271,7 @@ public class Parser {
         this.mg = new MembershipGraph(stringEncoder, entityDataHashMap, classEntityCount);
         mg.createMembershipSets();
         mg.createMembershipGraph();
+        mg.visualizeMg();
         //System.out.println("Before");
         System.out.println("Vertices: " + mg.getMembershipGraph().vertexSet().size());
         System.out.println("Edges: " + mg.getMembershipGraph().edgeSet().size());

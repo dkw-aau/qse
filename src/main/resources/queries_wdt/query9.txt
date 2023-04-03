@@ -1,0 +1,6 @@
+PREFIX onto: <http://www.ontotext.com/>
+SELECT ( COUNT( DISTINCT ?s) AS ?count) FROM onto:explicit WHERE {
+    ?s :instantiationProperty :Class .
+    ?s :Prop ?obj .
+    ?obj :instantiationProperty :ObjectType ;
+}

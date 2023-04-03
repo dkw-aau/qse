@@ -26,6 +26,18 @@ public class KBManagement {
         }
         return repository;
     }
+
+    public Repository initGraphDBRepository(String graphdbUrl, String graphdbRepository) {
+        try {
+            RepositoryManager repositoryManager = new RemoteRepositoryManager(graphdbUrl);
+            repository = repositoryManager.getRepository(graphdbRepository);
+            repository.init();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return repository;
+    }
     
     /**
      * Shutdown repository and manager

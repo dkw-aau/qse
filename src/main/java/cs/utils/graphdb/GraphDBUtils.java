@@ -18,13 +18,19 @@ public class GraphDBUtils {
     KBManagement kbManager;
     Repository repository;
     RepositoryConnection repositoryConnection;
-    
+
     public GraphDBUtils() {
         this.kbManager = new KBManagement();
         this.repository = kbManager.initGraphDBRepository();
         this.repositoryConnection = repository.getConnection();
     }
-    
+
+    public GraphDBUtils(String graphdbUrl, String graphdbRepository) {
+        this.kbManager = new KBManagement();
+        this.repository = kbManager.initGraphDBRepository(graphdbUrl, graphdbRepository);
+        this.repositoryConnection = repository.getConnection();
+    }
+
     public List<BindingSet> runSelectQuery(String query) {
         List<BindingSet> result = new ArrayList<>();
         try {
@@ -39,22 +45,22 @@ public class GraphDBUtils {
         }
         return result;
     }
-    
+
     public TupleQueryResult evaluateSelectQuery(String query) {
         TupleQueryResult tupleQueryResult = null;
         try {
-            if(!repositoryConnection.isActive()){
+            if (!repositoryConnection.isActive()) {
                 this.repositoryConnection = repository.getConnection();
             }
             TupleQuery tq = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, query);
             tupleQueryResult = tq.evaluate();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return tupleQueryResult;
     }
-    
+
     public Boolean runAskQuery(String query) {
         Boolean result = null;
         try {
@@ -67,13 +73,13 @@ public class GraphDBUtils {
         }
         return result;
     }
-    
+
     public GraphQueryResult runConstructQuery(String query) {
         GraphQueryResult resultantTriples = null;
         try {
             GraphQuery queryResult = repositoryConnection.prepareGraphQuery(query);
             resultantTriples = queryResult.evaluate();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             if (repositoryConnection.isActive())
@@ -81,18 +87,18 @@ public class GraphDBUtils {
         }
         return resultantTriples;
     }
-    
+
     public void runConstructQuery(String query, String address) {
         try {
             GraphQuery queryResult = repositoryConnection.prepareGraphQuery(query);
             GraphQueryResult resultantTriples = queryResult.evaluate();
-            
+
             FileWriter fileWriter = new FileWriter(address, true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
             resultantTriples.forEach(statement -> {
                 printWriter.println("<" + statement.getSubject() + "> <" + statement.getPredicate() + "> <" + statement.getObject() + "> .");
             });
-            
+
             printWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,7 +106,7 @@ public class GraphDBUtils {
                 repositoryConnection.rollback();
         }
     }
-    
+
     public void runUpdateQuery(String query) {
         try {
             Update updateQuery = repositoryConnection.prepareUpdate(query);
@@ -111,17 +117,17 @@ public class GraphDBUtils {
                 repositoryConnection.rollback();
         }
     }
-    
+
     public void runGraphQuery(String query, String address) {
         try {
             GraphQuery graphQuery = repositoryConnection.prepareGraphQuery(QueryLanguage.SPARQL, query);
-            
+
             GraphQueryResult graphQueryResult = graphQuery.evaluate();
-            
+
             OutputStream out = new FileOutputStream(address, true);
             RDFWriter writer = new NTriplesWriter(out);
             graphQuery.evaluate(writer);
-            
+
             graphQueryResult.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,7 +135,7 @@ public class GraphDBUtils {
                 repositoryConnection.rollback();
         }
     }
-    
+
     public List<BindingSet> runSelectQueryWithTimeOut(String query) {
         List<BindingSet> result = new ArrayList<>();
         try {
@@ -144,7 +150,7 @@ public class GraphDBUtils {
         }
         return result;
     }
-    
+
     public void updateQueryExecutor(String query) {
         try {
             repositoryConnection.begin();

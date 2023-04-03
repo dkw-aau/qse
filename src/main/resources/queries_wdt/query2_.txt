@@ -1,0 +1,5 @@
+PREFIX onto: <http://www.ontotext.com/>
+SELECT (COUNT(DISTINCT ?s) AS ?classCount) FROM onto:explicit where {
+	?s :instantiationProperty :Class .
+}
+Group by ?class

@@ -34,5 +34,12 @@ public class SupportConfidence {
     public void setConfidence(Double confidence) {
         this.confidence = confidence;
     }
-    
+
+    @Override
+    public String toString() {
+        return "SupportConfidence{" +
+                "support=" + support +
+                ", confidence=" + confidence +
+                '}';
+    }
 }

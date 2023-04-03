@@ -1,0 +1,8 @@
+PREFIX onto: <http://www.ontotext.com/>
+PREFIX : <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT DISTINCT ?objDataType FROM onto:explicit where {
+	?s :instantiationProperty  :Class  .
+    ?s :Prop ?obj.
+    ?obj :instantiationProperty ?objDataType .
+}
