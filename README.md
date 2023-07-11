@@ -1,8 +1,8 @@
 # Quality Shapes Extraction (QSE)
 
 QSE is a scalable shapes extraction tool which helps you extract validating shapes (SHACL) from large knowledge graphs.
-Please read our [research paper](https://relweb.cs.aau.dk/qse/) for more details.
 
+Read the paper: [https://www.vldb.org/pvldb/vol16/p1023-rabbani.pdf](https://www.vldb.org/pvldb/vol16/p1023-rabbani.pdf) or visit our website for more details: [https://relweb.cs.aau.dk/qse/](https://relweb.cs.aau.dk/qse/)
 
 ### Instructions to extract SHACL shapes from your Knowledge Graph
 
@@ -50,7 +50,19 @@ QSE will output SHACL shapes in the `output_file_path` directory along with `cla
 ### Reproducibility 
 If you want to reproduce the results of the paper, please read  [VLDB_Reproducibility](https://github.com/dkw-aau/qse/blob/main/VLDB_Reproducibility.md) readme file.
 
-### Citation
+### Citing the work
+Please cite us if you use the code in your project or publication
 
-If you use this tool please reference:
->  Rabbani, Kashif; Lissandrini, Matteo; and Hose, Katja. **Extraction of Validating Shapes from very large Knowledge Graphs**. In Proceedings of the Very Large Databases 2023 (Volume 16), August 28 - Sept 02, 2023, Vancouver, Canada.
+```bibtex
+@article{DBLP:journals/pvldb/RabbaniLH23,
+  author       = {Kashif Rabbani and
+                  Matteo Lissandrini and
+                  Katja Hose},
+  title        = {Extraction of Validating Shapes from very large Knowledge Graphs},
+  journal      = {Proc. {VLDB} Endow.},
+  volume       = {16},
+  number       = {5},
+  pages        = {1023--1032},
+  year         = {2023}
+}
+```
