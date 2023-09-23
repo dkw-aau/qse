@@ -5,10 +5,7 @@ import cs.qse.querybased.nonsampling.QbParser;
 import cs.qse.querybased.sampling.QbSampling;
 import cs.qse.querybased.sampling.parallel.ParallelQbSampling;
 import cs.qse.filebased.sampling.ReservoirSamplingParser;
-import cs.utils.ConfigManager;
-import cs.utils.Constants;
-import cs.utils.FilesUtil;
-import cs.utils.Utils;
+import cs.utils.*;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import cs.validation.QseSHACLValidator;
@@ -26,18 +23,18 @@ public class Main {
     public static boolean extractMaxCardConstraints;
     public static boolean isWikiData;
     public static boolean qseFromSpecificClasses;
-    
+
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        qseExactExecutionWithMinimumParams();
-        //readConfig();
-        //benchmark();
+        //qseExactExecutionWithMinimumParams();
+        readConfig();
+        benchmark();
         //new PrecisionRecallComputer();
     }
-    
-    
+
+
     private static void benchmark() {
         System.out.println("Benchmark Initiated for " + paramVal("dataset_path"));
         Utils.log("Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath");
@@ -47,27 +44,27 @@ public class Main {
             if (isWikiData) {
                 typeProperty = Constants.INSTANCE_OF;
             }
-            
+
             if (isActivated("qse_exact_file")) {
                 Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, typeProperty);
                 parser.run();
             }
-            
+
             if (isActivated("qse_approximate_file")) {
                 ReservoirSamplingParser reservoirSamplingParser = new ReservoirSamplingParser(datasetPath, numberOfClasses, numberOfInstances, typeProperty, entitySamplingThreshold);
                 reservoirSamplingParser.run();
             }
-            
+
             if (isActivated("qse_exact_query_based")) {
                 QbParser qbParser = new QbParser(typeProperty);
                 qbParser.run();
             }
-            
+
             if (isActivated("qse_approximate_query_based")) {
                 QbSampling qbSampling = new QbSampling(numberOfClasses, numberOfInstances, typeProperty, entitySamplingThreshold);
                 qbSampling.run();
             }
-            
+
             if (isActivated("qse_approximate_parallel_query_based")) {
                 int numOfThreads = Integer.parseInt(paramVal("qse_approximate_parallel_qb_threads"));
                 ParallelQbSampling parallelQbSampling = new ParallelQbSampling(numberOfClasses, numberOfInstances, typeProperty, entitySamplingThreshold, numOfThreads);
@@ -76,14 +73,14 @@ public class Main {
             if (isActivated("qse_validation")) {
                 new QseSHACLValidator(true);
             }
-            
+
         } catch (
                 Exception e) {
             e.printStackTrace();
         }
         Utils.getCurrentTimeStamp();
     }
-    
+
     private static void readConfig() {
         datasetPath = paramVal("dataset_path");
         datasetName = paramVal("dataset_name");
@@ -96,7 +93,7 @@ public class Main {
         qseFromSpecificClasses = isActivated("qse_specific_classes");
         outputFilePath = paramVal("output_file_path");
     }
-    
+
     private static void qseExactExecutionWithMinimumParams() {
         datasetPath = paramVal("dataset_path");
         datasetName = FilesUtil.getFileName(datasetPath);
@@ -106,13 +103,17 @@ public class Main {
         isWikiData = false;
         qseFromSpecificClasses = isActivated("qse_specific_classes");
         outputFilePath = paramVal("output_file_path");
-        
+
         // Run QSE-Exact
         Parser parser = new Parser(datasetPath, numberOfClasses, numberOfInstances, paramVal("instance_type_property"));
         parser.run();
     }
-    
-    private static boolean isActivated(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
-    
-    private static String paramVal(String prop) {return ConfigManager.getProperty(prop);}
+
+    private static boolean isActivated(String option) {
+        return Boolean.parseBoolean(ConfigManager.getProperty(option));
+    }
+
+    private static String paramVal(String prop) {
+        return ConfigManager.getProperty(prop);
+    }
 }

@@ -13,7 +13,8 @@ container=qse_container_dbpedia
 
 echo "About to run docker container: ${container}"
 
-docker run -m 16GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/data/,target=/app/data --mount type=bind,source=/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
+#docker run -m 16GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/data/,target=/app/data --mount type=bind,source=/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
+docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx20g" --mount type=bind,source=/home/ubuntu/data/data/,target=/app/data --mount type=bind,source=/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
 
 ### Logging memory consumption stats by docker container
 
