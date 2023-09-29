@@ -161,11 +161,11 @@ public class Parser {
         statsComputer = new StatsComputer();
         statsComputer.setShapeTripletSupport(shapeTripletSupport);
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
-        Utils.writeLineToFile("CLASS,PROPERTY,OBJECT_TYPE,SUPPORT,CONFIDENCE", Constants.TRIPLETS_STATS);
+        /*Utils.writeLineToFile("CLASS,PROPERTY,OBJECT_TYPE,SUPPORT,CONFIDENCE", Constants.TRIPLETS_STATS);
         shapeTripletSupport.forEach((k, v) -> {
             String log = stringEncoder.decode(k._1) + "," + stringEncoder.decode(k._2) + "," + stringEncoder.decode(k._3) + "," + v.getSupport() + "," + String.format("%.3f", v.getConfidence());
             Utils.writeLineToFile(log, Constants.TRIPLETS_STATS);
-        });
+        });*/
         watch.stop();
         Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }

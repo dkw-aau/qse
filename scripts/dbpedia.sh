@@ -13,7 +13,7 @@ container=qse_dbpedia_latest
 
 echo "About to run docker container: ${container}"
 
-docker run -m 120GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx100g" --mount type=bind,source=/srv/data/iq26og/dbpedia/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/qse/,target=/app/local $image /app/local/config/wd-max-card/dbpediaConfig.properties
+docker run -m 200GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx175g" --mount type=bind,source=/srv/data/iq26og/dbpedia/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/qse/,target=/app/local $image /app/local/config/wd-max-card/dbpediaConfig.properties
 #docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx20g" --mount type=bind,source=/home/ubuntu/data/data/,target=/app/data --mount type=bind,source=/home/ubuntu/git/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
 
 ### Logging memory consumption stats by docker container
