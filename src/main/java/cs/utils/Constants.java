@@ -38,4 +38,5 @@ public class Constants {
     
     
     public static String THE_LOGS = Main.outputFilePath + Main.datasetName + "_THE_LOGS.csv";
+    public static String TRIPLETS_STATS = Main.outputFilePath + Main.datasetName + "_TRIPLETS_STATS.csv";
 }

@@ -29,19 +29,20 @@ public class Parser {
     StringEncoder stringEncoder;
     StatsComputer statsComputer;
     String typePredicate;
-    
+
     // In the following the size of each data structure
     // N = number of distinct nodes in the graph
     // T = number of distinct types
     // P = number of distinct predicates
-    
+
     Map<Node, EntityData> entityDataHashMap; // Size == N For every entity we save a number of summary information
     Map<Integer, Integer> classEntityCount; // Size == T
     Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes; // Size O(T*P*T)
     Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T) For every unique <class,property,objectType> tuples, we save their support and confidence
-    
-    public Parser() {}
-    
+
+    public Parser() {
+    }
+
     /**
      * ============================================= Constructor ========================================
      */
@@ -55,7 +56,7 @@ public class Parser {
         this.entityDataHashMap = new HashMap<>((int) ((expNoOfInstances) / 0.75 + 1));
         this.stringEncoder = new StringEncoder();
     }
-    
+
     /**
      * ============================================= Run Parser ========================================
      */
@@ -68,7 +69,7 @@ public class Parser {
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("STATS: \n\t" + "No. of Classes: " + classEntityCount.size());
     }
-    
+
     /**
      * ============================================= Phase 1: Entity Extraction ========================================
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to extract set of entity types and frequency of each entity.
@@ -103,14 +104,14 @@ public class Parser {
         watch.stop();
         Utils.logTime("firstPass", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
+
     /**
      * ============================================= Phase 2: Entity constraints extraction ============================
      * Streaming over RDF (NT Format) triples <s,p,o> line by line to collect the constraints and the metadata required
      * to compute the support and confidence of each candidate shape.
      * =================================================================================================================
      */
-    
+
     protected void entityConstraintsExtraction() {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -120,13 +121,13 @@ public class Parser {
                     //Declaring required sets
                     Set<Integer> objTypesIDs = new HashSet<>(10);
                     Set<Tuple2<Integer, Integer>> prop2objTypeTuples = new HashSet<>(10);
-                    
+
                     // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     Node[] nodes = NxParser.parseNodes(line);
                     Node entityNode = nodes[0];
                     String objectType = extractObjectType(nodes[2].toString());
                     int propID = stringEncoder.encode(nodes[1].getLabel());
-                    
+
                     // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                     if (objectType.equals("IRI")) {
                         objTypesIDs = parseIriTypeObject(objTypesIDs, prop2objTypeTuples, nodes, entityNode, propID);
@@ -147,7 +148,7 @@ public class Parser {
         watch.stop();
         Utils.logTime("secondPhase", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
+
     /**
      * ============================================= Phase 3: Support and Confidence Computation =======================
      * Computing support and confidence using the metadata extracted in the 2nd pass for shape constraints
@@ -160,10 +161,15 @@ public class Parser {
         statsComputer = new StatsComputer();
         statsComputer.setShapeTripletSupport(shapeTripletSupport);
         statsComputer.computeSupportConfidence(entityDataHashMap, classEntityCount);
+        Utils.writeLineToFile("CLASS,PROPERTY,OBJECT_TYPE,SUPPORT,CONFIDENCE", Constants.TRIPLETS_STATS);
+        shapeTripletSupport.forEach((k, v) -> {
+            String log = stringEncoder.decode(k._1) + "," + stringEncoder.decode(k._2) + "," + stringEncoder.decode(k._3) + "," + v.getSupport() + "," + String.format("%.3f", v.getConfidence());
+            Utils.writeLineToFile(log, Constants.TRIPLETS_STATS);
+        });
         watch.stop();
         Utils.logTime("computeSupportConfidence", TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
+
     /**
      * ============================================= Phase 4: Shapes extraction ========================================
      * Extracting shapes in SHACL syntax using various values for support and confidence thresholds
@@ -175,11 +181,11 @@ public class Parser {
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, typePredicate);
         se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        
+
         //====================== Enable shapes extraction for specific classes ======================
         if (qseFromSpecificClasses)
             classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
-        
+
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
@@ -197,16 +203,16 @@ public class Parser {
             watchForPruning.stop();
             Utils.logTime(methodName + "-Time.For.Pruning.Only", TimeUnit.MILLISECONDS.toSeconds(watchForPruning.getTime()), TimeUnit.MILLISECONDS.toMinutes(watchForPruning.getTime()));
         }
-        
+
         ExperimentsUtil.prepareCsvForGroupedStackedBarChart(Constants.EXPERIMENTS_RESULT, Constants.EXPERIMENTS_RESULT_CUSTOM, true);
         watch.stop();
-        
+
         Utils.logTime(methodName, TimeUnit.MILLISECONDS.toSeconds(watch.getTime()), TimeUnit.MILLISECONDS.toMinutes(watch.getTime()));
     }
-    
-    
+
+
     //============================================= Utility Methods ====================================================
-    
+
     private Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
         EntityData currEntityData = entityDataHashMap.get(nodes[2]);
         if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
@@ -217,15 +223,15 @@ public class Parser {
             addEntityToPropertyConstraints(prop2objTypeTuples, subject);
         }
         /*else { // If we do not have data this is an unlabelled IRI objTypes = Collections.emptySet(); }*/
-        else {
+        /*else {
             int objID = stringEncoder.encode(Constants.OBJECT_UNDEFINED_TYPE);
             objTypesIDs.add(objID);
             prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
             addEntityToPropertyConstraints(prop2objTypeTuples, subject);
-        }
+        }*/
         return objTypesIDs;
     }
-    
+
     private void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
         Set<Tuple2<Integer, Integer>> prop2objTypeTuples;
         int objID = stringEncoder.encode(objectType);
@@ -234,7 +240,7 @@ public class Parser {
         prop2objTypeTuples = Collections.singleton(new Tuple2<>(propID, objID));
         addEntityToPropertyConstraints(prop2objTypeTuples, subject);
     }
-    
+
     private void updateClassToPropWithObjTypesMap(Set<Integer> objTypesIDs, Node entityNode, int propID) {
         EntityData entityData = entityDataHashMap.get(entityNode);
         if (entityData != null) {
@@ -247,8 +253,8 @@ public class Parser {
             }
         }
     }
-    
-    
+
+
     /**
      * A utility method to add property constraints of each entity in the 2nd phase
      *
@@ -270,7 +276,7 @@ public class Parser {
         //Add entity data into the map
         entityDataHashMap.put(subject, currentEntityData);
     }
-    
+
     //A utility method to extract the literal object type, returns String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
     protected String extractObjectType(String literalIri) {
         Literal theLiteral = new Literal(literalIri, true);
@@ -288,7 +294,7 @@ public class Parser {
         }
         return type;
     }
-    
+
     /**
      * Assigning cardinality constraints  using various values for support and confidence thresholds
      */

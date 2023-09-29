@@ -9,12 +9,12 @@ docker build . -t $image
 echo "Clearing cache"
 sync; echo 1 > /proc/sys/vm/drop_caches
 
-container=qse_container_dbpedia
+container=qse_dbpedia_latest
 
 echo "About to run docker container: ${container}"
 
-#docker run -m 16GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx10g" --mount type=bind,source=/data/,target=/app/data --mount type=bind,source=/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
-docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx20g" --mount type=bind,source=/home/ubuntu/data/data/,target=/app/data --mount type=bind,source=/home/ubuntu/git/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
+docker run -m 64GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx50g" --mount type=bind,source=/srv/data/iq26og/dbpedia/,target=/app/data --mount type=bind,source=/srv/data/iq26og/git/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
+#docker run -m 32GB -d --name $container -e "JAVA_TOOL_OPTIONS=-Xmx20g" --mount type=bind,source=/home/ubuntu/data/data/,target=/app/data --mount type=bind,source=/home/ubuntu/git/qse/,target=/app/local $image /app/local/config/dbpediaConfig.properties
 
 ### Logging memory consumption stats by docker container
 
@@ -22,7 +22,7 @@ docker ps
 
 # Get the status of the current docker container
 status=$(docker container inspect -f '{{.State.Status}}' $container)
-
+d
 echo "Status of the ${container} is ${status}"
 
 ### Keep it in sleep for 1 minutes while this container is running
