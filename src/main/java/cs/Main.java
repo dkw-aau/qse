@@ -140,4 +140,9 @@ public class Main {
     private static boolean isActivated(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
     
     private static String paramVal(String prop) {return ConfigManager.getProperty(prop);}
+
+    public static void setPruningThresholds(String thresholds) {
+        pruningThresholds = thresholds;
+    }
+    public static void setAnnotateSupportConfidence(String value) { annotateSupportConfidence = value;}
 }
