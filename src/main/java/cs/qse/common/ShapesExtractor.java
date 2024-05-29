@@ -227,7 +227,7 @@ public class ShapesExtractor {
             this.prettyFormatTurtle(outputFilePath);
             FilesUtil.deleteFile(outputFilePath);
         } finally {
-            //db.shutDown(); // before our program exits, make sure the database is properly shut down.
+            db.shutDown(); // before our program exits, make sure the database is properly shut down. Bugfix evapuermayr: otherwise SAIL repository is locked during second run
         }
     }
 
