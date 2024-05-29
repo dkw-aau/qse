@@ -28,6 +28,8 @@ public class Main {
     public static boolean qseFromSpecificClasses;
     public static String resourcesPath;
     public static String configDirPath;
+    public static String pruningThresholds;
+    public static String annotateSupportConfidence;
     
     public static void main(String[] args) throws Exception {
         configPath = args[0];
