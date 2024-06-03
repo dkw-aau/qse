@@ -237,6 +237,7 @@ public class QbParser {
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, instantiationProperty);
+        shapesExtractor = se; //Bugfix evapuermayr: make shapes accessible
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
 
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
