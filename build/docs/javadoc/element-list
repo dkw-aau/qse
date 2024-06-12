@@ -1,0 +1,12 @@
+cs
+cs.qse.common
+cs.qse.common.encoders
+cs.qse.filebased
+cs.qse.filebased.sampling
+cs.qse.querybased.nonsampling
+cs.qse.querybased.sampling
+cs.qse.querybased.sampling.parallel
+cs.utils
+cs.utils.graphdb
+cs.utils.tries
+cs.validation

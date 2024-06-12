@@ -1,0 +1,7 @@
+#Total Number of Node Shape Properties having sh:minCount Constraints
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (COUNT(?minCount) AS ?count) where {
+    ?s a sh:NodeShape .
+    ?s sh:property ?p .
+    ?p sh:minCount ?minCount.
+}

@@ -1,0 +1,4 @@
+# Query to get all node shapes
+SELECT DISTINCT ?nodeShape where {
+	?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
+} 

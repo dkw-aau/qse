@@ -1,0 +1,12 @@
+# Min Number of SH:CLASS Constraint for a property shape
+
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+SELECT (MIN(?count) AS ?min) WHERE {
+    SELECT ?s ?p (COUNT(?shClassConstraint) AS ?count) where {
+        ?s a sh:NodeShape .
+        ?s sh:property ?p .
+        ?p sh:class ?shClassConstraint.
+    }
+    GROUP BY ?s ?p
+}

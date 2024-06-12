@@ -1,0 +1,5 @@
+PREFIX onto: <http://www.ontotext.com/>
+PREFIX : <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>
+SELECT DISTINCT ?class FROM onto:explicit where {
+	?s <http://www.wikidata.org/prop/direct/P31> ?class .
+}

@@ -1,0 +1,11 @@
+# Max Number of SH:CLASS Constraint for a property shape
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+SELECT (MAX(?count) AS ?max) WHERE {
+    SELECT ?s ?p (COUNT(?shClassConstraint) AS ?count) where {
+        ?s a sh:NodeShape .
+        ?s sh:property ?p .
+        ?p sh:class ?shClassConstraint.
+    }
+    GROUP BY ?s ?p
+}

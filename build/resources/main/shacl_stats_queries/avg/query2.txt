@@ -1,0 +1,9 @@
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (AVG(?propCount) AS ?avg) WHERE {
+    SELECT ?s ?p (COUNT(?shClassConstraint) AS ?propCount) where {
+        ?s a sh:NodeShape .
+        ?s sh:property ?p .
+        ?p sh:class ?shClassConstraint.
+    }
+    GROUP BY ?s ?p
+}

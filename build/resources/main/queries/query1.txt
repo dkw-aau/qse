@@ -1,0 +1,5 @@
+PREFIX onto: <http://www.ontotext.com/>
+SELECT DISTINCT ?s ?o FROM onto:explicit where {
+	?s <http://www.wikidata.org/prop/direct/P31> ?o .
+}
+Group by ?s ?o

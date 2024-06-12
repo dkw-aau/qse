@@ -1,0 +1,10 @@
+# Maximum Number of Node Shape Properties having sh:minCount Constraints
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (MAX(?count) AS ?max) WHERE {
+    SELECT ?s ?p (COUNT(?minCount) AS ?count) where {
+        ?s a sh:NodeShape .
+        ?s sh:property ?p .
+        ?p sh:minCount ?minCount.
+    }
+GROUP BY ?s ?p
+}

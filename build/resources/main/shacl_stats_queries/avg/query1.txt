@@ -1,0 +1,9 @@
+# Average Number of Property shapes for each Node Shape
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (AVG(?propCount) AS ?avg) WHERE {
+    select ?s (COUNT(?p) AS ?propCount) where {
+	?s a sh:NodeShape .
+    ?s sh:property ?p .
+}
+GROUP BY ?s
+}

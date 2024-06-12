@@ -19,7 +19,7 @@ Logs/
 # sbteclipse plugin
 .target
 target/
-build/
+#build/
 gradle/
 gradlew
 gradlew.bat

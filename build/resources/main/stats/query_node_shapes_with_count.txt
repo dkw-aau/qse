@@ -1,0 +1,6 @@
+#Get all Node Shapes along with their entity count (Support)
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT  distinct ?nodeShape ?entitiesCount  where {
+    ?nodeShape a sh:NodeShape .
+    ?nodeShape <http://rdfs.org/ns/void#entities> ?entitiesCount .
+}

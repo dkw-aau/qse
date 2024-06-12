@@ -1,0 +1,6 @@
+#Total Number of Node Shape Properties
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT  (COUNT(?p) AS ?count) where {
+    ?s a sh:NodeShape .
+     ?s sh:property ?p .
+}

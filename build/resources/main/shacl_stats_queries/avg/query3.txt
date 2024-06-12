@@ -1,0 +1,13 @@
+#AVG Number of LITERAL Constraints
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+SELECT (AVG(?count) AS ?avg) WHERE {
+SELECT ?s ?p (COUNT(?dataType) AS ?count) where {
+    ?s a sh:NodeShape .
+     ?s sh:property ?p .
+    ?p sh:NodeKind sh:Literal.
+    ?p sh:datatype ?dataType.
+}
+GROUP BY ?s ?p
+}
+
+
