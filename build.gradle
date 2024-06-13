@@ -17,6 +17,9 @@ version '1.0-QSE'
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://maven.ontotext.com/repository/owlim-releases"
+    }
 }
 
 dependencies {
@@ -31,7 +34,7 @@ dependencies {
 
     // These are for RDF4J and GraphDB
     implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-repository-sparql', version: '3.0.0'
-    implementation group: 'com.ontotext.graphdb', name: 'graphdb-free-runtime', version: '9.3.0'
+    implementation group: 'com.ontotext.graphdb', name: 'graphdb-runtime', version: '10.3.0'
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5.1'
 
 

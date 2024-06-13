@@ -8,6 +8,7 @@ import cs.Main;
 import cs.utils.ConfigManager;
 import cs.utils.FilesUtil;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,38 +25,42 @@ public class ExperimentsUtil {
         //Thresholds as CSV
         try {
             String fileAddress = ConfigManager.getProperty("config_dir_path") + "pruning/pruning_thresholds.csv";
-            List<String[]> config = FilesUtil.readCsvAllDataOnceWithCustomSeparator(fileAddress, ',');
-            config.remove(0); // remove the headers
+            File file = new File(fileAddress);
+            if(file.exists()) {
+                List<String[]> config = FilesUtil.readCsvAllDataOnceWithCustomSeparator(fileAddress, ',');
+                config.remove(0); // remove the headers
 
-            config.forEach(row -> {
-                Double conf = Double.parseDouble(row[0]);
-                List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
-                supportValues.add(Integer.parseInt(row[1]));
-                confSuppMap.put(conf, supportValues);
-            });
-            return confSuppMap;
+                config.forEach(row -> {
+                    Double conf = Double.parseDouble(row[0]);
+                    List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
+                    supportValues.add(Integer.parseInt(row[1]));
+                    confSuppMap.put(conf, supportValues);
+                });
+                return confSuppMap;
+            }
+            else {
+                //Thresholds in Config or in Main
+                String pruningThresholds = ConfigManager.getProperty("pruning_thresholds");
+                if(pruningThresholds==null || pruningThresholds.isEmpty())
+                    pruningThresholds = Main.pruningThresholds;
+                assert pruningThresholds != null;
+                Matcher m = Pattern.compile("\\((.*?)\\)").matcher(pruningThresholds);
+                while (m.find()) {
+                    String[] pair = m.group(1).split(",");
+                    Double conf = Double.parseDouble(pair[0]);
+                    List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
+                    supportValues.add(Integer.parseInt(pair[1]));
+                    confSuppMap.put(conf, supportValues);
+                }
+
+                return confSuppMap;
+            }
         }
         catch(Exception ex) {
-            //Ignore
+            ex.printStackTrace();
         }
-
-        //Thresholds in Config or in Main
-        String pruningThresholds = ConfigManager.getProperty("pruning_thresholds");
-        if(pruningThresholds==null || pruningThresholds.isEmpty())
-            pruningThresholds = Main.pruningThresholds;
-        assert pruningThresholds != null;
-        Matcher m = Pattern.compile("\\((.*?)\\)").matcher(pruningThresholds);
-        while (m.find()) {
-            String[] pair = m.group(1).split(",");
-            Double conf = Double.parseDouble(pair[0]);
-            List<Integer> supportValues = confSuppMap.computeIfAbsent(conf, k -> new ArrayList<>());
-            supportValues.add(Integer.parseInt(pair[1]));
-            confSuppMap.put(conf, supportValues);
-        }
-
-        return confSuppMap;
+        return null;
     }
-    
     
     public static HashMap<Double, List<Integer>> getMinCardinalitySupportConfRange() {
         //If I tell you min confidence 90% for min count 1 then you put in count 1 when the confidence is at least 90% . Without this rule min confidence for min count 1 is 100%
