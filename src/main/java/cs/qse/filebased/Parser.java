@@ -28,7 +28,7 @@ public class Parser {
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
     StringEncoder stringEncoder;
-    StatsComputer statsComputer;
+    public StatsComputer statsComputer;
     String typePredicate;
 
     // In the following the size of each data structure
@@ -293,7 +293,7 @@ public class Parser {
 
     //============================================= Utility Methods ====================================================
 
-    private Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
+    public Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
         EntityData currEntityData = entityDataHashMap.get(nodes[2]);
         if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
             objTypesIDs = currEntityData.getClassTypes();
@@ -312,7 +312,7 @@ public class Parser {
         return objTypesIDs;
     }
 
-    private void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
+    public void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
         Set<Tuple2<Integer, Integer>> prop2objTypeTuples;
         int objID = stringEncoder.encode(objectType);
         //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
@@ -396,6 +396,9 @@ public class Parser {
 
     public String getRdfFilePath() {
         return rdfFilePath;
+    }
+    public void setRdfFilePath(String rdfFilePath) {
+        this.rdfFilePath = rdfFilePath;
     }
 
     public Integer getExpectedNumberOfClasses() {

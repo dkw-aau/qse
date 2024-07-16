@@ -12,7 +12,7 @@ import java.util.*;
  * This class is used to compute stats like confidence, support, and cardinality constraints.
  */
 public class StatsComputer {
-    Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T)
+    public Map<Tuple3<Integer, Integer, Integer>, SupportConfidence> shapeTripletSupport; // Size O(T*P*T)
     Map<Integer, Set<Integer>> propWithClassesHavingMaxCountOne; // Size O(P*T)
     Map<Integer, List<Integer>> sampledEntitiesPerClass;
     Boolean isSamplingOn = false;
