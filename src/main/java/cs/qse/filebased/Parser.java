@@ -293,7 +293,7 @@ public class Parser {
 
     //============================================= Utility Methods ====================================================
 
-    public Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
+    private Set<Integer> parseIriTypeObject(Set<Integer> objTypesIDs, Set<Tuple2<Integer, Integer>> prop2objTypeTuples, Node[] nodes, Node subject, int propID) {
         EntityData currEntityData = entityDataHashMap.get(nodes[2]);
         if (currEntityData != null && currEntityData.getClassTypes().size() != 0) {
             objTypesIDs = currEntityData.getClassTypes();
@@ -312,7 +312,7 @@ public class Parser {
         return objTypesIDs;
     }
 
-    public void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
+    private void parseLiteralTypeObject(Set<Integer> objTypes, Node subject, String objectType, int propID) {
         Set<Tuple2<Integer, Integer>> prop2objTypeTuples;
         int objID = stringEncoder.encode(objectType);
         //objTypes = Collections.singleton(objID); Removed because the set throws an UnsupportedOperationException if modification operation (add) is performed on it later in the loop
@@ -408,6 +408,11 @@ public class Parser {
     public StringEncoder getStringEncoder() {
         return stringEncoder;
     }
+
+    public void setStringEncoder(StringEncoder stringEncoder) {
+        this.stringEncoder = stringEncoder;
+    }
+
 
     public StatsComputer getStatsComputer() {
         return statsComputer;

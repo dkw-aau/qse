@@ -30,7 +30,11 @@ public class Main {
     public static String configDirPath;
     public static String pruningThresholds;
     public static String annotateSupportConfidence;
-    
+    //This will save the count per classID in the PropertyData class during calculation.
+    // It is needed for QSE adaptions
+    public static boolean saveCountInPropertyData = false;
+
+
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
