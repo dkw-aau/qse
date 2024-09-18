@@ -28,7 +28,7 @@ public class Parser {
     Integer expectedNumberOfClasses;
     Integer expNoOfInstances;
     StringEncoder stringEncoder;
-    StatsComputer statsComputer;
+    public StatsComputer statsComputer;
     String typePredicate;
 
     // In the following the size of each data structure
@@ -397,6 +397,9 @@ public class Parser {
     public String getRdfFilePath() {
         return rdfFilePath;
     }
+    public void setRdfFilePath(String rdfFilePath) {
+        this.rdfFilePath = rdfFilePath;
+    }
 
     public Integer getExpectedNumberOfClasses() {
         return expectedNumberOfClasses;
@@ -405,6 +408,11 @@ public class Parser {
     public StringEncoder getStringEncoder() {
         return stringEncoder;
     }
+
+    public void setStringEncoder(StringEncoder stringEncoder) {
+        this.stringEncoder = stringEncoder;
+    }
+
 
     public StatsComputer getStatsComputer() {
         return statsComputer;

@@ -1,5 +1,6 @@
 package cs.qse.common;
 
+import cs.Main;
 import cs.utils.Tuple2;
 
 import java.util.*;
@@ -8,7 +9,7 @@ import java.util.*;
  *
  */
 public class EntityData {
-    Set<Integer> classTypes; // O(T) number of types of this node
+    public Set<Integer> classTypes; // O(T) number of types of this node
     public Map<Integer, PropertyData> propertyConstraintsMap; // Map from PropertyID -> PropertyData which consists of property's object types and count
     
     public EntityData() {
@@ -42,6 +43,10 @@ public class EntityData {
             this.propertyConstraintsMap.put(propertyID, pd);
         }
         pd.objTypes.add(classID);
+
+        if(Main.saveCountInPropertyData) {
+            pd.objTypesCount.put(classID, pd.objTypesCount.getOrDefault(classID, 0) + 1);
+        }
     }
     
     public void addPropertyCardinality(Integer propertyID) {
@@ -52,12 +57,13 @@ public class EntityData {
         }
         pd.count += 1;
     }
-    
+
     /**
      * PropertyData Class
      */
     public static class PropertyData {
-        Set<Integer> objTypes = new HashSet<>(5); // these are object types
+        public Set<Integer> objTypes = new HashSet<>(5); // these are object types
         public int count = 0; // number of times I've seen this property for this node
+        public HashMap<Integer, Integer> objTypesCount = new HashMap<>(5); //saves objType and corresponding count
     }
 }
