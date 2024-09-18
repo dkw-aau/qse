@@ -9,6 +9,7 @@ import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.Resource;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -49,6 +50,8 @@ public class Utils {
     
     public static void log(String log) {
         try {
+            createRunTimeLogsFile();
+
             FileWriter fileWriter = new FileWriter(Constants.RUNTIME_LOGS, true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
             printWriter.println(log);
@@ -57,7 +60,17 @@ public class Utils {
             e.printStackTrace();
         }
     }
-    
+
+    private static void createRunTimeLogsFile() throws IOException {
+        File file = new File(Constants.RUNTIME_LOGS);
+        File parentDir = file.getParentFile();
+        if(!parentDir.exists())
+            parentDir.mkdirs();
+        if(!file.exists()) {
+            file.createNewFile();
+        }
+    }
+
     public static void writeLineToFile(String line, String fileAddress) {
         try {
             FileWriter fileWriter = new FileWriter(fileAddress, true);
