@@ -1,9 +1,0 @@
-# Query to get all property shapes of a given node shape having direct sh:class attribute.
-SELECT DISTINCT ?propertyShape ?path ?class where {
- 	BIND(<NODE_SHAPE> AS ?nodeShape)
-	?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
-    ?nodeShape <http://www.w3.org/ns/shacl#property> ?propertyShape .
-    ?propertyShape a <http://www.w3.org/ns/shacl#PropertyShape> .
-    ?propertyShape <http://www.w3.org/ns/shacl#path> ?path .
-    ?propertyShape <http://www.w3.org/ns/shacl#class> ?class .
-}

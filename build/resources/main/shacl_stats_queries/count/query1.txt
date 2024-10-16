@@ -1,5 +1,0 @@
-#Total Number of Node Shapes
-PREFIX sh: <http://www.w3.org/ns/shacl#>
-SELECT  (COUNT(?s) AS ?count) where {
-    ?s a sh:NodeShape .
-}
