@@ -28,7 +28,13 @@ public class Main {
     public static boolean qseFromSpecificClasses;
     public static String resourcesPath;
     public static String configDirPath;
-    
+    public static String pruningThresholds;
+    public static String annotateSupportConfidence;
+    //This will save the count per classID in the PropertyData class during calculation.
+    // It is needed for QSE adaptions
+    public static boolean saveCountInPropertyData = false;
+
+
     public static void main(String[] args) throws Exception {
         configPath = args[0];
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
@@ -138,4 +144,9 @@ public class Main {
     private static boolean isActivated(String option) {return Boolean.parseBoolean(ConfigManager.getProperty(option));}
     
     private static String paramVal(String prop) {return ConfigManager.getProperty(prop);}
+
+    public static void setPruningThresholds(String thresholds) {
+        pruningThresholds = thresholds;
+    }
+    public static void setAnnotateSupportConfidence(String value) { annotateSupportConfidence = value;}
 }

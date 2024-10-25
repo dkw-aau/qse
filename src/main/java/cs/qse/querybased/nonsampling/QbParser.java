@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -67,6 +69,7 @@ public class QbParser {
     }
 
     private void runParser() {
+        deleteOutputDir();
         getNumberOfInstancesOfEachClass();
         getDistinctClasses();
         getShapesInfoAndComputeSupport();
@@ -76,6 +79,24 @@ public class QbParser {
         Utility.writeClassFrequencyInFile(classEntityCount, stringEncoder);
         System.out.println("Size: classToPropWithObjTypes :: " + classToPropWithObjTypes.size() + " , Size: shapeTripletSupport :: " + shapeTripletSupport.size());
     }
+
+    /*
+        Bugfix evapuermayr:
+        Delete output directory, otherwise shapes get duplicated after every run
+     */
+    private void deleteOutputDir() {
+        try {
+            Files.walk(Paths.get(Main.outputFilePath))
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                        }
+                    });
+        } catch (IOException e) {
+        }
+    }
+
 
     public void getNumberOfInstancesOfEachClass() {
         StopWatch watch = new StopWatch();
@@ -136,6 +157,7 @@ public class QbParser {
                 //Literal Type Object
                 if (graphDBUtils.runAskQuery(queryToVerifyLiteralObjectType)) {
                     String queryToGetDataTypeOfLiteralObject = buildQuery(classIri, property, "query6");
+                    queryToGetDataTypeOfLiteralObject = setProperty(queryToGetDataTypeOfLiteralObject); //BUGFIX evapuermayr
                     List<BindingSet> results = graphDBUtils.runSelectQuery(queryToGetDataTypeOfLiteralObject);
                     if (results != null) {
                         results.forEach(row -> {
@@ -215,6 +237,7 @@ public class QbParser {
         watch.start();
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(stringEncoder, shapeTripletSupport, classEntityCount, instantiationProperty);
+        shapesExtractor = se; //Bugfix evapuermayr: make shapes accessible
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
 
         se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
