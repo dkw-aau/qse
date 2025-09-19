@@ -19,8 +19,8 @@ public class RandomSamplingParser extends Parser {
     public int randomSamplingThreshold; // Random sampling threshold like 10 means: 10%
     Map<Integer, Integer> sampledClassEntityCount; // Size == T (number of distinct types) having count of entities sampled randomly based on defined threshold
     
-    public RandomSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, int entitySamplingThreshold) {
-        super(filePath, expNoOfClasses, expNoOfInstances, typePredicate);
+    public RandomSamplingParser(String filePath, int expNoOfClasses, int expNoOfInstances, String typePredicate, boolean addExamples, List<String> labelPredicates, int entitySamplingThreshold) {
+        super(filePath, expNoOfClasses, expNoOfInstances, typePredicate, addExamples, labelPredicates);
         this.sampledClassEntityCount = new HashMap<>((int) ((expectedNumberOfClasses) / 0.75 + 1));
         this.randomSamplingThreshold = entitySamplingThreshold;
     }
