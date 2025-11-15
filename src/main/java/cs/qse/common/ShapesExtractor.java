@@ -2,8 +2,6 @@ package cs.qse.common;
 
 import com.google.common.collect.Lists;
 import cs.Main;
-import cs.qse.common.ExperimentsUtil;
-import cs.qse.common.TurtlePrettyFormatter;
 import cs.qse.common.encoders.Encoder;
 import cs.qse.filebased.SupportConfidence;
 import cs.utils.*;
@@ -18,7 +16,6 @@ import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
-import org.eclipse.rdf4j.model.vocabulary.VOID;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
@@ -27,6 +24,7 @@ import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore;
+import org.semanticweb.yars.nx.Node;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -75,15 +73,14 @@ public class ShapesExtractor {
     /**
      * ==================================== QSE-Default Shapes Construction ============================================
      */
-    
-    public void constructDefaultShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes) {
+    public void constructDefaultShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, ExampleManager exampleManager) {
         File dbDir = new File(Main.outputFilePath + "db_default");
         performDirCheck(dbDir);
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath()))); // Create a new Repository.
         
         try (RepositoryConnection conn = db.getConnection()) { // Open a connection to the database
-            
-            constructShapeWithoutPruning(classToPropWithObjTypes, conn);
+
+            constructShapeWithoutPruning(classToPropWithObjTypes, exampleManager, conn);
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
             
@@ -116,7 +113,7 @@ public class ShapesExtractor {
     /**
      * QSE-Default sub-method to construct Node and Property shapes without pruning
      */
-    private void constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, RepositoryConnection conn) {
+    private void constructShapeWithoutPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, ExampleManager exampleManager, RepositoryConnection conn) {
         if (classToPropWithObjTypes.size() > 10000) { // partition to reduce memory consumption by Model creation library
             List<Integer> classesList = new ArrayList<>(classToPropWithObjTypes.keySet());
             List<List<Integer>> classesPartition = Lists.partition(classesList, classToPropWithObjTypes.size() / 4);
@@ -125,7 +122,7 @@ public class ShapesExtractor {
                 ModelBuilder b = new ModelBuilder();
                 partition.forEach(encodedClassIRI -> {
                     Map<Integer, Set<Integer>> propToObjectType = classToPropWithObjTypes.get(encodedClassIRI);
-                    buildShapes(b, encodedClassIRI, propToObjectType);
+                    buildShapes(b, encodedClassIRI, propToObjectType, exampleManager);
                 });
                 m = b.build();
                 conn.add(m);
@@ -135,29 +132,32 @@ public class ShapesExtractor {
             Model m = null;
             ModelBuilder b = new ModelBuilder();
             classToPropWithObjTypes.forEach((encodedClassIRI, propToObjectType) -> {
-                buildShapes(b, encodedClassIRI, propToObjectType);
+                buildShapes(b, encodedClassIRI, propToObjectType, exampleManager);
             });
             m = b.build();
             conn.add(m);
         }
     }
-    
-    private void buildShapes(ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType) {
+
+
+    private void buildShapes(ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, ExampleManager exampleManager) {
         if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
             IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
+
             b.subject(nodeShape)
                     .add(RDF.TYPE, SHACL.NODE_SHAPE)
                     .add(SHACL.TARGET_CLASS, subj);
             //.add(SHACL.IGNORED_PROPERTIES, RDF.TYPE)
             //.add(SHACL.CLOSED, true);
+
             if(isAnnotationOfSupportConfidenceActivated()){
                 b.subject(nodeShape).add(Constants.SUPPORT, classInstanceCount.get(encodedClassIRI));
                 //b.subject(nodeShape).add(VOID.ENTITIES, classInstanceCount.get(encodedClassIRI));
             }
             
             if (propToObjectType != null) {
-                constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType); // Property Shapes
+                constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectType, exampleManager); // Property Shapes
             }
         } else {
             System.out.println("constructShapeWithoutPruning::INVALID SUBJECT IRI: " + encoder.decode(encodedClassIRI));
@@ -168,14 +168,14 @@ public class ShapesExtractor {
     /**
      * ====================================  QSE-Pruned Shapes Construction ============================================
      */
-    public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support) {
+    public void constructPrunedShapes(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, ExampleManager exampleManager, Double confidence, Integer support) {
         
         File dbDir = new File(Main.outputFilePath + "db_" + confidence + "_" + support);
         performDirCheck(dbDir);
         Repository db = new SailRepository(new NativeStore(new File(dbDir.getAbsolutePath()))); // Create a new Repository.
         
         try (RepositoryConnection conn = db.getConnection()) { // Open a connection to the database
-            constructShapesWithPruning(classToPropWithObjTypes, confidence, support, conn);
+            constructShapesWithPruning(classToPropWithObjTypes,  exampleManager, confidence, support, conn);
             conn.setNamespace("shape", Constants.SHAPES_NAMESPACE);
             conn.setNamespace("shape", Constants.SHACL_NAMESPACE);
             
@@ -203,7 +203,7 @@ public class ShapesExtractor {
      * QSE-Pruned sub-method Construct Node and Property Shapes with specified support and confidence
      * Also include computation of relative support if QSE-Approximate (isSampling) is true
      */
-    private void constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, Double confidence, Integer support, RepositoryConnection conn) {
+    private void constructShapesWithPruning(Map<Integer, Map<Integer, Set<Integer>>> classToPropWithObjTypes, ExampleManager exampleManager, Double confidence, Integer support, RepositoryConnection conn) {
         if (classToPropWithObjTypes.size() > 10000) { // partition to reduce memory consumption by Model creation library
             List<Integer> classesList = new ArrayList<>(classToPropWithObjTypes.keySet());
             List<List<Integer>> classesPartition = Lists.partition(classesList, classToPropWithObjTypes.size() / 4);
@@ -213,7 +213,7 @@ public class ShapesExtractor {
                 ModelBuilder b = new ModelBuilder();
                 partition.forEach(encodedClassIRI -> {
                     Map<Integer, Set<Integer>> propToObjectType = classToPropWithObjTypes.get(encodedClassIRI);
-                    buildAndPruneShapes(confidence, support, b, encodedClassIRI, propToObjectType);
+                    buildAndPruneShapes(confidence, support, b, encodedClassIRI, propToObjectType, exampleManager);
                 });
                 m = b.build();
                 conn.add(m);
@@ -224,14 +224,14 @@ public class ShapesExtractor {
             for (Map.Entry<Integer, Map<Integer, Set<Integer>>> entry : classToPropWithObjTypes.entrySet()) {
                 Integer encodedClassIRI = entry.getKey();
                 Map<Integer, Set<Integer>> propToObjectType = entry.getValue();
-                buildAndPruneShapes(confidence, support, b, encodedClassIRI, propToObjectType);
+                buildAndPruneShapes(confidence, support, b, encodedClassIRI, propToObjectType, exampleManager);
             }
             m = b.build();
             conn.add(m);
         }
     }
     
-    private void buildAndPruneShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType) {
+    private void buildAndPruneShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, ExampleManager exampleManager) {
         if (Utils.isValidIRI(encoder.decode(encodedClassIRI))) {
             IRI subj = factory.createIRI(encoder.decode(encodedClassIRI));
             int classId = encoder.encode(subj.stringValue());
@@ -240,11 +240,11 @@ public class ShapesExtractor {
             //NODE SHAPES PRUNING based on support
             if (support == 1) {
                 if (classInstances >= support) {
-                    prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, exampleManager, subj);
                 }
             } else {
                 if (classInstances > support) {
-                    prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, subj);
+                    prepareNodeAndPropertyShapes(confidence, support, b, encodedClassIRI, propToObjectType, exampleManager, subj);
                 }
             }
         } else {
@@ -255,7 +255,7 @@ public class ShapesExtractor {
     /**
      * QSE-Pruned sub-method
      */
-    private void prepareNodeAndPropertyShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, IRI subj) {
+    private void prepareNodeAndPropertyShapes(Double confidence, Integer support, ModelBuilder b, Integer encodedClassIRI, Map<Integer, Set<Integer>> propToObjectType, ExampleManager exampleManager, IRI subj) {
         //String nodeShape = "shape:" + subj.getLocalName() + "Shape";
         String nodeShape = Constants.SHAPES_NAMESPACE + subj.getLocalName() + "Shape";
         b.subject(nodeShape)
@@ -266,20 +266,21 @@ public class ShapesExtractor {
         
         if (propToObjectType != null) {
             Map<Integer, Set<Integer>> propToObjectTypesLocalPositive = performPropShapePruningPositive(encodedClassIRI, propToObjectType, confidence, support);
-            
+
             if (ConfigManager.getProperty("qse_validation_with_shNot") != null) {
                 if (Boolean.parseBoolean(ConfigManager.getProperty("qse_validation_with_shNot"))) {
                     Map<Integer, Set<Integer>> propToObjectTypesLocalNegative = performPropShapePruningNegative(encodedClassIRI, propToObjectType, confidence, support);
-                    constructPropertyShapesWithShNot(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, propToObjectTypesLocalNegative); // call this to capture negative as sh:not
+                    constructPropertyShapesWithShNot(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, propToObjectTypesLocalNegative, exampleManager); // call this to capture negative as sh:not
                 } else {
-                    constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive);// call this for positive only
+                    constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, exampleManager);// call this for positive only
                 }
             } else {
-                constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive);// call this for positive only
+                constructPropertyShapes(b, subj, encodedClassIRI, nodeShape, propToObjectTypesLocalPositive, exampleManager);// call this for positive only
             }
         }
     }
-    
+
+
     /**
      * QSE-Pruned sub-method
      */
@@ -412,12 +413,14 @@ public class ShapesExtractor {
     
     
     //==================================== SHARED Methods between QSE-Pruned and QSE-Default===========================
-    
+
     /**
      * SHARED METHOD (QSE-Default & QSE-Pruned) : to build node and property shapes
      */
-    private void constructPropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal) {
+    private void constructPropertyShapes(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> propToObjectTypesLocal, ExampleManager exampleManager) {
         Map<String, Integer> propDuplicateDetector = new HashMap<>();
+        Integer encodedClassIRI = encoder.encode(subj.stringValue());
+
         
         propToObjectTypesLocal.forEach((prop, propObjectTypes) -> {
             ModelBuilder localBuilder = new ModelBuilder();
@@ -443,7 +446,8 @@ public class ShapesExtractor {
             b.subject(propShape)
                     .add(RDF.TYPE, SHACL.PROPERTY_SHAPE)
                     .add(SHACL.PATH, property);
-            
+
+
             if (isInstanceTypeProperty) {
                 Resource head = bnode();
                 List<Resource> members = Arrays.asList(new Resource[]{subj});
@@ -465,10 +469,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if (Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -493,8 +499,10 @@ public class ShapesExtractor {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
                                 b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
-                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE))
+                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                    if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
+                                }
                             }
                         }
                     } else {
@@ -518,10 +526,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -532,7 +542,6 @@ public class ShapesExtractor {
                             IRI objectTypeIri = factory.createIRI(objectType);
                             localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
                             localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
-                            
                             annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             
                         } else {
@@ -559,15 +568,62 @@ public class ShapesExtractor {
                 localModel.addAll(localBuilder.build());
                 b.build().addAll(localModel);
             }
+
+
+            if (Main.addExamples) {
+                // CREATING EXAMPLES FOR EACH PROPERTYSHAPE
+                // If property is literal-type, create a list of literal examples
+                if (exampleManager.isPropertyLiteralType(encodedClassIRI, prop)) {
+                    // Creating examples for the property
+                    Set<Literal> propertyExamples = exampleManager.buildExamplesForLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+                // If the property is NOT literal-type, create a list of string examples
+                else {
+                    // Creating string examples for the property
+                    Set<String> propertyExamples = exampleManager.buildExamplesForNonLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+            }
+
         });
+
+        if (Main.addExamples) {
+            // CREATING EXAMPLES FOR THE CLASS [encodedClassIRI]
+            // Creating examples for the class
+            Set<Integer> propertiesToKeep = propToObjectTypesLocal.keySet();
+            Set<String> classExamples = exampleManager.buildExampleForClassWithFilter(encodedClassIRI, propertiesToKeep);
+            // Adding examples to the Shape
+            if (!classExamples.isEmpty()) {
+                classExamples.forEach(classEx -> {
+                    b.subject(nodeShape)
+                            .add(ExampleManager.EXAMPLE_IRI, classEx);
+                });
+            }
+        }
+
     }
-    
-    
+
+
     /**
      * SHARED METHOD (QSE-Default & QSE-Pruned) : to build node and property shapes with sh:not
      */
-    private void constructPropertyShapesWithShNot(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> PropToObjectTypesPositive, Map<Integer, Set<Integer>> propToObjectTypesNegative) {
+    private void constructPropertyShapesWithShNot(ModelBuilder b, IRI subj, Integer subjEncoded, String nodeShape, Map<Integer, Set<Integer>> PropToObjectTypesPositive, Map<Integer, Set<Integer>> propToObjectTypesNegative, ExampleManager exampleManager) {
         Map<String, Integer> propDuplicateDetector = new HashMap<>();
+
+        Integer encodedClassIRI = encoder.encode(subj.stringValue());
         
         //handle positive property shapes
         PropToObjectTypesPositive.forEach((prop, propObjectTypes) -> {
@@ -614,10 +670,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -642,8 +700,10 @@ public class ShapesExtractor {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
                                 b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
-                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE))
+                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                    if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
+                                }
                             }
                         }
                     } else {
@@ -667,10 +727,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -708,6 +770,36 @@ public class ShapesExtractor {
                 localModel.addAll(localBuilder.build());
                 b.build().addAll(localModel);
             }
+
+
+            if (Main.addExamples) {
+                // CREATING EXAMPLES FOR EACH PROPERTYSHAPE
+                // If property is literal-type, create a list of literal examples
+                if (exampleManager.isPropertyLiteralType(encodedClassIRI, prop)) {
+                    // Creating examples for the property
+                    Set<Literal> propertyExamples = exampleManager.buildExamplesForLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+                // If the property is NOT literal-type, create a list of string examples
+                else {
+                    // Creating string examples for the property
+                    Set<String> propertyExamples = exampleManager.buildExamplesForNonLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+            }
+
         });
         
         //handle negative property shapes to annotate with sh:not
@@ -767,10 +859,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -795,8 +889,10 @@ public class ShapesExtractor {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
                                 b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
-                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE))
+                                if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                    if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
+                                }
                             }
                         }
                     } else {
@@ -820,10 +916,12 @@ public class ShapesExtractor {
                     if (shapeTripletSupport.containsKey(tuple3)) {
                         if (shapeTripletSupport.get(tuple3).getSupport().equals(classInstanceCount.get(encoder.encode(subj.stringValue())))) {
                             b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                            if(Main.addExamples){ exampleManager.setPropertyMinCount(encodedClassIRI, prop, 1); }
                         }
                         if (Main.extractMaxCardConstraints) {
                             if (propWithClassesHavingMaxCountOne.containsKey(prop) && propWithClassesHavingMaxCountOne.get(prop).contains(subjEncoded)) {
                                 b.subject(propShape).add(SHACL.MAX_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
+                                if(Main.addExamples){ exampleManager.setPropertyMaxCount(encodedClassIRI, prop, 1); }
                             }
                         }
                     }
@@ -861,7 +959,54 @@ public class ShapesExtractor {
                 localModel.addAll(localBuilder.build());
                 b.build().addAll(localModel);
             }
+
+
+            if (Main.addExamples) {
+                // CREATING EXAMPLES FOR EACH PROPERTYSHAPE
+                // If property is literal-type, create a list of literal examples
+                if (exampleManager.isPropertyLiteralType(encodedClassIRI, prop)) {
+                    // Creating examples for the property
+                    Set<Literal> propertyExamples = exampleManager.buildExamplesForLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+                // If the property is NOT literal-type, create a list of string examples
+                else {
+                    // Creating example strings for the property
+                    Set<String> propertyExamples = exampleManager.buildExamplesForNonLiteralTypeProperty(subjEncoded, prop);
+                    // Adding examples to the PropertyShape
+                    if (!propertyExamples.isEmpty()) {
+                        propertyExamples.forEach(propExample -> {
+                            b.subject(propShape)
+                                    .add(ExampleManager.EXAMPLE_IRI, propExample);
+                        });
+                    }
+                }
+            }
+
         });
+
+        if (Main.addExamples) {
+            // CREATING EXAMPLES FOR THE CLASS [encodedClassIRI]
+            // Creating examples for the class
+            Set<Integer> propertiesToKeep = new HashSet<>();
+            propertiesToKeep.addAll(PropToObjectTypesPositive.keySet());
+            propertiesToKeep.addAll(propToObjectTypesNegative.keySet());
+            Set<String> classExamples = exampleManager.buildExampleForClassWithFilter(encodedClassIRI, propertiesToKeep);
+            // Adding examples to the Shape
+            if (!classExamples.isEmpty()) {
+                classExamples.forEach(classEx -> {
+                    b.subject(nodeShape)
+                            .add(ExampleManager.EXAMPLE_IRI, classEx);
+                });
+            }
+        }
+
     }
     
     /**
@@ -1053,4 +1198,7 @@ public class ShapesExtractor {
         }
         return flag;
     }
+
 }
+
+

@@ -3,6 +3,7 @@ package cs.qse.querybased.sampling.parallel;
 import com.google.common.collect.Lists;
 import cs.Main;
 import cs.qse.common.EntityData;
+import cs.qse.common.ExampleManager;
 import cs.qse.common.ExperimentsUtil;
 import cs.qse.common.encoders.ConcurrentStringEncoder;
 import cs.qse.common.encoders.NodeEncoder;
@@ -241,7 +242,8 @@ public class ParallelQbSampling {
         String methodName = "extractSHACLShapes:No Pruning";
         ShapesExtractor se = new ShapesExtractor(encoder, shapeTripletSupport, classEntityCount, typePredicate);
         //se.setPropWithClassesHavingMaxCountOne(statsComputer.getPropWithClassesHavingMaxCountOne());
-        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        /* TODO currently this class doesn't collect data for example creation. We pass a new ExampleManager object only to compile correctly */
+        se.constructDefaultShapes(classToPropWithObjTypes, new ExampleManager(encoder)); // SHAPES without performing pruning based on confidence and support thresholds
         
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
@@ -250,7 +252,8 @@ public class ParallelQbSampling {
                 supportRange.forEach(supp -> {
                     StopWatch innerWatch = new StopWatch();
                     innerWatch.start();
-                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    /* TODO currently this class doesn't collect data for example creation. We pass a new ExampleManager object only to compile correctly */
+                    se.constructPrunedShapes(classToPropWithObjTypes, new ExampleManager(encoder), conf, supp);
                     innerWatch.stop();
                     Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
                 });

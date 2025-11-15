@@ -2,11 +2,8 @@ package cs.qse.querybased.sampling;
 
 import com.google.common.collect.Lists;
 import cs.Main;
-import cs.qse.common.EntityData;
-import cs.qse.common.Utility;
-import cs.qse.common.ShapesExtractor;
+import cs.qse.common.*;
 import cs.qse.filebased.SupportConfidence;
-import cs.qse.common.ExperimentsUtil;
 import cs.qse.filebased.sampling.DynamicNeighborBasedReservoirSampling;
 import cs.utils.*;
 import cs.qse.common.encoders.StringEncoder;
@@ -268,8 +265,8 @@ public class QbSampling {
         //====================== Enable shapes extraction for specific classes ======================
         if (qseFromSpecificClasses)
             classToPropWithObjTypes = Utility.extractShapesForSpecificClasses(classToPropWithObjTypes, classEntityCount, stringEncoder);
-        
-        se.constructDefaultShapes(classToPropWithObjTypes); // SHAPES without performing pruning based on confidence and support thresholds
+        /* TODO currently this class doesn't collect data for example creation. We pass a new ExampleManager object only to compile correctly */
+        se.constructDefaultShapes(classToPropWithObjTypes, new ExampleManager(stringEncoder)); // SHAPES without performing pruning based on confidence and support thresholds
         if (performPruning) {
             StopWatch watchForPruning = new StopWatch();
             watchForPruning.start();
@@ -277,7 +274,8 @@ public class QbSampling {
                 supportRange.forEach(supp -> {
                     StopWatch innerWatch = new StopWatch();
                     innerWatch.start();
-                    se.constructPrunedShapes(classToPropWithObjTypes, conf, supp);
+                    /* TODO currently this class doesn't collect data for example creation. We pass a new ExampleManager object only to compile correctly */
+                    se.constructPrunedShapes(classToPropWithObjTypes, new ExampleManager(stringEncoder), conf, supp);
                     innerWatch.stop();
                     Utils.logTime(conf + "_" + supp + "", TimeUnit.MILLISECONDS.toSeconds(innerWatch.getTime()), TimeUnit.MILLISECONDS.toMinutes(innerWatch.getTime()));
                 });

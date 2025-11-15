@@ -10,7 +10,8 @@ import java.util.*;
 public class EntityData {
     Set<Integer> classTypes; // O(T) number of types of this node
     public Map<Integer, PropertyData> propertyConstraintsMap; // Map from PropertyID -> PropertyData which consists of property's object types and count
-    
+
+
     public EntityData() {
         this.classTypes = new HashSet<>();
         this.propertyConstraintsMap = new HashMap<>();
