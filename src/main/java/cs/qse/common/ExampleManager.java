@@ -28,6 +28,8 @@ public class ExampleManager {
     public static final int DEFAULT_ENCODED_PROP_TYPE = -1;
     /** Default label of a property **/
     public static final String DEFAULT_LABEL = " ";
+    /** IRI used as predicate to denote comments in Shapes and PropertyShapes **/
+    public static final IRI COMMENT_IRI = Values.getValueFactory().createIRI("https://www.w3.org/TR/rdf-schema/#ch_comment");
     /** IRI used as predicate to denote examples in Shapes and PropertyShapes **/
     public static IRI EXAMPLE_IRI = Values.getValueFactory().createIRI("http://example.org/example");
 
@@ -79,7 +81,7 @@ public class ExampleManager {
 
 
 
-    /*=============================Metodi per la gestione dei nodi di esempio=============================*/
+    /*=============================Methods for example-nodes management=============================*/
     /**
      * @param encodedClassIRI Encoded IRI of the class.
      * @return The number of example-nodes stored for the class {@code encodedClassIRI}.
@@ -187,7 +189,7 @@ public class ExampleManager {
 
 
 
-    /*===============================Metodi per la gestione delle proprietà===============================*/
+    /*===============================Methods for properties management===============================*/
     /**
      * Store {@code encodedProperty} in the list of all properties({@code encodedProperties})
      * @param encodedProperty Encoded property to store
@@ -351,7 +353,7 @@ public class ExampleManager {
 
 
 
-    /*===============================Metodi per la gestione delle label===============================*/
+    /*===============================Methods for labels management===============================*/
 
     /**
      * Associate the label {@code encodedLabel} to the subject {@code encodedSubject}.
@@ -374,7 +376,7 @@ public class ExampleManager {
 
 
 
-    /*================================Metodi per la creazione degli esempi================================*/
+    /*================================Methods for examples and comments creation================================*/
     /**
      * @param encodedClassIRI Encoded IRI of the class to build the example of.
      * @return Set of example strings for class {@code encodedClassIRI}.
@@ -396,51 +398,23 @@ public class ExampleManager {
 
         // Iterate over all the class example-nodes and, for each one, build an example string
         classToExData.get(encodedClassIRI).exNodeToExData.forEach((exNode, nodeData)->{
+            StringBuilder exampleString = new StringBuilder();
             String nodeName = exNode.getLabel();
             String className = stringEncoder.decode(encodedClassIRI);
             Integer encodedNodeIRI = stringEncoder.encode(nodeName);
+
             // Adding labels of example-node and class (if there are associated labels)
             if (IRItoLabel.containsKey(encodedNodeIRI))
-                nodeName += "("+stringEncoder.decode(IRItoLabel.get(encodedNodeIRI))+")";
+                nodeName += " ("+stringEncoder.decode(IRItoLabel.get(encodedNodeIRI))+")";
             else
-                nodeName += "("+DEFAULT_LABEL+")";
+                nodeName += " ("+DEFAULT_LABEL+")";
             if (IRItoLabel.containsKey(encodedClassIRI))
-                className += "("+stringEncoder.decode(IRItoLabel.get(encodedClassIRI))+")";
+                className += " ("+stringEncoder.decode(IRItoLabel.get(encodedClassIRI))+")";
             else
-                className += "("+DEFAULT_LABEL+")";
+                className += " ("+DEFAULT_LABEL+")";
 
-
-            StringBuilder exampleString = new StringBuilder();
+            // Building current example
             exampleString.append(nodeName).append(" is a ").append(className);
-
-            // Iterate over all the example-node data (properties and property-values)
-            // For each property add the example of that property
-            nodeData.propToExData.forEach((encodedProperty, propertyData) -> {
-                // Adding only properties that belong to the filtered property set
-                if (filteredProperties.contains(encodedProperty)) {
-                    exampleString.append("; has ");
-
-                    // Adding min and max constraints (only if different from min:0, max:INF)
-                    Integer minCount = propertyData.minCount;
-                    Integer maxCount = propertyData.maxCount;
-                    if (!minCount.equals(DEFAULT_MIN))
-                        exampleString.append("at least ").append(minCount).append(" ");
-                    if (!maxCount.equals(DEFAULT_MAX))
-                        exampleString.append("at most ").append(maxCount).append(" ");
-
-                    // Adding property name
-                    exampleString.append( stringEncoder.decode(encodedProperty) );
-                    // Adding property label
-                    if (IRItoLabel.containsKey(encodedProperty)) {
-                        exampleString.append("(")
-                                .append( stringEncoder.decode(IRItoLabel.get(encodedProperty)) )
-                                .append(")");
-                    }
-                    else {
-                        exampleString.append("(").append(DEFAULT_LABEL).append(")");
-                    }
-                }
-            });
 
             // Adding current example string to the complete set
             completeExample.add( exampleString.toString() );
@@ -523,9 +497,9 @@ public class ExampleManager {
                 // Adding label
                 String label;
                 if (IRItoLabel.containsKey(enVal.actualValue)) {
-                    label = "(" + stringEncoder.decode(IRItoLabel.get(enVal.actualValue)) + ")";
+                    label = " (" + stringEncoder.decode(IRItoLabel.get(enVal.actualValue)) + ")";
                 } else {
-                    label = "(" + DEFAULT_LABEL + ")";
+                    label = " (" + DEFAULT_LABEL + ")";
                 }
                 ex.append(label);
 
@@ -534,6 +508,86 @@ public class ExampleManager {
         }
 
         return examples;
+    }
+
+    /**
+     * @param encodedClassIRI Encoded class IRI
+     * @param filteredProperties Set of properties to maintain in the comment
+     * @return The comment for the class {@code encodedClassIRI}. Only class properties in {@code filteredProperties} will appear in the comment.
+     */
+    public String buildCommentForClass(Integer encodedClassIRI, Set<Integer> filteredProperties){
+        StringBuilder completeComment = new StringBuilder();
+        String className = stringEncoder.decode(encodedClassIRI);
+
+        // Adding label to class (if there is one)
+        if (IRItoLabel.containsKey(encodedClassIRI))
+            className += " ("+stringEncoder.decode(IRItoLabel.get(encodedClassIRI))+")";
+        else
+            className += " ("+DEFAULT_LABEL+")";
+
+        // Comment start
+        completeComment.append("Each ").append(className);
+
+        // Adding properties to comment
+        classToExData.get(encodedClassIRI).propToExData.forEach( (encodedProperty, propertyData) ->{
+            // Adding only properties that belong to the filtered property set
+            if (filteredProperties.contains(encodedProperty)) {
+                completeComment.append(" has ");
+
+                // Adding min and max constraints (only if different from min:0, max:INF)
+                Integer minCount = propertyData.minCount;
+                Integer maxCount = propertyData.maxCount;
+                if (!minCount.equals(DEFAULT_MIN))
+                    completeComment.append("at least ").append(minCount).append(" ");
+                if (!maxCount.equals(DEFAULT_MAX))
+                    completeComment.append("at most ").append(maxCount).append(" ");
+
+                // Adding property name
+                completeComment.append( stringEncoder.decode(encodedProperty) );
+                // Adding property label
+                if (IRItoLabel.containsKey(encodedProperty)) {
+                    completeComment.append(" (")
+                            .append( stringEncoder.decode(IRItoLabel.get(encodedProperty)) )
+                            .append(")");
+                }
+                else {
+                    completeComment.append(" (").append(DEFAULT_LABEL).append(")");
+                }
+
+                completeComment.append(",");
+            }
+        });
+        // Deleting last ","
+        completeComment.deleteCharAt(completeComment.length()-1);
+
+        return completeComment.toString();
+    }
+
+
+    /**
+     * @param encodedClassIRI Encoded class IRI
+     * @param encodedProperty Encoded property
+     * @return The comment for the property {@code encodedProperty} in class {@code encodedClassIRI}
+     */
+    public String buildCommentForProperty(Integer encodedClassIRI, Integer encodedProperty){
+        String propertyName = stringEncoder.decode(encodedProperty);
+        String className = stringEncoder.decode(encodedClassIRI);
+        String completeComment;
+
+        // Adding labels to property and class (if there are any)
+        if (IRItoLabel.containsKey(encodedProperty))
+            propertyName += " ("+stringEncoder.decode(IRItoLabel.get(encodedProperty))+")";
+        else
+            propertyName += " ("+DEFAULT_LABEL+")";
+        if (IRItoLabel.containsKey(encodedClassIRI))
+            className += " ("+stringEncoder.decode(IRItoLabel.get(encodedClassIRI))+")";
+        else
+            className += " ("+DEFAULT_LABEL+")";
+
+        // Building comment
+        completeComment = propertyName + " is a property that takes values from " + className;
+
+        return completeComment;
     }
     /*====================================================================================================*/
 
@@ -545,7 +599,7 @@ public class ExampleManager {
 
 
 
-    /*===================================Classi di supporto====================================*/
+    /*===================================Support classes====================================*/
     /**
      * Store all the data of a specific class.
      */

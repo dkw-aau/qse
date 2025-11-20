@@ -571,7 +571,7 @@ public class ShapesExtractor {
 
 
             if (Main.addExamples) {
-                // CREATING EXAMPLES FOR EACH PROPERTYSHAPE
+                // CREATING EXAMPLES FOR EACH PROPERTY-SHAPE
                 // If property is literal-type, create a list of literal examples
                 if (exampleManager.isPropertyLiteralType(encodedClassIRI, prop)) {
                     // Creating examples for the property
@@ -596,6 +596,11 @@ public class ShapesExtractor {
                         });
                     }
                 }
+
+                // CREATING COMMENT FOR EACH PROPERTY-SHAPE
+                String propComment = exampleManager.buildCommentForProperty(subjEncoded, prop);
+                b.subject(propShape)
+                        .add(ExampleManager.COMMENT_IRI, propComment);
             }
 
         });
@@ -612,6 +617,11 @@ public class ShapesExtractor {
                             .add(ExampleManager.EXAMPLE_IRI, classEx);
                 });
             }
+
+            // CREATING COMMENT FOR THE CLASS
+            String classComment = exampleManager.buildCommentForClass(encodedClassIRI, propertiesToKeep);
+            b.subject(nodeShape)
+                    .add(ExampleManager.COMMENT_IRI, classComment);
         }
 
     }
@@ -798,6 +808,11 @@ public class ShapesExtractor {
                         });
                     }
                 }
+
+                // CREATING COMMENT FOR EACH PROPERTY-SHAPE
+                String propComment = exampleManager.buildCommentForProperty(subjEncoded, prop);
+                b.subject(propShape)
+                        .add(ExampleManager.COMMENT_IRI, propComment);
             }
 
         });
@@ -987,6 +1002,11 @@ public class ShapesExtractor {
                         });
                     }
                 }
+
+                // CREATING COMMENT FOR EACH PROPERTY-SHAPE
+                String propComment = exampleManager.buildCommentForProperty(subjEncoded, prop);
+                b.subject(propShape)
+                        .add(ExampleManager.COMMENT_IRI, propComment);
             }
 
         });
@@ -1005,6 +1025,11 @@ public class ShapesExtractor {
                             .add(ExampleManager.EXAMPLE_IRI, classEx);
                 });
             }
+
+            // CREATING COMMENT FOR THE CLASS
+            String classComment = exampleManager.buildCommentForClass(encodedClassIRI, propertiesToKeep);
+            b.subject(nodeShape)
+                    .add(ExampleManager.COMMENT_IRI, classComment);
         }
 
     }
