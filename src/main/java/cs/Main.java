@@ -36,6 +36,8 @@ public class Main {
     public static List<String> labelProperties;
     /** IRI used as predicate to indicate examples in Shapes and PropertyShapes **/
     public static String exampleIRI;
+    /** Custom predicate used as rdf:type **/
+    public static String customTypeProperty;
 
 
     
@@ -57,9 +59,15 @@ public class Main {
         Utils.log("Dataset,Method,Second,Minute,SecondTotal,MinuteTotal,MaxCard,DatasetPath");
         Utils.getCurrentTimeStamp();
         try {
+            // Standard rdf:type
             String typeProperty = Constants.RDF_TYPE;
+            // If the dataset is wikidata, use another rdf:type
             if (isWikiData) {
                 typeProperty = Constants.INSTANCE_OF;
+            }
+            // If specified in the config file, force the custom rdf:type
+            if (customTypeProperty != null){
+                typeProperty = customTypeProperty;
             }
             
             if (isActivated("qse_exact_file")) {
@@ -134,6 +142,8 @@ public class Main {
         exampleIRI = paramVal("example_IRI");
         // Read all possible predicates used for labels
         labelProperties = readLabelProperties();
+        // Read custom rdf:typeProperty (if there is one)
+        customTypeProperty = paramVal("custom_type_property");
     }
     
     private static void qseExactExecutionWithMinimumParams() {
