@@ -484,20 +484,20 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                         } else {
                             //objectType = objectType.replace("<", "").replace(">", "");
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                             } else {
                                 //IRI objectTypeIri = factory.createIRI(objectType);
                                 //b.subject(propShape).add(SHACL.CLASS, objectType);
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                                 if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
@@ -541,18 +541,18 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
-                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             
                         } else {
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             } else {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             }
                         }
@@ -685,20 +685,20 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                         } else {
                             //objectType = objectType.replace("<", "").replace(">", "");
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                             } else {
                                 //IRI objectTypeIri = factory.createIRI(objectType);
                                 //b.subject(propShape).add(SHACL.CLASS, objectType);
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                                 if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
@@ -742,7 +742,7 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
-                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             
                             annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             
@@ -750,11 +750,11 @@ public class ShapesExtractor {
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             } else {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             }
                         }
@@ -874,20 +874,20 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.DATATYPE, objectTypeIri);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                         } else {
                             //objectType = objectType.replace("<", "").replace(">", "");
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                             } else {
                                 //IRI objectTypeIri = factory.createIRI(objectType);
                                 //b.subject(propShape).add(SHACL.CLASS, objectType);
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                                b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(propShape, localBuilder, tuple3);
                                 if (objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                     b.subject(propShape).add(SHACL.MIN_COUNT, factory.createLiteral(XMLDatatypeUtil.parseInteger("1")));
@@ -931,7 +931,7 @@ public class ShapesExtractor {
                             if (objectType.contains("<")) {objectType = objectType.replace("<", "").replace(">", "");}
                             IRI objectTypeIri = factory.createIRI(objectType);
                             localBuilder.subject(currentMember).add(SHACL.DATATYPE, objectTypeIri);
-                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.LITERAL);
+                            localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.LITERAL);
                             
                             annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             
@@ -939,11 +939,11 @@ public class ShapesExtractor {
                             if (Utils.isValidIRI(objectType) && !objectType.equals(Constants.OBJECT_UNDEFINED_TYPE)) {
                                 IRI objectTypeIri = factory.createIRI(objectType);
                                 localBuilder.subject(currentMember).add(SHACL.CLASS, objectTypeIri);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             } else {
                                 //System.out.println("INVALID Object Type IRI: " + objectType);
-                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND, SHACL.IRI);
+                                localBuilder.subject(currentMember).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                                 annotateWithSupportAndConfidence(currentMember, localBuilder, tuple3);
                             }
                         }
