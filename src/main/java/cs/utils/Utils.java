@@ -33,7 +33,6 @@ public class Utils {
     // public static boolean isValidIRI(String iri) {
     //     return iri.indexOf(':') > 0;
     // }
-
     public static boolean isValidIRI(String iri) {
         if (iri == null) return false;
         String trimmed = iri.trim();
@@ -56,7 +55,7 @@ public class Utils {
         } catch (Exception e) {
             return false;
         }
-    }    
+    }
     
     public static IRI toIri(String value) {
         ValueFactory factory = SimpleValueFactory.getInstance();

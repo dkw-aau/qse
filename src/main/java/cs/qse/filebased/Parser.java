@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.Resource;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.parser.ParseException;
 
@@ -164,11 +165,12 @@ public class Parser {
                     // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     Node[] nodes = NxParser.parseNodes(line);
                     Node entityNode = nodes[0];
-                    String objectType = extractObjectType(nodes[2].toString());
+                    Node objectNode = nodes[2];
+                    String objectType = extractObjectType(objectNode);
                     int propID = stringEncoder.encode(nodes[1].getLabel());
                     
                     // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                    if (objectType.equals("IRI")) {
+                    if (objectNode instanceof Resource) { //if (objectType.equals("IRI")) {
                         objTypesIDs = parseIriTypeObject(objTypesIDs, prop2objTypeTuples, nodes, entityNode, propID);
 
                         if (addExamples) {
@@ -181,7 +183,7 @@ public class Parser {
                         }
                     }
                     // Object is of type literal, e.g., xsd:String, xsd:Integer, etc.
-                    else {
+                    else if (objectNode instanceof Literal) {
                         parseLiteralTypeObject(objTypesIDs, entityNode, objectType, propID);
 
                         if (addExamples) {
@@ -410,22 +412,22 @@ public class Parser {
         entityDataHashMap.put(subject, currentEntityData);
     }
     
-    //A utility method to extract the literal object type, returns String literal type : for example RDF.LANGSTRING, XSD.STRING, XSD.INTEGER, XSD.DATE, etc.
-    protected String extractObjectType(String literalIri) {
-        Literal theLiteral = new Literal(literalIri, true);
-        String type = null;
-        if (theLiteral.getDatatype() != null) {   // is literal type
-            type = theLiteral.getDatatype().toString();
-        } else if (theLiteral.getLanguageTag() != null) {  // is rdf:lang type
-            type = "<" + RDF.LANGSTRING + ">"; //theLiteral.getLanguageTag(); will return the language tag
-        } else {
-            if (Utils.isValidIRI(literalIri)) {
-                if (SimpleValueFactory.getInstance().createIRI(literalIri).isIRI()) type = "IRI";
-            } else {
-                type = "<" + XSD.STRING + ">";
-            }
+    //Extract literal type from the literal node, if the literal node has no type, then return XSD.STRING as default
+    protected String extractObjectType(Node node) {
+        if (node instanceof Resource) {
+            return "IRI"; 
         }
-        return type;
+        else if (node instanceof Literal) {
+            Literal theLiteral = (Literal) node;
+            if (theLiteral.getDatatype() != null) {   // is literal type
+                return theLiteral.getDatatype().toString();
+            } else if (theLiteral.getLanguageTag() != null) {  // is rdf:lang type
+                return "<" + RDF.LANGSTRING + ">"; //theLiteral.getLanguageTag(); will return the language tag
+            } else {
+                return "<" + XSD.STRING + ">";
+                }
+            }
+        return "UNKNOWN";
     }
     
     /**
