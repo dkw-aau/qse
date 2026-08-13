@@ -30,8 +30,31 @@ public class Utils {
         dtf.format(now);
     }
     
+    // public static boolean isValidIRI(String iri) {
+    //     return iri.indexOf(':') > 0;
+    // }
     public static boolean isValidIRI(String iri) {
-        return iri.indexOf(':') > 0;
+        if (iri == null) return false;
+        String trimmed = iri.trim();
+        
+        if (trimmed.startsWith("\"")) {
+            return false;
+        }
+        
+        try {
+            String cleanIri = trimmed.replace("<", "").replace(">", "").trim();
+            java.net.URI uri = new java.net.URI(cleanIri);
+            
+            return uri.isAbsolute() && (
+                cleanIri.startsWith("http://") || 
+                cleanIri.startsWith("https://") || 
+                cleanIri.startsWith("urn:") || 
+                cleanIri.startsWith("ftp://") ||
+                cleanIri.startsWith("file:")
+            );
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     public static IRI toIri(String value) {

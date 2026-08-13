@@ -94,7 +94,7 @@ public class SHACLER {
                             //objectType = objectType.replace("<", "").replace(">", "");
                             IRI objectTypeIri = factory.createIRI(objectType);
                             b.subject(propShape).add(SHACL.CLASS, objectTypeIri);
-                            b.subject(propShape).add(SHACL.NODE_KIND, SHACL.IRI);
+                            b.subject(propShape).add(SHACL.NODE_KIND_PROP, SHACL.IRI);
                         }
                     } else {
                         // in case the type is null, we set it default as string
