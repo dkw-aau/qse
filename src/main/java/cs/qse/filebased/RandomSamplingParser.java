@@ -95,12 +95,13 @@ public class RandomSamplingParser extends Parser {
                     
                     Node[] nodes = NxParser.parseNodes(line); // parsing <s,p,o> of triple from each line as node[0], node[1], and node[2]
                     Node subject = nodes[0];
+                    Node object = nodes[2];
                     // if the entity is sampled, we go for it
                     if (entityDataHashMap.get(subject) != null) {
-                        String objectType = extractObjectType(nodes[2].toString());
+                        String objectType = extractObjectType(object);
                         int propID = stringEncoder.encode(nodes[1].getLabel());
                         if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
-                            EntityData currEntityData = entityDataHashMap.get(nodes[2]);
+                            EntityData currEntityData = entityDataHashMap.get(object);
                             if (currEntityData != null) {
                                 objTypes = currEntityData.getClassTypes();
                                 for (Integer node : objTypes) { // get classes of node2

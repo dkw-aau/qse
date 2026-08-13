@@ -246,7 +246,7 @@ public class ReservoirSamplingParser extends Parser {
                         int subjID = nodeEncoder.getEncodedNode(nodes[0]);
                         // if the entity is in the Reservoir, we go for it
                         if (entityDataMapContainer.get(subjID) != null) {
-                            String objectType = extractObjectType(nodes[2].toString());
+                            String objectType = extractObjectType(nodes[2]);
                             int propID = stringEncoder.encode(nodes[1].getLabel());
                             if (objectType.equals("IRI")) { // object is an instance or entity of some class e.g., :Paris is an instance of :City & :Capital
                                 EntityData currEntityData = entityDataMapContainer.get(nodeEncoder.encode(nodes[2]));
